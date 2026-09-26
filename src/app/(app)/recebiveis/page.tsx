@@ -1,0 +1,126 @@
+import Link from "next/link";
+import { getReceivables, receivableTotals } from "@/modules/recebiveis/queries";
+import { ReceiveButton } from "@/modules/recebiveis/receive-button";
+import { brl } from "@/lib/format";
+import type { Receivable } from "@/modules/recebiveis/queries";
+
+function fmtDate(iso: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
+}
+
+function Item({ r, received }: { r: Receivable; received?: boolean }) {
+  return (
+    <li className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="tabular text-sm font-medium">{fmtDate(r.due_date)}</span>
+          <span className="truncate text-sm">{r.customer_name ?? "Cliente"}</span>
+          {r.quote_number && (
+            <span className="text-xs text-muted">#{r.quote_number}</span>
+          )}
+          <span className="text-xs text-muted">
+            {r.number === 0 ? "entrada" : `parcela ${r.number}`}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="tabular text-sm font-medium">{brl(r.amount_cents)}</span>
+        <ReceiveButton id={r.id} received={received} />
+      </div>
+    </li>
+  );
+}
+
+function Group({
+  title,
+  items,
+  emphasis,
+  received,
+}: {
+  title: string;
+  items: Receivable[];
+  emphasis?: boolean;
+  received?: boolean;
+}) {
+  if (items.length === 0) return null;
+  const total = items.reduce((s, r) => s + r.amount_cents, 0);
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">
+          {title} <span className="text-muted">({items.length})</span>
+        </h2>
+        <span className="tabular text-sm text-muted">{brl(total)}</span>
+      </div>
+      <ul
+        className={`divide-y rounded-lg border bg-surface shadow-card ${
+          emphasis ? "border-l-2 border-l-danger" : ""
+        }`}
+      >
+        {items.map((r) => (
+          <Item key={r.id} r={r} received={received} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function TotalCard({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
+  return (
+    <div className="rounded-lg border bg-surface p-4 shadow-card">
+      <p className="text-sm text-muted">{label}</p>
+      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+export default async function RecebiveisPage() {
+  const { overdue, dueSoon, upcoming, received } = await getReceivables();
+  const totals = await receivableTotals();
+
+  const empty =
+    overdue.length + dueSoon.length + upcoming.length + received.length === 0;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">Recebíveis</h1>
+
+      <div className="grid grid-cols-3 gap-3">
+        <TotalCard label="A receber" value={brl(totals.toReceive)} />
+        <TotalCard label="Vencido" value={brl(totals.overdue)} danger={totals.overdue > 0} />
+        <TotalCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />
+      </div>
+
+      {empty ? (
+        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
+          Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas
+          aparecem aqui.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <Group title="Vencidas" items={overdue} emphasis />
+          <Group title="Vencem em até 7 dias" items={dueSoon} />
+          <Group title="A vencer" items={upcoming} />
+          {received.length > 0 && (
+            <details className="group">
+              <summary className="cursor-pointer text-sm font-medium text-muted hover:text-foreground">
+                Recebidas recentemente ({received.length})
+              </summary>
+              <ul className="mt-2 divide-y rounded-lg border bg-surface">
+                {received.map((r) => (
+                  <Item key={r.id} r={r} received />
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

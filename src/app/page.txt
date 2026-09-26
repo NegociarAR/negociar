@@ -1,0 +1,6 @@
+import { redirect } from "next/navigation";
+
+export default function Home() {
+  // proxy.ts redireciona para /login se não houver sessão
+  redirect("/dashboard");
+}
