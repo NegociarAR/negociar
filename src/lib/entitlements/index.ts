@@ -53,42 +53,34 @@ export async function getSession() {
   };
 }
 
-import { unstable_cache } from "next/cache";
-
 export async function getEntitlements(): Promise<Entitlements | null> {
   const session = await getSession();
   if (!session?.companyId) return null;
 
   const companyId = session.companyId;
-  const cached = unstable_cache(
-    async () => {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("plan_id, plans(id, name, modules, limits)")
-        .eq("company_id", companyId)
-        .in("status", ["active", "trialing"])
-        .limit(1)
-        .maybeSingle();
+  // Nota: não usar unstable_cache aqui — createClient() lê cookies(),
+  // e o Next não permite cookies() dentro de uma função cacheada.
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("plan_id, plans(id, name, modules, limits)")
+    .eq("company_id", companyId)
+    .in("status", ["active", "trialing"])
+    .limit(1)
+    .maybeSingle();
 
-      const plan = (data as { plans?: unknown } | null)?.plans as
-        | { id: string; name: string; modules: PlanModules; limits: PlanLimits }
-        | undefined;
+  const plan = (data as { plans?: unknown } | null)?.plans as
+    | { id: string; name: string; modules: PlanModules; limits: PlanLimits }
+    | undefined;
 
-      if (!plan) return null;
+  if (!plan) return null;
 
-      return {
-        planId: plan.id,
-        planName: plan.name,
-        modules: plan.modules ?? {},
-        limits: plan.limits ?? {},
-      };
-    },
-    [`entitlements-${companyId}`],
-    { revalidate: 30 },
-  );
-
-  return cached();
+  return {
+    planId: plan.id,
+    planName: plan.name,
+    modules: plan.modules ?? {},
+    limits: plan.limits ?? {},
+  };
 }
 
 export function hasModule(ent: Entitlements | null, key: ModuleKey): boolean {
@@ -139,13 +131,16 @@ export async function checkModuleAccess(key: ModuleKey): Promise<boolean> {
   return hasModule(ent, key);
 }
 
-// Usado nas Server Actions: garante sessao + empresa + (opcionalmente)
-// modulo contratado. Lanca erro em vez de redirect. Retorna a session
-// ja com companyId garantido (nao-nulo).
-export async function requireModule(moduleKey?: ModuleKey) {
+// Usado nas Server Actions: garante sessão + empresa + (opcionalmente)
+// módulo contratado. Lança erro em vez de redirect (redirect no meio de
+// uma mutação corta a resposta da action de forma inesperada no client).
+// Retorna a session já com companyId garantido (non-null).
+export async function requireModule(
+  moduleKey?: ModuleKey,
+): Promise<NonNullable<Awaited<ReturnType<typeof getSession>>> & { companyId: string }> {
   const session = await getSession();
   if (!session) {
-    throw new Error("Sessao expirada. Faca login novamente.");
+    throw new Error("Sessão expirada. Faça login novamente.");
   }
   if (!session.companyId) {
     throw new Error("Nenhuma empresa vinculada a esta conta.");
@@ -153,9 +148,10 @@ export async function requireModule(moduleKey?: ModuleKey) {
   if (moduleKey) {
     const allowed = await checkModuleAccess(moduleKey);
     if (!allowed) {
-      throw new Error("Este recurso nao esta incluido no seu plano atual.");
+      throw new Error(
+        `Este recurso (${moduleKey}) não está incluído no seu plano atual.`,
+      );
     }
   }
-  return session;
+  return session as NonNullable<typeof session> & { companyId: string };
 }
-

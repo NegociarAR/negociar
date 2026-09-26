@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { unstable_cache } from "next/cache";
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { Topbar } from "@/components/topbar";
@@ -11,29 +10,15 @@ import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
 import type { ModuleKey } from "@/lib/entitlements/types";
 
-// Cache da empresa (60s) — nome não muda a cada request
-const getCachedCompany = unstable_cache(
-  async (companyId: string) => {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("companies")
-      .select("name")
-      .eq("id", companyId)
-      .maybeSingle();
-    return data;
-  },
-  ["company-name"],
-  { revalidate: 60 },
-);
-
-// Cache dos entitlements (60s) — plano não muda a cada request
-const getCachedEntitlements = unstable_cache(
-  async (companyId: string) => {
-    return getEntitlements();
-  },
-  ["entitlements"],
-  { revalidate: 60 },
-);
+async function getCompany(companyId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("companies")
+    .select("name")
+    .eq("id", companyId)
+    .maybeSingle();
+  return data;
+}
 
 export default async function AppLayout({
   children,
@@ -45,10 +30,11 @@ export default async function AppLayout({
   if (!session.companyId) redirect("/configuracoes");
   if (session.status !== "active") redirect("/status");
 
-  // tudo em paralelo — sem waterfall
+  // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
+  // cookies(), e o Next não permite cookies() dentro de unstable_cache).
   const [ent, company, fu, openQuotes, overdue] = await Promise.all([
-    getCachedEntitlements(session.companyId),
-    getCachedCompany(session.companyId),
+    getEntitlements(),
+    getCompany(session.companyId),
     followupCounts(),
     countOpenQuotes(),
     overdueCount(),
