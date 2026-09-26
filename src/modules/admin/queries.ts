@@ -9,6 +9,7 @@ export interface AdminCompany {
   plan_id: string | null;
   plan_name: string | null;
   current_period_end: string | null;
+  is_expired: boolean;
   owner_email: string | null;
 }
 
@@ -49,10 +50,13 @@ export async function listCompanies(filter?: string) {
     }>;
   }>;
 
+  const today = new Date().toISOString();
+
   return rows.map((r) => {
     const sub = r.subscriptions?.find(
       (s) => s.status === "active" || s.status === "trialing",
     );
+    const periodEnd = sub?.current_period_end ?? null;
     return {
       id: r.id,
       name: r.name,
@@ -60,10 +64,34 @@ export async function listCompanies(filter?: string) {
       created_at: r.created_at,
       plan_id: sub?.plan_id ?? null,
       plan_name: sub?.plans?.name ?? null,
-      current_period_end: sub?.current_period_end ?? null,
+      current_period_end: periodEnd,
+      is_expired: Boolean(periodEnd && periodEnd < today),
       owner_email: null,
     } as AdminCompany;
   });
+}
+
+// Item 7 (auditoria): assinaturas vencidas não rebaixam sozinhas —
+// aparecem aqui para o admin decidir manualmente (cobrar, renovar ou suspender).
+export async function expiredSubscriptions() {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const supabase = await createClient();
+  const today = new Date().toISOString();
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("company_id, current_period_end, plan_id, companies(name), plans(name)")
+    .in("status", ["active", "trialing"])
+    .not("current_period_end", "is", null)
+    .lt("current_period_end", today);
+
+  return (data ?? []).map((r) => ({
+    companyId: r.company_id,
+    companyName: (r as { companies?: { name?: string } }).companies?.name ?? "—",
+    planName: (r as { plans?: { name?: string } }).plans?.name ?? r.plan_id,
+    expiredAt: r.current_period_end as string,
+  }));
 }
 
 export async function getCompanyDetail(id: string) {

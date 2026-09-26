@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listCompanies, companyCounts, pendingPlanRequests } from "@/modules/admin/queries";
+import { listCompanies, companyCounts, pendingPlanRequests, expiredSubscriptions } from "@/modules/admin/queries";
 import { PlanRequestActions } from "@/modules/admin/plan-request-actions";
 import { AdminCompanyRow } from "@/modules/admin/admin-company-row";
 
@@ -9,10 +9,11 @@ export default async function AdminHomePage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
-  const [companies, counts, requests] = await Promise.all([
+  const [companies, counts, requests, expired] = await Promise.all([
     listCompanies(status),
     companyCounts(),
     pendingPlanRequests(),
+    expiredSubscriptions(),
   ]);
 
   const tabs = [
@@ -44,6 +45,32 @@ export default async function AdminHomePage({
                 </div>
                 <PlanRequestActions requestId={r.id} />
               </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {expired.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold">
+            Assinaturas vencidas{" "}
+            <span className="text-muted">({expired.length})</span>
+          </h2>
+          <div className="divide-y rounded-lg border border-l-2 border-l-danger bg-surface">
+            {expired.map((e) => (
+              <Link
+                key={e.companyId}
+                href={`/admin/empresas/${e.companyId}`}
+                className="flex items-center justify-between gap-4 px-4 py-3 text-sm transition hover:bg-subtle"
+              >
+                <div>
+                  <span className="font-medium">{e.companyName}</span>
+                  <span className="text-muted"> · plano {e.planName}</span>
+                </div>
+                <span className="text-xs text-danger">
+                  venceu em {new Date(e.expiredAt).toLocaleDateString("pt-BR")}
+                </span>
+              </Link>
             ))}
           </div>
         </section>
