@@ -29,6 +29,9 @@ export async function signUp(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
   const companyName = String(formData.get("company_name") || "").trim();
+  // escapa HTML pra evitar injeção no e-mail do admin
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -46,10 +49,10 @@ export async function signUp(formData: FormData) {
   const adminTo = process.env.ADMIN_ALERT_EMAIL ?? "suitebueno@gmail.com";
   await sendEmail({
     to: adminTo,
-    subject: `Nova empresa aguardando aprovação: ${companyName || email}`,
+    subject: `Nova empresa aguardando aprovação: ${esc(companyName || email)}`,
     html: `<p>Um novo cadastro entrou na plataforma e está aguardando aprovação.</p>
-           <p><strong>Empresa:</strong> ${companyName || "(sem nome)"}<br/>
-           <strong>E-mail:</strong> ${email}</p>
+           <p><strong>Empresa:</strong> ${esc(companyName) || "(sem nome)"}<br/>
+           <strong>E-mail:</strong> ${esc(email)}</p>
            <p>Acesse o painel para aprovar o acesso.</p>`,
   });
 

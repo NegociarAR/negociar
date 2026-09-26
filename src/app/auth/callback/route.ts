@@ -7,26 +7,25 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
 
+  // item 5: open redirect — só aceita paths internos
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
+
   const supabase = await createClient();
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      if (type === "recovery") {
-        return NextResponse.redirect(`${origin}/recuperar/nova-senha`);
-      }
-      // confirmação de e-mail → rota decisora
-      return NextResponse.redirect(`${origin}/`);
+      if (type === "recovery") return NextResponse.redirect(`${origin}/recuperar/nova-senha`);
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as never });
     if (!error) {
-      if (type === "recovery") {
-        return NextResponse.redirect(`${origin}/recuperar/nova-senha`);
-      }
-      return NextResponse.redirect(`${origin}/`);
+      if (type === "recovery") return NextResponse.redirect(`${origin}/recuperar/nova-senha`);
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 

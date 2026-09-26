@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireModule } from "@/lib/entitlements";
+import { getSession } from "@/lib/entitlements";
 import { computeSale, type SaleInput } from "./sale-calc";
 
 export interface CloseSaleInput extends SaleInput {
@@ -17,19 +17,24 @@ export interface CloseSaleInput extends SaleInput {
 // Fecha a venda de um orçamento aprovado: grava sales + parcelas.
 // Idempotente por quote_id (índice único evita duplicar).
 export async function closeSale(input: CloseSaleInput) {
-  const session = await requireModule("orcamentos");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   const supabase = await createClient();
 
-  // valida orçamento e evita venda duplicada
+  // valida orçamento: só aceita approved ou negotiation_requested
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, number, customer_id, status")
+    .select("id, number, customer_id, status, total_cents")
     .eq("id", input.quoteId)
     .eq("company_id", session.companyId)
     .maybeSingle();
   if (!quote) return { ok: false, error: "Orçamento não encontrado." };
+
+  const validStatuses = ["approved", "negotiation_requested"];
+  if (!validStatuses.includes(quote.status)) {
+    return { ok: false, error: "Só é possível fechar venda de orçamentos aprovados." };
+  }
 
   const { data: existing } = await supabase
     .from("sales")
@@ -38,8 +43,11 @@ export async function closeSale(input: CloseSaleInput) {
     .maybeSingle();
   if (existing) return { ok: false, error: "Este orçamento já virou venda." };
 
-  // recalcula no server (não confia nos números do client)
-  const calc = computeSale(input);
+  // item 4: usa o total do banco, ignora grossCents do client
+  const grossCents = quote.total_cents;
+
+  // recalcula no server com o valor real do orçamento
+  const calc = computeSale({ ...input, grossCents });
   if (!calc.ok) return { ok: false, error: calc.reason };
 
   // cria a venda
@@ -51,7 +59,7 @@ export async function closeSale(input: CloseSaleInput) {
       quote_id: quote.id,
       status: "won",
       total_cents: calc.netCents,
-      gross_cents: input.grossCents,
+      gross_cents: grossCents,
       discount_percent: input.discountPercent,
       discount_cents: calc.discountCents,
       net_cents: calc.netCents,
