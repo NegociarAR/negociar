@@ -53,31 +53,42 @@ export async function getSession() {
   };
 }
 
+import { unstable_cache } from "next/cache";
+
 export async function getEntitlements(): Promise<Entitlements | null> {
   const session = await getSession();
   if (!session?.companyId) return null;
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("plan_id, plans(id, name, modules, limits)")
-    .eq("company_id", session.companyId)
-    .in("status", ["active", "trialing"])
-    .limit(1)
-    .maybeSingle();
+  const companyId = session.companyId;
+  const cached = unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan_id, plans(id, name, modules, limits)")
+        .eq("company_id", companyId)
+        .in("status", ["active", "trialing"])
+        .limit(1)
+        .maybeSingle();
 
-  const plan = (data as { plans?: unknown } | null)?.plans as
-    | { id: string; name: string; modules: PlanModules; limits: PlanLimits }
-    | undefined;
+      const plan = (data as { plans?: unknown } | null)?.plans as
+        | { id: string; name: string; modules: PlanModules; limits: PlanLimits }
+        | undefined;
 
-  if (!plan) return null;
+      if (!plan) return null;
 
-  return {
-    planId: plan.id,
-    planName: plan.name,
-    modules: plan.modules ?? {},
-    limits: plan.limits ?? {},
-  };
+      return {
+        planId: plan.id,
+        planName: plan.name,
+        modules: plan.modules ?? {},
+        limits: plan.limits ?? {},
+      };
+    },
+    [`entitlements-${companyId}`],
+    { revalidate: 30 },
+  );
+
+  return cached();
 }
 
 export function hasModule(ent: Entitlements | null, key: ModuleKey): boolean {

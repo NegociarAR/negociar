@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { Topbar } from "@/components/topbar";
@@ -10,6 +11,30 @@ import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
 import type { ModuleKey } from "@/lib/entitlements/types";
 
+// Cache da empresa (60s) — nome não muda a cada request
+const getCachedCompany = unstable_cache(
+  async (companyId: string) => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("companies")
+      .select("name")
+      .eq("id", companyId)
+      .maybeSingle();
+    return data;
+  },
+  ["company-name"],
+  { revalidate: 60 },
+);
+
+// Cache dos entitlements (60s) — plano não muda a cada request
+const getCachedEntitlements = unstable_cache(
+  async (companyId: string) => {
+    return getEntitlements();
+  },
+  ["entitlements"],
+  { revalidate: 60 },
+);
+
 export default async function AppLayout({
   children,
 }: {
@@ -18,40 +43,29 @@ export default async function AppLayout({
   const session = await getSession();
   if (!session) redirect("/login");
   if (!session.companyId) redirect("/configuracoes");
+  if (session.status !== "active") redirect("/status");
 
-  if (session.status !== "active") {
-    redirect("/status");
-  }
-
-  const ent = await getEntitlements();
-
-  const supabase = await createClient();
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name")
-    .eq("id", session.companyId)
-    .maybeSingle();
-
-  // mapa de módulos liberados
-  const moduleKeys: ModuleKey[] = ["clientes", "precifica", "orcamentos", "teams"];
-  const modules: Record<string, boolean> = {};
-  for (const k of moduleKeys) modules[k] = hasModule(ent, k);
-
-  // contadores dinâmicos da navegação
-  const [fu, openQuotes, overdue] = await Promise.all([
+  // tudo em paralelo — sem waterfall
+  const [ent, company, fu, openQuotes, overdue] = await Promise.all([
+    getCachedEntitlements(session.companyId),
+    getCachedCompany(session.companyId),
     followupCounts(),
     countOpenQuotes(),
     overdueCount(),
   ]);
+
+  const moduleKeys: ModuleKey[] = ["clientes", "precifica", "orcamentos", "teams"];
+  const modules: Record<string, boolean> = {};
+  for (const k of moduleKeys) modules[k] = hasModule(ent, k);
+
   const badges = {
     followups: fu.overdue + fu.today,
     openQuotes,
     receivables: overdue,
   };
 
-  // bottom-nav e quick actions continuam com a lista achatada filtrada
   const items = NAV_ITEMS.filter((i) => !i.module || hasModule(ent, i.module));
-  const quick = QUICK_ACTIONS.filter((a) => !a.module || hasModule(ent, a.module));
+  const quick = QUICK_ACTIONS?.filter((a) => !a.module || hasModule(ent, a.module)) ?? [];
 
   return (
     <div className="flex min-h-dvh">

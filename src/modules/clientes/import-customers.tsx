@@ -46,7 +46,7 @@ export function ImportCustomers() {
         setParsed(null);
         setFileName("");
       } else {
-        setResult("Não foi possível importar.");
+        setResult(res.error ?? "Não foi possível importar.");
       }
     });
   }

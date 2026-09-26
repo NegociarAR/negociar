@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/entitlements";
+import { requireModule } from "@/lib/entitlements";
 import { computeSale, type SaleInput } from "./sale-calc";
 
 export interface CloseSaleInput extends SaleInput {
@@ -17,7 +17,7 @@ export interface CloseSaleInput extends SaleInput {
 // Fecha a venda de um orçamento aprovado: grava sales + parcelas.
 // Idempotente por quote_id (índice único evita duplicar).
 export async function closeSale(input: CloseSaleInput) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   const supabase = await createClient();

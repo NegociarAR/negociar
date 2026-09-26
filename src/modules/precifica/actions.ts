@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession, getEntitlements, checkLimit } from "@/lib/entitlements";
+import { requireModule, getEntitlements, checkLimit } from "@/lib/entitlements";
 import { countProducts } from "@/modules/produtos/queries";
 import { computePrice } from "./calc";
 
@@ -15,7 +15,7 @@ export async function savePriceCalculation(params: {
   commissionPercent: number;
   marginPercent: number;
 }) {
-  const session = await getSession();
+  const session = await requireModule("precifica");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   const r = computePrice(params);
@@ -57,7 +57,7 @@ export async function saveAsProduct(params: {
   commissionPercent: number;
   marginPercent: number;
 }) {
-  const session = await getSession();
+  const session = await requireModule("precifica");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
   if (!params.name.trim()) return { ok: false, error: "Informe um nome." };
 

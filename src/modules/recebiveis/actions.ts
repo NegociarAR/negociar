@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/entitlements";
+import { requireModule } from "@/lib/entitlements";
 
 export async function markReceived(installmentId: string) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return;
   const supabase = await createClient();
   await supabase
@@ -18,7 +18,7 @@ export async function markReceived(installmentId: string) {
 }
 
 export async function undoReceived(installmentId: string) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return;
   const supabase = await createClient();
   await supabase

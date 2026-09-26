@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession } from "@/lib/entitlements";
+import { requireModule } from "@/lib/entitlements";
 
 // data de hoje + N dias em YYYY-MM-DD
 function addDaysISO(days: number) {
@@ -13,7 +13,7 @@ function addDaysISO(days: number) {
 }
 
 export async function createFollowup(formData: FormData) {
-  const session = await getSession();
+  const session = await requireModule("clientes");
   if (!session?.companyId) redirect("/login");
 
   const customer_id = String(formData.get("customer_id") ?? "");
@@ -40,7 +40,7 @@ export async function createFollowup(formData: FormData) {
 }
 
 export async function completeFollowup(id: string) {
-  const session = await getSession();
+  const session = await requireModule("clientes");
   if (!session?.companyId) return;
   const supabase = await createClient();
   await supabase
@@ -52,7 +52,7 @@ export async function completeFollowup(id: string) {
 }
 
 export async function cancelFollowup(id: string) {
-  const session = await getSession();
+  const session = await requireModule("clientes");
   if (!session?.companyId) return;
   const supabase = await createClient();
   await supabase
@@ -73,6 +73,9 @@ export async function suggestFollowupForQuote(params: {
   quoteNumber: number;
   days: number;
 }) {
+  // exportada de arquivo "use server" = endpoint público; confere o chamador
+  const session = await requireModule("orcamentos");
+  if (session?.companyId !== params.companyId) return;
   const supabase = await createClient();
   await supabase.from("followups").insert({
     company_id: params.companyId,
@@ -86,7 +89,7 @@ export async function suggestFollowupForQuote(params: {
 
 // Reabre um follow-up concluído (volta a pendente).
 export async function reopenFollowup(id: string) {
-  const session = await getSession();
+  const session = await requireModule("clientes");
   if (!session?.companyId) return;
   const supabase = await createClient();
   await supabase

@@ -35,9 +35,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  // getSession() lê o JWT do cookie localmente (sem roundtrip ao servidor Auth).
+  // getUser() valida com o servidor — mais seguro mas mais lento.
+  // Para navegação comum, getSession() é suficiente.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some(

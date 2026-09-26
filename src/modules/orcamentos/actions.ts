@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession, getEntitlements, checkLimit } from "@/lib/entitlements";
+import { requireModule, getEntitlements, checkLimit } from "@/lib/entitlements";
 import { suggestFollowupForQuote } from "@/modules/followups/actions";
 
 export interface ItemInput {
@@ -54,7 +54,7 @@ async function bumpQuoteUsage(companyId: string) {
 }
 
 export async function createQuote(input: CreateQuoteInput) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   if (!input.customer_id) return { ok: false, error: "Selecione um cliente." };
@@ -145,7 +145,7 @@ export async function createQuote(input: CreateQuoteInput) {
 }
 
 export async function deleteQuote(id: string) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) redirect("/login");
   const supabase = await createClient();
   await supabase
@@ -160,7 +160,7 @@ export async function deleteQuote(id: string) {
 // Marca o orçamento como enviado (draft -> sent), registra timeline
 // e cria um follow-up automático "retornar em N dias" (0 = não criar).
 export async function sendQuote(id: string, followupDays = 3) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
   const supabase = await createClient();
 
@@ -213,7 +213,7 @@ export async function sendQuote(id: string, followupDays = 3) {
 
 // Muda status manualmente pelo dono (ex.: marcar negociação, aprovado).
 export async function updateQuoteStatus(id: string, status: string) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
   const valid = ["draft", "sent", "viewed", "negotiation", "approved", "rejected"];
   if (!valid.includes(status)) return { ok: false, error: "Status inválido." };
@@ -307,7 +307,7 @@ export async function editQuote(
     notes: string | null;
   },
 ) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
   const supabase = await createClient();
 
@@ -346,7 +346,7 @@ export async function editQuote(
 
 // Cancela um orçamento (encerra sem apagar — vira histórico).
 export async function cancelQuote(id: string) {
-  const session = await getSession();
+  const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false };
   const supabase = await createClient();
   await supabase

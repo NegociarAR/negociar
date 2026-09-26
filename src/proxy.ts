@@ -7,7 +7,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // tudo, exceto estáticos e imagens
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Exclui:
+     * - _next/static  (arquivos estáticos do Next)
+     * - _next/image   (otimização de imagens)
+     * - brand/        (logos NEGOCIAR — assets públicos)
+     * - favicon, ícones e extensões de imagem/fonte
+     */
+    "/((?!_next/static|_next/image|brand/|favicon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2|woff|ttf|otf)$).*)",
   ],
 };

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSession, getEntitlements, checkLimit } from "@/lib/entitlements";
+import { requireModule, getEntitlements, checkLimit } from "@/lib/entitlements";
 import { parseBRLToCents } from "@/lib/format";
 import { countProducts } from "./queries";
 
@@ -21,7 +21,7 @@ function parseForm(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
-  const session = await getSession();
+  const session = await requireModule("precifica");
   if (!session?.companyId) redirect("/login");
 
   const ent = await getEntitlements();
@@ -45,7 +45,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const session = await getSession();
+  const session = await requireModule("precifica");
   if (!session?.companyId) redirect("/login");
 
   const fields = parseForm(formData);
@@ -64,7 +64,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
-  const session = await getSession();
+  const session = await requireModule("precifica");
   if (!session?.companyId) redirect("/login");
   const supabase = await createClient();
   await supabase
