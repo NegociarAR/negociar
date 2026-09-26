@@ -138,3 +138,24 @@ export async function checkModuleAccess(key: ModuleKey): Promise<boolean> {
   const ent = await getEntitlements();
   return hasModule(ent, key);
 }
+
+// Usado nas Server Actions: garante sessao + empresa + (opcionalmente)
+// modulo contratado. Lanca erro em vez de redirect. Retorna a session
+// ja com companyId garantido (nao-nulo).
+export async function requireModule(moduleKey?: ModuleKey) {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Sessao expirada. Faca login novamente.");
+  }
+  if (!session.companyId) {
+    throw new Error("Nenhuma empresa vinculada a esta conta.");
+  }
+  if (moduleKey) {
+    const allowed = await checkModuleAccess(moduleKey);
+    if (!allowed) {
+      throw new Error("Este recurso nao esta incluido no seu plano atual.");
+    }
+  }
+  return session;
+}
+
