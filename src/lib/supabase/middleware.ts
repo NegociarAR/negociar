@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Rotas públicas (sem sessão). Todo o resto exige login.
 const PUBLIC_PATHS = [
+  "/",
   "/login",
   "/signup",
   "/recuperar",
@@ -56,7 +57,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && (path === "/login" || path === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
 
-// origin do request atual (dev: localhost; prod: domínio real) — sem hardcode
 async function originUrl() {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host")!;
@@ -22,12 +21,8 @@ export async function signIn(formData: FormData) {
   if (error) {
     redirect(`/login?erro=${encodeURIComponent("E-mail ou senha inválidos.")}`);
   }
-  // admin vai ao painel; cliente ao app
-  const { data: admin } = await supabase
-    .from("platform_admins")
-    .select("user_id")
-    .maybeSingle();
-  redirect(admin ? "/admin" : "/dashboard");
+  // Redireciona pra rota decisora — ela avalia admin/normal/status
+  redirect("/");
 }
 
 export async function signUp(formData: FormData) {
@@ -41,15 +36,13 @@ export async function signUp(formData: FormData) {
     password,
     options: {
       data: { company_name: companyName },
-      emailRedirectTo: `${await originUrl()}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${await originUrl()}/auth/callback`,
     },
   });
   if (error) {
     redirect(`/signup?erro=${encodeURIComponent(error.message)}`);
   }
 
-  // Alerta ao dono da plataforma: nova empresa aguardando aprovação.
-  // Não bloqueia o cadastro se o e-mail falhar.
   const adminTo = process.env.ADMIN_ALERT_EMAIL ?? "suitebueno@gmail.com";
   await sendEmail({
     to: adminTo,
@@ -60,13 +53,10 @@ export async function signUp(formData: FormData) {
            <p>Acesse o painel para aprovar o acesso.</p>`,
   });
 
-  // trigger no banco cria empresa + owner + assinatura free.
-  // Se a confirmação de e-mail estiver ligada, session vem null:
-  // o usuário precisa confirmar antes de logar.
   if (!data.session) {
     redirect("/login?confirme=1");
   }
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function resetPassword(formData: FormData) {
