@@ -1,15 +1,7 @@
 import Link from "next/link";
 import { listCompanies, companyCounts, pendingPlanRequests } from "@/modules/admin/queries";
-import { StatusBadge } from "@/modules/admin/status-badge";
 import { PlanRequestActions } from "@/modules/admin/plan-request-actions";
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+import { AdminCompanyRow } from "@/modules/admin/admin-company-row";
 
 export default async function AdminHomePage({
   searchParams,
@@ -93,25 +85,7 @@ export default async function AdminHomePage({
             </thead>
             <tbody>
               {companies.map((c) => (
-                <tr key={c.id} className="border-b last:border-0">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/empresas/${c.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted">
-                    {c.plan_name ?? "—"}
-                  </td>
-                  <td className="tabular px-4 py-3 text-muted">
-                    {fmtDate(c.created_at)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={c.status} />
-                  </td>
-                </tr>
+                <AdminCompanyRow key={c.id} c={c} />
               ))}
             </tbody>
           </table>

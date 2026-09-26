@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
 
 // origin do request atual (dev: localhost; prod: domínio real) — sem hardcode
 async function originUrl() {
@@ -46,6 +47,19 @@ export async function signUp(formData: FormData) {
   if (error) {
     redirect(`/signup?erro=${encodeURIComponent(error.message)}`);
   }
+
+  // Alerta ao dono da plataforma: nova empresa aguardando aprovação.
+  // Não bloqueia o cadastro se o e-mail falhar.
+  const adminTo = process.env.ADMIN_ALERT_EMAIL ?? "suitebueno@gmail.com";
+  await sendEmail({
+    to: adminTo,
+    subject: `Nova empresa aguardando aprovação: ${companyName || email}`,
+    html: `<p>Um novo cadastro entrou na plataforma e está aguardando aprovação.</p>
+           <p><strong>Empresa:</strong> ${companyName || "(sem nome)"}<br/>
+           <strong>E-mail:</strong> ${email}</p>
+           <p>Acesse o painel para aprovar o acesso.</p>`,
+  });
+
   // trigger no banco cria empresa + owner + assinatura free.
   // Se a confirmação de e-mail estiver ligada, session vem null:
   // o usuário precisa confirmar antes de logar.
@@ -59,7 +73,7 @@ export async function resetPassword(formData: FormData) {
   const email = String(formData.get("email"));
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await originUrl()}/auth/callback?next=/dashboard`,
+    redirectTo: `${await originUrl()}/auth/callback?type=recovery`,
   });
   redirect(`/recuperar?enviado=1`);
 }
