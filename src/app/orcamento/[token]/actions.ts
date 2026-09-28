@@ -5,6 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 // Registra que a página pública foi vista (sent -> viewed), via RPC.
 export async function markQuoteViewed(token: string) {
   const supabase = await createClient();
+  // dono logado enxerga o orçamento via RLS pelo token: não conta como visualização
+  const { data: own } = await supabase
+    .from("quotes")
+    .select("id")
+    .eq("public_token", token)
+    .maybeSingle();
+  if (own) return;
   await supabase.rpc("mark_public_quote_viewed", { p_token: token });
 }
 

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { brl } from "@/lib/format";
 import { PublicDecision } from "./decision";
-import { markQuoteViewed } from "./actions";
+import { MarkViewed } from "./mark-viewed";
 
 interface QuoteItem {
   description: string;
@@ -23,8 +23,6 @@ export default async function PublicQuotePage({
 }) {
   const { token } = await params;
   const supabase = await createClient();
-
-  await markQuoteViewed(token);
 
   const { data, error } = await supabase.rpc("get_public_quote", { p_token: token });
   if (error || !data) notFound();
@@ -55,6 +53,7 @@ export default async function PublicQuotePage({
 
   return (
     <div className="min-h-dvh bg-background py-8">
+      <MarkViewed token={token} />
       <div className="mx-auto max-w-2xl px-4">
         <div className="overflow-hidden rounded-2xl border bg-surface shadow-card">
 

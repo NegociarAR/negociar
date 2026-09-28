@@ -1,48 +1,39 @@
-import { getSession } from "@/lib/entitlements";
+import { getSession, getEntitlements, hasModule } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
 import { brl } from "@/lib/format";
+import { currentPeriod, brtHour } from "@/lib/period";
 import { followupCounts } from "@/modules/followups/queries";
 import { receivableTotals } from "@/modules/recebiveis/queries";
 import Link from "next/link";
 
-async function metrics(companyId: string) {
+type Mods = { clientes: boolean; precifica: boolean; orcamentos: boolean };
+
+// Só consulta o que o plano libera. Vendas = mês corrente (Brasília).
+async function metrics(companyId: string, mods: Mods) {
   const supabase = await createClient();
+  const monthStart = `${currentPeriod()}-01T00:00:00-03:00`;
 
-  const [customers, quotes, negotiation, sales] = await Promise.all([
-    supabase
-      .from("customers")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", companyId)
-      .is("deleted_at", null),
-    supabase
-      .from("quotes")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", companyId)
-      .is("deleted_at", null)
-      .in("status", ["sent", "viewed", "negotiation"]),
-    supabase
-      .from("quotes")
-      .select("total_cents")
-      .eq("company_id", companyId)
-      .in("status", ["sent", "viewed", "negotiation"]),
-    supabase
-      .from("sales")
-      .select("total_cents")
-      .eq("company_id", companyId)
-      .eq("status", "won"),
-  ]);
+  const customers = mods.clientes
+    ? supabase.from("customers").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).is("deleted_at", null).then((r) => r.count ?? 0)
+    : Promise.resolve(0);
+  const products = mods.precifica
+    ? supabase.from("products").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).is("deleted_at", null).then((r) => r.count ?? 0)
+    : Promise.resolve(0);
+  const openQuotes = mods.orcamentos
+    ? supabase.from("quotes").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).is("deleted_at", null)
+        .in("status", ["sent", "viewed", "negotiation", "negotiation_requested"]).then((r) => r.count ?? 0)
+    : Promise.resolve(0);
+  const salesValue = mods.orcamentos
+    ? supabase.from("sales").select("total_cents")
+        .eq("company_id", companyId).eq("status", "won").gte("sold_at", monthStart)
+        .then((r) => r.data?.reduce((s, x) => s + (x.total_cents ?? 0), 0) ?? 0)
+    : Promise.resolve(0);
 
-  const negValue =
-    negotiation.data?.reduce((s, r) => s + (r.total_cents ?? 0), 0) ?? 0;
-  const salesValue =
-    sales.data?.reduce((s, r) => s + (r.total_cents ?? 0), 0) ?? 0;
-
-  return {
-    customers: customers.count ?? 0,
-    openQuotes: quotes.count ?? 0,
-    negValue,
-    salesValue,
-  };
+  const [c, p, o, v] = await Promise.all([customers, products, openQuotes, salesValue]);
+  return { customers: c, products: p, openQuotes: o, salesValue: v };
 }
 
 function Card({ label, value, href }: { label: string; value: string; href?: string }) {
@@ -64,15 +55,25 @@ function Card({ label, value, href }: { label: string; value: string; href?: str
 
 export default async function DashboardPage() {
   const session = await getSession();
-  const m = session?.companyId
-    ? await metrics(session.companyId)
-    : { customers: 0, openQuotes: 0, negValue: 0, salesValue: 0 };
-  const fu = await followupCounts();
-  const rec = await receivableTotals();
+  const ent = await getEntitlements();
+  const mods: Mods = {
+    clientes: hasModule(ent, "clientes"),
+    precifica: hasModule(ent, "precifica"),
+    orcamentos: hasModule(ent, "orcamentos"),
+  };
 
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const [m, fu, rec] = await Promise.all([
+    session?.companyId
+      ? metrics(session.companyId, mods)
+      : Promise.resolve({ customers: 0, products: 0, openQuotes: 0, salesValue: 0 }),
+    mods.clientes ? followupCounts() : Promise.resolve({ overdue: 0, today: 0 }),
+    mods.orcamentos
+      ? receivableTotals()
+      : Promise.resolve({ toReceive: 0, overdue: 0, receivedThisMonth: 0 }),
+  ]);
+
+  const hour = brtHour();
+  const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
   return (
     <div className="space-y-6">
@@ -80,10 +81,11 @@ export default async function DashboardPage() {
         <h1 className="text-xl font-semibold">{greeting}</h1>
       </header>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card label="Clientes" value={String(m.customers)} href="/clientes" />
-        <Card label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />
-        <Card label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />
-        <Card label="Vendas" value={brl(m.salesValue)} href="/relatorios" />
+        {mods.clientes && <Card label="Clientes" value={String(m.customers)} href="/clientes" />}
+        {mods.precifica && <Card label="Produtos" value={String(m.products)} href="/produtos" />}
+        {mods.orcamentos && <Card label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />}
+        {mods.orcamentos && <Card label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />}
+        {mods.orcamentos && <Card label="Vendas no mês" value={brl(m.salesValue)} href="/relatorios" />}
       </div>
 
       {(fu.overdue > 0 || fu.today > 0) && (

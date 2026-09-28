@@ -1,5 +1,6 @@
 "use server";
 
+import { currentPeriod } from "@/lib/period";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +27,7 @@ export interface CreateQuoteInput {
 // incrementa contador mensal via RPC (atômica, sem race condition, sem escrita direta)
 async function bumpQuoteUsage(companyId: string) {
   const supabase = await createClient();
-  const period = new Date().toISOString().slice(0, 7);
+  const period = currentPeriod();
   await supabase.rpc("increment_usage", {
     p_company: companyId,
     p_metric: "quotes_created",
@@ -47,7 +48,7 @@ export async function createQuote(input: CreateQuoteInput) {
 
   // GATE: limite mensal de orçamentos
   const ent = await getEntitlements();
-  const period = new Date().toISOString().slice(0, 7);
+  const period = currentPeriod();
   const supabase = await createClient();
   const { data: usage } = await supabase
     .from("usage_counters")

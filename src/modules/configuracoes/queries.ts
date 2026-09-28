@@ -1,3 +1,4 @@
+import { currentPeriod } from "@/lib/period";
 import { createClient } from "@/lib/supabase/server";
 import { getSession, getEntitlements } from "@/lib/entitlements";
 
@@ -58,7 +59,7 @@ export async function getPlanInfo(): Promise<PlanInfo | null> {
   if (!sub || !plan) return null;
 
   // contagens de uso
-  const period = new Date().toISOString().slice(0, 7);
+  const period = currentPeriod();
   const [customers, products, quotes] = await Promise.all([
     supabase.from("customers").select("id", { count: "exact", head: true })
       .eq("company_id", session.companyId).is("deleted_at", null),

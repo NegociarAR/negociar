@@ -1,3 +1,4 @@
+import { currentPeriod } from "@/lib/period";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/entitlements";
 
@@ -114,7 +115,7 @@ export async function countQuotesThisMonth(): Promise<number> {
   const session = await getSession();
   if (!session?.companyId) return 0;
   const supabase = await createClient();
-  const period = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+  const period = currentPeriod(); // 'YYYY-MM'
   const { data } = await supabase
     .from("usage_counters")
     .select("count")
