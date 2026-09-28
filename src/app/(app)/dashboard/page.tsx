@@ -4,6 +4,8 @@ import { brl } from "@/lib/format";
 import { currentPeriod, brtHour } from "@/lib/period";
 import { receivableTotals } from "@/modules/recebiveis/queries";
 import { attentionToday } from "@/modules/clientes/attention";
+import { myBilling } from "@/modules/configuracoes/billing";
+import { fmtDay } from "@/lib/dates";
 import Link from "next/link";
 
 type Mods = { clientes: boolean; precifica: boolean; orcamentos: boolean };
@@ -77,7 +79,7 @@ export default async function DashboardPage() {
   };
   const companyId = session?.companyId ?? null;
 
-  const [m, att, rec] = await Promise.all([
+  const [m, att, rec, billing] = await Promise.all([
     companyId
       ? metrics(companyId, mods)
       : Promise.resolve({ customers: 0, leads: 0, opportunities: 0, products: 0, openQuotes: 0, salesValue: 0 }),
@@ -87,6 +89,7 @@ export default async function DashboardPage() {
     mods.orcamentos
       ? receivableTotals()
       : Promise.resolve({ toReceive: 0, overdue: 0, receivedThisMonth: 0 }),
+    companyId ? myBilling(companyId) : Promise.resolve(null),
   ]);
 
   const hour = brtHour();
@@ -97,6 +100,21 @@ export default async function DashboardPage() {
       <header>
         <h1 className="text-xl font-semibold">{greeting}</h1>
       </header>
+
+      {/* mensalidade do NEGOCIAR em atraso */}
+      {billing?.alert && (
+        <div className="space-y-1 rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card">
+          <p>
+            <strong className="text-danger">Mensalidade em atraso:</strong>{" "}
+            {billing.alert.count} título(s), {brl(billing.alert.cents)}.{" "}
+            {billing.alert.pastGrace
+              ? "O prazo de tolerância terminou e o acesso pode ser suspenso a qualquer momento."
+              : `Regularize até ${fmtDay(billing.alert.regularizeUntil)} para evitar a suspensão do acesso.`}
+          </p>
+          {billing.instructions && <p className="whitespace-pre-line text-xs text-muted">{billing.instructions}</p>}
+          <Link href="/configuracoes" className="text-xs font-medium underline">Ver faturas</Link>
+        </div>
+      )}
 
       {/* atenção hoje: quem eu preciso acompanhar */}
       {(att.items.length > 0 || att.noAction > 0) && (

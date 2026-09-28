@@ -5,6 +5,8 @@ import { LogoUpload } from "@/modules/configuracoes/logo-upload";
 import { PlanPicker } from "@/modules/configuracoes/plan-picker";
 import { signOut } from "@/app/(auth)/actions";
 import { brl } from "@/lib/format";
+import { myBilling } from "@/modules/configuracoes/billing";
+import { fmtDay } from "@/lib/dates";
 
 function UsageRow({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
@@ -33,6 +35,7 @@ export default async function ConfiguracoesPage() {
   const plan = await getPlanInfo();
   const plans = await listPlans();
   const pending = await pendingPlanRequest();
+  const billing = company ? await myBilling(company.id) : null;
 
   return (
     <div className="space-y-6">
@@ -78,6 +81,33 @@ export default async function ConfiguracoesPage() {
               pending={pending}
             />
           </div>
+        </div>
+      )}
+
+      {billing && billing.invoices.length > 0 && (
+        <div className="space-y-3 rounded-lg border bg-surface p-5 shadow-card">
+          <h2 className="text-sm font-semibold">Faturas do NEGOCIAR</h2>
+          <ul className="divide-y text-sm">
+            {billing.invoices.map((i) => (
+              <li key={i.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <span className="font-medium">{i.description ?? `Mensalidade ${i.reference_period}`}</span>
+                  <span className="text-muted"> · vence {fmtDay(i.due_date)}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className="tabular">{brl(i.amount_cents)}</span>
+                  {i.state === "paid" && <span className="text-xs text-muted">Paga</span>}
+                  {i.state === "open" && <span className="rounded-full border px-2 py-0.5 text-xs text-muted">A vencer</span>}
+                  {i.state === "overdue" && (
+                    <span className="rounded-full border border-danger/30 bg-danger/10 px-2 py-0.5 text-xs text-danger">Atrasada {i.overdue_days}d</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {billing.instructions && billing.invoices.some((i) => i.state !== "paid") && (
+            <p className="whitespace-pre-line rounded-md bg-subtle p-3 text-xs text-muted">{billing.instructions}</p>
+          )}
         </div>
       )}
 

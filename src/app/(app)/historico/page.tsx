@@ -10,7 +10,7 @@ const TABS: { key: string; label: string; types?: string[] }[] = [
   { key: "vendas", label: "Vendas", types: ["sales"] },
   { key: "produtos", label: "Produtos", types: ["products", "product_categories"] },
   { key: "followups", label: "Follow-ups", types: ["followups"] },
-  { key: "empresa", label: "Empresa e plano", types: ["companies", "subscriptions", "plan_requests"] },
+  { key: "empresa", label: "Empresa e plano", types: ["companies", "subscriptions", "plan_requests", "billing_invoices"] },
 ];
 const PAGE = 50;
 

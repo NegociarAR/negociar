@@ -6,6 +6,7 @@ export const TABLE_LABELS: Record<string, string> = {
   products: "Produto", product_categories: "Categoria", price_calculations: "Cálculo de preço",
   sales: "Venda", sale_installments: "Parcela", followups: "Follow-up", companies: "Empresa",
   subscriptions: "Plano", plan_requests: "Solicitação de plano", platform_admins: "Administrador", system: "Sistema",
+  billing_invoices: "Fatura", platform_settings: "Configuração da plataforma",
 };
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -28,6 +29,8 @@ const FIELD_LABELS: Record<string, string> = {
   discount_percent: "Desconto %", signed_at: "Assinado em", signed_doc_url: "Proposta assinada", plan_id: "Plano",
   requested_plan_id: "Plano solicitado", current_plan_id: "Plano atual", current_period_end: "Fim do período",
   logo_url: "Logo", reason: "Motivo", kind: "Tipo de ação", deleted_at: "Excluído em", completed_at: "Concluído em",
+  reference_period: "Referência", paid_amount_cents: "Valor pago", suspended_reason: "Motivo da suspensão",
+  suspended_at: "Suspensa em", grace_days: "Tolerância (dias)", payment_instructions: "Instruções de pagamento",
   tax_percent: "Imposto %", margin_percent: "Margem %", commission_percent: "Comissão %",
   suggested_price_cents: "Preço sugerido", stale_yellow_days: "Dias p/ alerta", stale_red_days: "Dias p/ esquecido",
 };
@@ -54,9 +57,9 @@ const DICT: Record<string, string> = {
   superseded: "Substituído", lead: "Lead", opportunity: "Oportunidade", customer: "Cliente", lost: "Perdido",
   avista: "À vista", cartao: "Cartão", pix: "Pix", boleto: "Boleto", transferencia: "Transferência",
   cheque: "Cheque", outro: "Outro", nenhum: "Nenhum", nota_fiscal: "Nota fiscal", recibo: "Recibo",
-  contrato: "Contrato", pf: "Pessoa física", pj: "Pessoa jurídica",
+  contrato: "Contrato", open: "Em aberto", paid: "Pago", billing: "Financeiro", pf: "Pessoa física", pj: "Pessoa jurídica",
 };
-const DICT_FIELDS = new Set(["status", "stage", "payment_method", "doc_type", "person_type"]);
+const DICT_FIELDS = new Set(["status", "stage", "payment_method", "doc_type", "person_type", "suspended_reason"]);
 
 export function formatValue(field: string, v: unknown): string {
   if (v === null || v === undefined || v === "") return "—";
