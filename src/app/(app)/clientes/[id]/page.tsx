@@ -12,6 +12,8 @@ import { StageControls } from "@/modules/clientes/stage-controls";
 import { NextAction } from "@/modules/clientes/next-action";
 import { RecoveryAction } from "@/modules/clientes/recovery-action";
 import { pendingActionsFor } from "@/modules/clientes/attention";
+import { listPeople } from "@/modules/clientes/people";
+import { PeopleCard } from "@/modules/clientes/people-card";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -28,7 +30,11 @@ export default async function ClienteDetailPage({
   const { id } = await params;
   const customer = await getCustomer(id);
   if (!customer) notFound();
-  const [activities, actions] = await Promise.all([getCustomerActivities(id), pendingActionsFor(id)]);
+  const [activities, actions, people] = await Promise.all([
+    getCustomerActivities(id),
+    pendingActionsFor(id),
+    listPeople(id),
+  ]);
   const stage = customer.stage ?? "customer";
   const name = customerDisplayName(customer);
 
@@ -95,6 +101,8 @@ export default async function ClienteDetailPage({
           </div>
         )}
       </div>
+
+      <PeopleCard customerId={id} people={people} />
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* dados */}
