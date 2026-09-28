@@ -8,6 +8,10 @@ import {
 import { customerDisplayName } from "@/modules/clientes/types";
 import { maskCPF, maskCNPJ } from "@/lib/br-validators";
 import { CustomerStatusSelect } from "@/modules/clientes/status-select";
+import { StageControls } from "@/modules/clientes/stage-controls";
+import { NextAction } from "@/modules/clientes/next-action";
+import { RecoveryAction } from "@/modules/clientes/recovery-action";
+import { pendingActionsFor } from "@/modules/clientes/attention";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -24,7 +28,9 @@ export default async function ClienteDetailPage({
   const { id } = await params;
   const customer = await getCustomer(id);
   if (!customer) notFound();
-  const activities = await getCustomerActivities(id);
+  const [activities, actions] = await Promise.all([getCustomerActivities(id), pendingActionsFor(id)]);
+  const stage = customer.stage ?? "customer";
+  const name = customerDisplayName(customer);
 
   const rows: [string, string | null][] =
     customer.person_type === "pf"
@@ -63,6 +69,32 @@ export default async function ClienteDetailPage({
           </Link>
         </div>
       </header>
+
+      {/* funil comercial + próxima ação */}
+      <div className="space-y-5 rounded-lg border bg-surface p-5">
+        <StageControls
+          customerId={id}
+          stage={stage}
+          source={customer.lead_source ?? null}
+          estimatedValueCents={customer.estimated_value_cents ?? null}
+          lostReason={customer.lost_reason ?? null}
+        />
+        <div className="border-t pt-4">
+          <NextAction customerId={id} actions={actions} />
+        </div>
+        {(stage === "lead" || stage === "opportunity") && (
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted">Mensagem pronta no WhatsApp</p>
+            <RecoveryAction
+              customerId={id}
+              customerName={name}
+              whatsapp={customer.whatsapp ?? customer.phone}
+              defaultMessage={`Olá, ${name.split(" ")[0]}! Tudo bem? Passando para saber se conseguiu avaliar nossa conversa. Fico à disposição para ajudar.`}
+              label="Abrir mensagem"
+            />
+          </div>
+        )}
+      </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* dados */}

@@ -12,3 +12,8 @@ export function brtHour(date = new Date()): number {
     new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).format(date),
   );
 }
+
+// data de hoje (YYYY-MM-DD) em Brasília
+export function todayBRT(date = new Date()): string {
+  return date.toLocaleDateString("en-CA", { timeZone: TZ });
+}

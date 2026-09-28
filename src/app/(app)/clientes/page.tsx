@@ -14,6 +14,8 @@ import { ImportCustomers } from "@/modules/clientes/import-customers";
 import { ThresholdSettings } from "@/modules/clientes/threshold-settings";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
+import { LeadForm } from "@/modules/clientes/lead-form";
+import { STAGE_TABS, STAGE_LABELS, STAGE_BADGE, type Stage } from "@/modules/clientes/stages";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
   { key: "recent", label: "Contato recente" },
@@ -32,12 +34,29 @@ function recoveryMessage(name: string, status: RelStatus): string {
 export default async function ClientesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; limite?: string; sort?: CustomerSort; f?: string }>;
+  searchParams: Promise<{ q?: string; limite?: string; sort?: CustomerSort; f?: string; etapa?: string }>;
 }) {
-  const { q, limite, sort, f } = await searchParams;
+  const { q, limite, sort, f, etapa } = await searchParams;
   const activeSort = sort ?? "recent";
   await autoInactivateStale();
-  const { customers } = await listCustomersSorted(q, activeSort);
+  const { customers: allCustomers } = await listCustomersSorted(q, activeSort);
+  const stageOf = (c: { stage?: Stage }): Stage => c.stage ?? "customer";
+  const stageFilter = (["lead", "opportunity", "customer", "lost"] as const).find((x) => x === etapa) ?? null;
+  const stageCounts: Record<string, number> = {
+    all: allCustomers.length,
+    lead: allCustomers.filter((c) => stageOf(c) === "lead").length,
+    opportunity: allCustomers.filter((c) => stageOf(c) === "opportunity").length,
+    customer: allCustomers.filter((c) => stageOf(c) === "customer").length,
+    lost: allCustomers.filter((c) => stageOf(c) === "lost").length,
+  };
+  const customers = stageFilter ? allCustomers.filter((c) => stageOf(c) === stageFilter) : allCustomers;
+  const fHref = (v?: string) => {
+    const p = new URLSearchParams();
+    if (stageFilter) p.set("etapa", stageFilter);
+    if (v) p.set("f", v);
+    const qs = p.toString();
+    return `/clientes${qs ? `?${qs}` : ""}`;
+  };
   const used = await countCustomers();
   const ent = await getEntitlements();
   const gate = checkLimit(ent, "customers", used);
@@ -68,11 +87,12 @@ export default async function ClientesPage({
         <div>
           <h1 className="text-xl font-semibold">Clientes</h1>
           <p className="text-sm text-muted">
-            {gate.limit === null ? `${used} clientes` : `${used}/${gate.limit} clientes`}
+            {gate.limit === null ? `${used} contatos` : `${used}/${gate.limit} contatos`}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <ImportCustomers />
+          <LeadForm />
           <Link href="/clientes/novo">
             <Button>+ Novo cliente</Button>
           </Link>
@@ -86,12 +106,34 @@ export default async function ClientesPage({
         </div>
       )}
 
+      {/* etapas comerciais */}
+      <div className="flex gap-1 overflow-x-auto border-b text-sm">
+        {STAGE_TABS.map((t) => {
+          const p = new URLSearchParams();
+          if (q) p.set("q", q);
+          if (t.key !== "all") p.set("etapa", t.key);
+          const qs = p.toString();
+          const active = (stageFilter ?? "all") === t.key;
+          return (
+            <Link
+              key={t.key}
+              href={`/clientes${qs ? `?${qs}` : ""}`}
+              className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 ${
+                active ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"
+              }`}
+            >
+              {t.label} <span className="tabular text-xs text-muted">{stageCounts[t.key]}</span>
+            </Link>
+          );
+        })}
+      </div>
+
       {/* stats clicáveis */}
       <div className="grid grid-cols-4 gap-2">
-        <StatCard label="Todos" value={stats.all} active={!f} href="/clientes" />
-        <StatCard label="Em dia" value={stats.active} active={f === "active"} href="/clientes?f=active" />
-        <StatCard label="Sem retorno" value={stats.stale} active={f === "stale"} href="/clientes?f=stale" />
-        <StatCard label="Esquecidos" value={stats.forgotten} active={f === "forgotten"} href="/clientes?f=forgotten" />
+        <StatCard label="Todos" value={stats.all} active={!f} href={fHref()} />
+        <StatCard label="Em dia" value={stats.active} active={f === "active"} href={fHref("active")} />
+        <StatCard label="Sem retorno" value={stats.stale} active={f === "stale"} href={fHref("stale")} />
+        <StatCard label="Esquecidos" value={stats.forgotten} active={f === "forgotten"} href={fHref("forgotten")} />
       </div>
 
       <ThresholdSettings yellowDays={t.yellowDays} redDays={t.redDays} />
@@ -100,6 +142,7 @@ export default async function ClientesPage({
       <div className="flex flex-wrap items-center gap-2">
         <form className="flex flex-1 gap-2">
           {f && <input type="hidden" name="f" value={f} />}
+          {stageFilter && <input type="hidden" name="etapa" value={stageFilter} />}
           <input type="hidden" name="sort" value={activeSort} />
           <input
             name="q"
@@ -114,6 +157,7 @@ export default async function ClientesPage({
             const params = new URLSearchParams();
             if (q) params.set("q", q);
             if (f) params.set("f", f);
+            if (stageFilter) params.set("etapa", stageFilter);
             params.set("sort", sOpt.key);
             return (
               <Link
@@ -149,6 +193,11 @@ export default async function ClientesPage({
                     <div className="flex items-center gap-2">
                       <span className="truncate font-medium">{name}</span>
                       <RelBadge status={status} />
+                      {stageOf(c) !== "customer" && (
+                        <span className={`rounded-full border px-2 py-0.5 text-xs ${STAGE_BADGE[stageOf(c)]}`}>
+                          {STAGE_LABELS[stageOf(c)]}
+                        </span>
+                      )}
                       {c.status === "inactive" && (
                         <span className="rounded-full border px-2 py-0.5 text-xs text-muted">
                           Inativo
@@ -165,7 +214,7 @@ export default async function ClientesPage({
                       {d != null && ` · há ${d} dia${d === 1 ? "" : "s"}`}
                     </p>
                   </Link>
-                  {status !== "active" && c.status !== "blocked" && (
+                  {status !== "active" && c.status !== "blocked" && stageOf(c) !== "lost" && (
                     <RecoveryAction
                       customerId={c.id}
                       customerName={name}

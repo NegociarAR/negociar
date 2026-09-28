@@ -294,6 +294,7 @@ export async function autoInactivateStale() {
     .select("id, created_at")
     .eq("company_id", session.companyId)
     .eq("status", "active")
+    .eq("stage", "customer")
     .is("deleted_at", null);
   if (!actives || actives.length === 0) return;
 

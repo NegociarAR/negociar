@@ -10,11 +10,13 @@ export function RecoveryAction({
   customerName,
   whatsapp,
   defaultMessage,
+  label = "Recuperar",
 }: {
   customerId: string;
   customerName: string;
   whatsapp: string | null;
   defaultMessage: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState(defaultMessage);
@@ -38,7 +40,7 @@ export function RecoveryAction({
         onClick={() => setOpen(true)}
         className="text-sm font-medium text-foreground underline"
       >
-        Recuperar
+        {label}
       </button>
     );
   }
@@ -54,7 +56,7 @@ export function RecoveryAction({
       <div className="flex gap-2">
         <button
           onClick={send}
-          className="h-9 rounded-lg bg-foreground px-4 text-sm font-medium text-background"
+          className="h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg"
         >
           Enviar WhatsApp
         </button>

@@ -8,6 +8,8 @@ import {
   PERIOD_LABELS,
   type Period,
 } from "@/modules/relatorios/queries";
+import { getLeadFunnel } from "@/modules/relatorios/lead-queries";
+import { getEntitlements, hasModule } from "@/lib/entitlements";
 import { STATUS_LABELS } from "@/modules/orcamentos/types";
 import { brl } from "@/lib/format";
 
@@ -30,11 +32,13 @@ export default async function RelatoriosPage({
   const { periodo } = await searchParams;
   const period: Period = periodo && ["month", "quarter", "year"].includes(periodo) ? periodo : "month";
 
-  const [funnel, revenue, reasons, receivables] = await Promise.all([
+  const showLeads = hasModule(await getEntitlements(), "clientes");
+  const [funnel, revenue, reasons, receivables, leads] = await Promise.all([
     getFunnel(period),
     getRevenue(period),
     getReasons(period),
     getReceivablesSummary(period),
+    showLeads ? getLeadFunnel(period) : Promise.resolve(null),
   ]);
 
   const maxFunnel = Math.max(1, ...Object.values(funnel.byStatus));
@@ -108,6 +112,40 @@ export default async function RelatoriosPage({
           {funnel.total === 0 && <p className="text-sm text-muted">Sem orçamentos no período.</p>}
         </div>
       </section>
+
+      {/* LEADS -> CLIENTES */}
+      {leads && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Leads e conversão</h2>
+            <span className="text-sm text-muted">
+              Conversão: <strong className="text-foreground">{leads.rate.toFixed(0)}%</strong> ({leads.converted} de {leads.leads})
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Card label="Leads no período" value={String(leads.leads)} />
+            <Card label="Viraram cliente" value={String(leads.converted)} />
+            <Card label="Perdidos" value={String(leads.lost)} />
+          </div>
+          <div className="rounded-lg border bg-surface p-5 shadow-card">
+            {leads.bySource.length === 0 ? (
+              <p className="text-sm text-muted">Nenhum lead no período.</p>
+            ) : (
+              <ul className="space-y-2">
+                {leads.bySource.map((s) => (
+                  <li key={s.source} className="flex items-center gap-3 text-sm">
+                    <span className="w-36 shrink-0 text-muted">{s.source}</span>
+                    <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${s.total ? (s.converted / s.total) * 100 : 0}%` }} />
+                    </div>
+                    <span className="tabular w-16 shrink-0 text-right">{s.converted}/{s.total}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 3. MOTIVOS */}
       <section className="space-y-3">

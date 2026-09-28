@@ -18,6 +18,12 @@ export interface Customer {
   zip_code: string | null;
   last_contact_at: string | null;
   status: "active" | "inactive" | "blocked";
+  stage: "lead" | "opportunity" | "customer" | "lost";
+  lead_source: string | null;
+  estimated_value_cents: number | null;
+  converted_at: string | null;
+  lost_at: string | null;
+  lost_reason: string | null;
   contact_name: string | null;
   notes: string | null;
   created_at: string;
