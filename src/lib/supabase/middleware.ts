@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/orcamento",
   "/auth",
   "/status",
+  "/api/cron",  // autenticado pelo próprio segredo do cron, não por sessão
 ];
 
 export async function updateSession(request: NextRequest) {
