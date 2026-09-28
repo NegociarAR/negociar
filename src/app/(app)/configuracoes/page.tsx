@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCompanyData, getPlanInfo, listPlans, pendingPlanRequest } from "@/modules/configuracoes/queries";
 import { CompanyForm } from "@/modules/configuracoes/company-form";
 import { LogoUpload } from "@/modules/configuracoes/logo-upload";
@@ -79,6 +80,17 @@ export default async function ConfiguracoesPage() {
           </div>
         </div>
       )}
+
+      <Link
+        href="/historico"
+        className="flex items-center justify-between rounded-lg border bg-surface p-5 shadow-card transition hover:bg-subtle"
+      >
+        <div>
+          <h2 className="text-sm font-semibold">Histórico de alterações</h2>
+          <p className="text-xs text-muted">Quem alterou o quê e quando: clientes, orçamentos, vendas e produtos.</p>
+        </div>
+        <span className="text-muted">Ver →</span>
+      </Link>
 
       {/* Sair (mobile) */}
       <form action={signOut}>

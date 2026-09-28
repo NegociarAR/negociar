@@ -9,6 +9,7 @@ import { QuoteActions } from "@/modules/orcamentos/quote-actions";
 import { CloseSaleForm } from "@/modules/vendas/close-sale-form";
 import { CancelQuoteButton } from "@/modules/orcamentos/cancel-button";
 import { brl } from "@/lib/format";
+import { HistoryPanel } from "@/modules/historico/history-panel";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
@@ -198,6 +199,8 @@ export default async function OrcamentoDetailPage({
           O fechamento de venda fica disponível após a aprovação do orçamento.
         </p>
       )}
+
+      <HistoryPanel entityIds={[quote.id, ...(existingSale ? [existingSale.id] : [])]} />
     </div>
   );
 }

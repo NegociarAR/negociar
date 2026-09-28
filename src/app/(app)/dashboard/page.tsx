@@ -22,7 +22,7 @@ async function metrics(companyId: string, mods: Mods) {
 
   const products = mods.precifica
     ? supabase.from("products").select("id", { count: "exact", head: true })
-        .eq("company_id", companyId).is("deleted_at", null).then((r) => r.count ?? 0)
+        .eq("company_id", companyId).is("deleted_at", null).eq("is_active", true).then((r) => r.count ?? 0)
     : Promise.resolve(0);
   const openQuotes = mods.orcamentos
     ? supabase.from("quotes").select("id", { count: "exact", head: true })

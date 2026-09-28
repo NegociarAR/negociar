@@ -4,6 +4,8 @@ import { getProduct, getPriceHistory } from "@/modules/produtos/queries";
 import { updateProduct } from "@/modules/produtos/actions";
 import { ProductForm } from "@/modules/produtos/product-form";
 import { brl } from "@/lib/format";
+import { ProductStatusSelect } from "@/modules/produtos/product-status-select";
+import { HistoryPanel } from "@/modules/historico/history-panel";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
@@ -27,8 +29,16 @@ export default async function EditarProdutoPage({
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <BackLink href="/produtos" label="Voltar para produtos" />
-      <h1 className="text-xl font-semibold">{product.name}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-xl font-semibold">{product.name}</h1>
+        <ProductStatusSelect
+          productId={id}
+          active={(product as { is_active?: boolean }).is_active !== false}
+        />
+      </div>
       <ProductForm action={action} initial={product} submitLabel="Salvar alterações" erro={erro} />
+
+      <HistoryPanel entityIds={[id]} />
 
       {history.length > 0 && (
         <div className="space-y-2 rounded-lg border bg-surface p-5">

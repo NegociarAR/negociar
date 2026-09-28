@@ -11,6 +11,7 @@ const TITLES: { prefix: string; label: string }[] = [
   { prefix: "/produtos", label: "Produtos" },
   { prefix: "/follow-ups", label: "Follow-ups" },
   { prefix: "/configuracoes", label: "Configurações" },
+  { prefix: "/historico", label: "Histórico" },
 ];
 
 export function Topbar() {

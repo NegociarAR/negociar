@@ -14,6 +14,7 @@ import { RecoveryAction } from "@/modules/clientes/recovery-action";
 import { pendingActionsFor } from "@/modules/clientes/attention";
 import { listPeople } from "@/modules/clientes/people";
 import { PeopleCard } from "@/modules/clientes/people-card";
+import { HistoryPanel } from "@/modules/historico/history-panel";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -140,6 +141,8 @@ export default async function ClienteDetailPage({
           )}
         </div>
       </div>
+
+      <HistoryPanel entityIds={[id]} />
     </div>
   );
 }

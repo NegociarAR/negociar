@@ -143,6 +143,7 @@ export async function quoteFormOptions() {
     supabase
       .from("products")
       .select("id, name, current_price_cents, cost_cents")
+      .eq("is_active", true)
       .eq("company_id", session.companyId)
       .is("deleted_at", null)
       .order("name"),
