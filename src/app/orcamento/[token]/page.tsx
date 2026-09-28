@@ -176,6 +176,10 @@ export default async function PublicQuotePage({
               <div className="rounded-xl border p-4 text-center text-sm text-muted">
                 Esta versão foi revisada. Solicite o link atualizado.
               </div>
+            ) : quote.status === "canceled" ? (
+              <div className="rounded-xl border p-4 text-center text-sm text-muted">
+                Este orçamento foi cancelado. Entre em contato caso tenha dúvidas.
+              </div>
             ) : null}
           </div>
 
