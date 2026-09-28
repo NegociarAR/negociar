@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createLead } from "./lead-actions";
@@ -13,6 +14,7 @@ export function LeadForm() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +33,7 @@ export function LeadForm() {
         setError(res.error === "limit" ? "Limite de contatos do plano atingido." : res.error);
         return;
       }
+      toast("Lead cadastrado.");
       setOpen(false);
       router.refresh();
     });

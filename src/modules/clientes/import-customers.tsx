@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import * as XLSX from "xlsx";
 import { importParsedCustomers } from "./actions";
@@ -12,6 +13,7 @@ export function ImportCustomers() {
   const [fileName, setFileName] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   // baixa uma planilha-modelo com os cabeçalhos e uma linha de exemplo
   function downloadTemplate() {
@@ -43,10 +45,12 @@ export function ImportCustomers() {
       const res = await importParsedCustomers(parsed.valid);
       if (res.ok) {
         setResult(`${res.imported} cliente(s) importado(s) com sucesso.`);
+        toast(`${res.imported} cliente(s) importado(s) com sucesso.`);
         setParsed(null);
         setFileName("");
       } else {
-        setResult(res.error ?? "Não foi possível importar.");
+        setResult("Não foi possível importar.");
+        toast("Não foi possível importar.", "error");
       }
     });
   }

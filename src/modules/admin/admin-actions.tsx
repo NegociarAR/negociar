@@ -1,5 +1,7 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   approveCompany,
   suspendCompany,
@@ -7,6 +9,10 @@ import {
   changePlan,
   setPeriodEnd,
 } from "@/modules/admin/actions";
+import { useToast } from "@/components/toast";
+
+const btn = "h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle disabled:opacity-50";
+const btnPrimary = "h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
 
 export function AdminActions({
   companyId,
@@ -21,44 +27,64 @@ export function AdminActions({
   periodEnd: string | null;
   plans: { id: string; name: string }[];
 }) {
-  const approve = approveCompany.bind(null, companyId);
-  const suspend = suspendCompany.bind(null, companyId);
-  const reactivate = reactivateCompany.bind(null, companyId);
+  const router = useRouter();
+  const toast = useToast();
+  const [pending, startTransition] = useTransition();
+
+  // executa a ação, avisa o resultado e atualiza a tela
+  function run(fn: () => Promise<unknown>, okMsg: string) {
+    startTransition(async () => {
+      try {
+        await fn();
+        toast(okMsg);
+        router.refresh();
+      } catch (e) {
+        toast(e instanceof Error && e.message ? e.message : "Não foi possível salvar. Tente novamente.", "error");
+      }
+    });
+  }
+
+  function savePlan(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const id = String(new FormData(e.currentTarget).get("plan_id"));
+    const name = plans.find((p) => p.id === id)?.name ?? id;
+    run(() => changePlan(companyId, id), `Plano alterado para ${name}.`);
+  }
+
+  function savePeriod(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const v = String(new FormData(e.currentTarget).get("period_end") ?? "");
+    const msg = v ? `Vencimento atualizado para ${new Date(v + "T00:00:00").toLocaleDateString("pt-BR")}.` : "Vencimento removido.";
+    run(() => setPeriodEnd(companyId, v), msg);
+  }
 
   return (
     <div className="space-y-5">
       {/* status */}
       <div className="flex flex-wrap gap-2">
         {status === "pending" && (
-          <form action={approve}>
-            <button className="h-9 rounded-lg bg-foreground px-4 text-sm font-medium text-background">
-              Aprovar acesso
-            </button>
-          </form>
+          <button disabled={pending} className={btnPrimary} onClick={() => run(() => approveCompany(companyId), "Acesso aprovado.")}>
+            Aprovar acesso
+          </button>
         )}
         {status === "active" && (
-          <form action={suspend}>
-            <button className="h-9 rounded-lg border px-4 text-sm font-medium">
-              Suspender
-            </button>
-          </form>
+          <button
+            disabled={pending}
+            className={btn}
+            onClick={() => confirm("Suspender o acesso desta empresa?") && run(() => suspendCompany(companyId), "Empresa suspensa.")}
+          >
+            Suspender
+          </button>
         )}
         {status === "suspended" && (
-          <form action={reactivate}>
-            <button className="h-9 rounded-lg bg-foreground px-4 text-sm font-medium text-background">
-              Reativar
-            </button>
-          </form>
+          <button disabled={pending} className={btnPrimary} onClick={() => run(() => reactivateCompany(companyId), "Empresa reativada.")}>
+            Reativar
+          </button>
         )}
       </div>
 
       {/* plano */}
-      <form
-        action={async (fd: FormData) => {
-          await changePlan(companyId, String(fd.get("plan_id")));
-        }}
-        className="flex items-end gap-2"
-      >
+      <form onSubmit={savePlan} className="flex items-end gap-2">
         <label className="space-y-1.5">
           <span className="block text-sm font-medium">Plano</span>
           <select
@@ -73,22 +99,15 @@ export function AdminActions({
             ))}
           </select>
         </label>
-        <button className="h-9 rounded-lg border px-4 text-sm font-medium">
-          Salvar plano
+        <button disabled={pending} className={btn}>
+          {pending ? "Salvando..." : "Salvar plano"}
         </button>
       </form>
 
       {/* vencimento */}
-      <form
-        action={async (fd: FormData) => {
-          await setPeriodEnd(companyId, String(fd.get("period_end")));
-        }}
-        className="flex items-end gap-2"
-      >
+      <form onSubmit={savePeriod} className="flex items-end gap-2">
         <label className="space-y-1.5">
-          <span className="block text-sm font-medium">
-            Vencimento (pagamento)
-          </span>
+          <span className="block text-sm font-medium">Vencimento (pagamento)</span>
           <input
             type="date"
             name="period_end"
@@ -96,8 +115,8 @@ export function AdminActions({
             className="h-9 rounded-lg border bg-surface px-3 text-sm"
           />
         </label>
-        <button className="h-9 rounded-lg border px-4 text-sm font-medium">
-          Salvar vencimento
+        <button disabled={pending} className={btn}>
+          {pending ? "Salvando..." : "Salvar vencimento"}
         </button>
       </form>
     </div>

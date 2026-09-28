@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { computePrice, computeReverse } from "./calc";
@@ -44,6 +45,7 @@ export function PriceCalculator({
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const toast = useToast();
   const [productName, setProductName] = useState(productName_ ?? "");
   const [showNameInput, setShowNameInput] = useState(false);
 
@@ -117,7 +119,9 @@ export function PriceCalculator({
         commissionPercent: num(commission),
         marginPercent: num(margin),
       });
-      setSaved(res.ok ? "Preço salvo no produto." : res.error ?? "Erro ao salvar.");
+      const m = res.ok ? "Preço salvo no produto." : res.error ?? "Erro ao salvar.";
+      setSaved(m);
+      toast(m, res.ok ? "success" : "error");
     });
   }
 
@@ -139,11 +143,14 @@ export function PriceCalculator({
       });
       if (res.ok) {
         setSaved("Produto criado com o preço calculado.");
+        toast("Produto criado com o preço calculado.");
         setShowNameInput(false);
       } else if (res.error === "limit") {
         setSaved("Limite de produtos do plano atingido.");
+        toast("Limite de produtos do plano atingido.", "error");
       } else {
         setSaved(res.error ?? "Erro ao salvar.");
+        toast(res.error ?? "Erro ao salvar.", "error");
       }
     });
   }

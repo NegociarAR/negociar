@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { generateInvoices, createInvoice, saveBillingSettings } from "./billing-actions";
@@ -27,12 +28,15 @@ export function BillingTools({
   const [panel, setPanel] = useState<Panel>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function run(fn: () => Promise<{ ok: boolean; error?: string; n?: number }>, okMsg: (n?: number) => string) {
     setMsg(null);
     startTransition(async () => {
       const res = await fn();
-      setMsg(res.ok ? okMsg(res.n) : (res as { error: string }).error);
+      const m = res.ok ? okMsg(res.n) : (res as { error: string }).error;
+      setMsg(m);
+      toast(m, res.ok ? "success" : "error");
       if (res.ok) router.refresh();
     });
   }

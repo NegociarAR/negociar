@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { blockCompany, unblockCompany, blockEligible } from "./billing-actions";
@@ -9,6 +10,7 @@ const btn = "h-7 rounded-md border px-2.5 text-xs font-medium transition hover:b
 export function AccessButton({ companyId, name, blocked }: { companyId: string; name: string; blocked: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   return (
     <button
       className={blocked ? btn : `${btn} border-danger/40 text-danger`}
@@ -17,7 +19,9 @@ export function AccessButton({ companyId, name, blocked }: { companyId: string; 
         const q = blocked ? `Reativar o acesso de ${name}?` : `Bloquear o acesso de ${name}? Os usuários serão levados à tela de acesso suspenso.`;
         if (!confirm(q)) return;
         startTransition(async () => {
-          await (blocked ? unblockCompany(companyId) : blockCompany(companyId));
+          const res = await (blocked ? unblockCompany(companyId) : blockCompany(companyId));
+          if (res.ok) toast(blocked ? `${name} foi reativada.` : `${name} foi bloqueada.`);
+          else toast(res.error, "error");
           router.refresh();
         });
       }}
@@ -30,6 +34,7 @@ export function AccessButton({ companyId, name, blocked }: { companyId: string; 
 export function BlockEligibleButton({ count }: { count: number }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [msg, setMsg] = useState<string | null>(null);
   return (
     <span className="flex items-center gap-3">
@@ -40,7 +45,9 @@ export function BlockEligibleButton({ count }: { count: number }) {
           if (!confirm(`Bloquear ${count} empresa(s) com título em atraso além da tolerância?`)) return;
           startTransition(async () => {
             const res = await blockEligible();
-            setMsg(res.ok ? `${res.n ?? 0} empresa(s) bloqueada(s).` : res.error);
+            const m = res.ok ? `${res.n ?? 0} empresa(s) bloqueada(s).` : res.error;
+            setMsg(m);
+            toast(m, res.ok ? "success" : "error");
             router.refresh();
           });
         }}

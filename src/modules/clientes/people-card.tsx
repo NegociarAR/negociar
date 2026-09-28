@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { savePerson, makePrimary, deletePerson } from "./people-actions";
@@ -27,6 +28,7 @@ function PersonForm({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -45,8 +47,10 @@ function PersonForm({
       });
       if (!res.ok) {
         setError(res.error);
+        toast(res.error, "error");
         return;
       }
+      toast(person ? "Contato atualizado." : "Contato adicionado.");
       onDone();
       router.refresh();
     });
@@ -92,12 +96,14 @@ function PersonForm({
 export function PeopleCard({ customerId, people }: { customerId: string; people: Person[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
 
-  function run(fn: () => Promise<unknown>) {
+  function run(fn: () => Promise<{ ok: boolean; error?: string }>, okMsg: string) {
     startTransition(async () => {
-      await fn();
+      const res = await fn();
+      toast(res.ok ? okMsg : (res.error ?? "Não foi possível concluir."), res.ok ? "success" : "error");
       router.refresh();
     });
   }
@@ -105,7 +111,7 @@ export function PeopleCard({ customerId, people }: { customerId: string; people:
   function remove(p: Person) {
     const extra = p.is_primary && people.length > 1 ? " Outro contato passará a ser o principal." : "";
     if (!confirm(`Excluir ${p.name}?${extra}`)) return;
-    run(() => deletePerson(p.id, customerId));
+    run(() => deletePerson(p.id, customerId), "Contato excluído.");
   }
 
   return (
@@ -154,7 +160,7 @@ export function PeopleCard({ customerId, people }: { customerId: string; people:
               </div>
               <div className="flex items-center gap-3 text-xs">
                 {!p.is_primary && (
-                  <button disabled={pending} onClick={() => run(() => makePrimary(p.id, customerId))} className="font-medium underline disabled:opacity-50">
+                  <button disabled={pending} onClick={() => run(() => makePrimary(p.id, customerId), "Contato principal alterado.")} className="font-medium underline disabled:opacity-50">
                     Tornar principal
                   </button>
                 )}

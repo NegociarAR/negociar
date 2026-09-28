@@ -1,17 +1,24 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { setProductActive } from "./status-actions";
 
 export function ProductStatusSelect({ productId, active }: { productId: string; active: boolean }) {
   const [value, setValue] = useState(active);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function change(next: boolean) {
     setValue(next);
     startTransition(async () => {
       const res = await setProductActive(productId, next);
-      if (!res.ok) setValue(!next);
+      if (!res.ok) {
+        setValue(!next);
+        toast(res.error, "error");
+      } else {
+        toast(next ? "Produto ativado." : "Produto inativado. Ele não aparece mais nos orçamentos.");
+      }
     });
   }
 

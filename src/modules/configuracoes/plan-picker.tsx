@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { requestPlanChange } from "./actions";
 import { brl } from "@/lib/format";
@@ -22,6 +23,7 @@ export function PlanPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [busy, startTransition] = useTransition();
+  const toast = useToast();
   const [result, setResult] = useState<string | null>(null);
 
   if (pending) {
@@ -48,7 +50,9 @@ export function PlanPicker({
     setResult(null);
     startTransition(async () => {
       const res = await requestPlanChange(planId);
-      setResult(res.ok ? "Solicitação enviada! Em breve entraremos em contato." : res.error ?? "Erro.");
+      const m = res.ok ? "Solicitação enviada! Em breve entraremos em contato." : res.error ?? "Erro.";
+      setResult(m);
+      toast(m, res.ok ? "success" : "error");
       if (res.ok) setOpen(false);
     });
   }

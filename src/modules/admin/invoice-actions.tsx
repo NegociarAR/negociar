@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { markPaid, reopenInvoice, cancelInvoice } from "./billing-actions";
@@ -11,14 +12,21 @@ const btn = "h-7 rounded-md border px-2.5 text-xs font-medium transition hover:b
 export function InvoiceActions({ id, status, amountCents }: { id: string; status: "open" | "paid" | "canceled"; amountCents: number }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
+  function run(fn: () => Promise<{ ok: boolean; error?: string }>, okMsg: string) {
     setError(null);
     startTransition(async () => {
       const res = await fn();
-      if (!res.ok) { setError((res as { error: string }).error); return; }
+      if (!res.ok) {
+        const msg = (res as { error: string }).error;
+        setError(msg);
+        toast(msg, "error");
+        return;
+      }
+      toast(okMsg);
       setPaying(false);
       router.refresh();
     });
@@ -28,14 +36,14 @@ export function InvoiceActions({ id, status, amountCents }: { id: string; status
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const v = String(f.get("amount") ?? "").trim();
-    run(() => markPaid(id, String(f.get("method")), v ? parseBRLToCents(v) : null, String(f.get("date") ?? "") || null));
+    run(() => markPaid(id, String(f.get("method")), v ? parseBRLToCents(v) : null, String(f.get("date") ?? "") || null), "Pagamento registrado.");
   }
 
   if (status === "canceled") return null;
 
   if (status === "paid") {
     return (
-      <button className={btn} disabled={pending} onClick={() => confirm("Desfazer a baixa deste título?") && run(() => reopenInvoice(id))}>
+      <button className={btn} disabled={pending} onClick={() => confirm("Desfazer a baixa deste título?") && run(() => reopenInvoice(id), "Título reaberto.")}>
         Reabrir
       </button>
     );
@@ -64,7 +72,7 @@ export function InvoiceActions({ id, status, amountCents }: { id: string; status
   return (
     <div className="flex items-center justify-end gap-1.5">
       <button className={btn} disabled={pending} onClick={() => setPaying(true)}>Registrar pagamento</button>
-      <button className={`${btn} text-muted`} disabled={pending} onClick={() => confirm("Cancelar este título?") && run(() => cancelInvoice(id))}>Cancelar</button>
+      <button className={`${btn} text-muted`} disabled={pending} onClick={() => confirm("Cancelar este título?") && run(() => cancelInvoice(id), "Título cancelado.")}>Cancelar</button>
       {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   );

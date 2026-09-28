@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { setCompanyLogo } from "./actions";
@@ -14,6 +15,7 @@ export function LogoUpload({
 }) {
   const [url, setUrl] = useState<string | null>(currentUrl);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
 
   async function onFile(file: File) {
@@ -31,6 +33,7 @@ export function LogoUpload({
       .upload(path, file, { upsert: true, cacheControl: "3600" });
     if (upErr) {
       setError("Falha no upload: " + upErr.message);
+      toast("Falha no upload da logo.", "error");
       return;
     }
     const { data } = supabase.storage.from("company-logos").getPublicUrl(path);
@@ -40,6 +43,7 @@ export function LogoUpload({
     startTransition(async () => {
       await setCompanyLogo(publicUrl);
       setUrl(publicUrl);
+      toast("Logo atualizada. Ela já aparece nos novos orçamentos.");
     });
   }
 
@@ -47,6 +51,7 @@ export function LogoUpload({
     startTransition(async () => {
       await setCompanyLogo(null);
       setUrl(null);
+      toast("Logo removida.");
     });
   }
 

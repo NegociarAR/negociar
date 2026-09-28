@@ -1,5 +1,6 @@
 "use client";
 
+import { FlashOnSubmit } from "@/components/toast";
 import { useState } from "react";
 import { Field, Input, Button } from "@/components/ui/form";
 import { DocInput, CepInput } from "@/components/ui/br-inputs";
@@ -22,6 +23,7 @@ export function CustomerForm({
 
   return (
     <form action={action} className="space-y-5">
+      <FlashOnSubmit message={initial ? "Alterações do cliente salvas." : "Cliente cadastrado."} />
       {erro && (
         <p className="rounded-lg border-l-2 border-foreground bg-subtle px-3 py-2 text-sm">
           {erro}

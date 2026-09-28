@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { updateCompany } from "./actions";
 import { Field, Input, Button } from "@/components/ui/form";
@@ -9,12 +10,15 @@ import type { CompanyData } from "./queries";
 export function CompanyForm({ company }: { company: CompanyData }) {
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function action(formData: FormData) {
     setSaved(null);
     startTransition(async () => {
       const res = await updateCompany(formData);
-      setSaved(res.ok ? "Dados salvos." : res.error ?? "Erro ao salvar.");
+      const m = res.ok ? "Dados da empresa salvos." : res.error ?? "Erro ao salvar.";
+      setSaved(m);
+      toast(m, res.ok ? "success" : "error");
     });
   }
 

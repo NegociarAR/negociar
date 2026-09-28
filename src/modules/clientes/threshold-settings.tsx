@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { setRelThresholds } from "./actions";
 
@@ -15,12 +16,14 @@ export function ThresholdSettings({
   const [red, setRed] = useState(redDays);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function save() {
     setSaved(false);
     startTransition(async () => {
       await setRelThresholds(yellow, red);
       setSaved(true);
+      toast("Prazos de acompanhamento salvos.");
     });
   }
 
@@ -73,7 +76,7 @@ export function ThresholdSettings({
         <button
           onClick={save}
           disabled={pending}
-          className="h-9 rounded-lg bg-foreground px-4 font-medium text-background disabled:opacity-50"
+          className="h-9 rounded-lg bg-primary px-4 font-medium text-primary-fg disabled:opacity-50"
         >
           {pending ? "Salvando..." : "Salvar"}
         </button>

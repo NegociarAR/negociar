@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { computeSale } from "./sale-calc";
@@ -49,6 +50,7 @@ export function CloseSaleForm({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   const num = (v: string) => {
     const n = parseFloat((v || "").replace(",", "."));
@@ -111,8 +113,13 @@ export function CloseSaleForm({
         notes: notes || null,
       });
 
-      if (res.ok) setDone(true);
-      else setError(res.error ?? "Erro ao fechar venda.");
+      if (res.ok) {
+        setDone(true);
+        toast("Venda registrada com sucesso.");
+      } else {
+        setError(res.error ?? "Erro ao fechar venda.");
+        toast(res.error ?? "Erro ao fechar venda.", "error");
+      }
     });
   }
 

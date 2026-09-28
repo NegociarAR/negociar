@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { pdf } from "@react-pdf/renderer";
 import { QuotePdf, type QuotePdfData } from "./quote-pdf";
@@ -19,6 +20,7 @@ export function QuoteActions({
   whatsapp: string | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [copied, setCopied] = useState(false);
   const [days, setDays] = useState(3);
 
@@ -41,6 +43,7 @@ export function QuoteActions({
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl);
+    toast("Link do orçamento copiado.");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -74,7 +77,7 @@ export function QuoteActions({
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-subtle p-3">
           <button
             onClick={() =>
-              startTransition(() => sendQuote(quoteId, days).then(() => {}))
+              startTransition(() => sendQuote(quoteId, days).then(() => { toast("Orçamento marcado como enviado."); }))
             }
             disabled={pending}
             className={btnPrimary}

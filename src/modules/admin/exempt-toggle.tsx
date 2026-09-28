@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setBillingExempt } from "./billing-actions";
@@ -8,6 +9,7 @@ import { setBillingExempt } from "./billing-actions";
 export function ExemptToggle({ companyId, exempt }: { companyId: string; exempt: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [msg, setMsg] = useState<string | null>(null);
 
   function toggle() {
@@ -25,9 +27,10 @@ export function ExemptToggle({ companyId, exempt }: { companyId: string; exempt:
       const res = await setBillingExempt(companyId, next);
       if (!res.ok) {
         setMsg(res.error);
+        toast(res.error, "error");
         return;
       }
-      if (next && res.n) setMsg(`${res.n} título(s) em aberto cancelado(s).`);
+      toast(next ? `Empresa isenta de cobrança.${res.n ? ` ${res.n} título(s) em aberto cancelado(s).` : ""}` : "Isenção removida. A empresa volta a ser cobrada.");
       router.refresh();
     });
   }

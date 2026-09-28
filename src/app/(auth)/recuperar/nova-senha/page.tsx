@@ -1,5 +1,6 @@
 "use client";
 
+import { flash } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -33,6 +34,7 @@ export default function NovaSenhaPage() {
         setError(error.message);
         return;
       }
+      flash("Senha alterada com sucesso.");
       router.push("/dashboard");
     });
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { flash } from "@/components/toast";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuote, editQuote, type ItemInput } from "./actions";
@@ -155,11 +156,17 @@ export function QuoteBuilder({
     startTransition(async () => {
       if (initial) {
         const res = await editQuote(initial.quoteId, payload);
-        if (res.ok) router.push(`/orcamentos/${res.id}`);
+        if (res.ok) {
+          flash(initial.isRevision ? "Nova versão do orçamento criada." : "Orçamento atualizado.");
+          router.push(`/orcamentos/${res.id}`);
+        }
         else setError(res.error ?? "Erro ao salvar.");
       } else {
         const res = await createQuote(payload);
-        if (res.ok) router.push(`/orcamentos/${res.id}`);
+        if (res.ok) {
+          flash("Orçamento criado.");
+          router.push(`/orcamentos/${res.id}`);
+        }
         else setError(res.error ?? "Erro ao salvar.");
       }
     });

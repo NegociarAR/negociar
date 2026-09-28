@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "./globals.css";
+import { ToastProvider } from "@/components/toast";
 
 export const metadata: Metadata = {
   title: "NEGOCIAR",
@@ -27,7 +28,9 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

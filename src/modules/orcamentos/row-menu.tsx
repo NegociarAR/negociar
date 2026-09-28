@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
@@ -18,6 +19,7 @@ export function QuoteRowMenu({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function QuoteRowMenu({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!confirm("Cancelar este orçamento?")) return;
-                startTransition(() => cancelQuote(quoteId).then(() => router.refresh()));
+                startTransition(() => cancelQuote(quoteId).then(() => { toast("Orçamento cancelado."); router.refresh(); }));
               }}
               disabled={pending}
               className="block w-full rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-subtle disabled:opacity-50"

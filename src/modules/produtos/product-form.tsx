@@ -1,3 +1,4 @@
+import { FlashOnSubmit } from "@/components/toast";
 import { Field, Input, Button } from "@/components/ui/form";
 import type { Product } from "@/modules/produtos/queries";
 import { brl } from "@/lib/format";
@@ -15,6 +16,7 @@ export function ProductForm({
 }) {
   return (
     <form action={action} className="space-y-5">
+      <FlashOnSubmit message={initial ? "Produto atualizado." : "Produto cadastrado."} />
       {erro && (
         <p className="rounded-lg border-l-2 border-foreground bg-subtle px-3 py-2 text-sm">
           {erro}

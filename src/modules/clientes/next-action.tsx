@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { finishNextAction, scheduleNextAction } from "./lead-actions";
@@ -20,12 +21,15 @@ export function NextAction({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
   const today = todayBRT();
 
   function finish(id: string) {
     startTransition(async () => {
-      await finishNextAction(id, customerId);
+      const res = await finishNextAction(id, customerId);
+      if (res.ok) toast("Ação concluída.");
+      else toast(res.error, "error");
       router.refresh();
     });
   }
@@ -44,8 +48,10 @@ export function NextAction({
       );
       if (!res.ok) {
         setError(res.error);
+        toast(res.error, "error");
         return;
       }
+      toast("Ação agendada.");
       form.reset();
       router.refresh();
     });

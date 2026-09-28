@@ -1,10 +1,18 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changeStage, updateLeadInfo } from "./lead-actions";
 import { LEAD_SOURCES, STAGE_BADGE, STAGE_LABELS, type Stage } from "./stages";
 import { parseBRLToCents, brl } from "@/lib/format";
+
+const STAGE_MSG: Record<Stage, string> = {
+  lead: "Reaberto como lead.",
+  opportunity: "Marcado como oportunidade.",
+  customer: "Convertido em cliente.",
+  lost: "Marcado como perdido.",
+};
 
 const btn = "h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
 const btnPrimary = "h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
@@ -25,6 +33,7 @@ export function StageControls({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const [msg, setMsg] = useState<string | null>(null);
 
   function go(next: Stage) {
@@ -37,7 +46,9 @@ export function StageControls({
     if (next === "customer" && !confirm("Converter este contato em cliente?")) return;
     startTransition(async () => {
       const res = await changeStage(customerId, next, reason);
-      setMsg(res.ok ? (next === "customer" ? "Convertido em cliente." : null) : res.error);
+      if (res.ok) toast(STAGE_MSG[next]);
+      else toast(res.error, "error");
+      setMsg(res.ok ? null : res.error);
       router.refresh();
     });
   }
@@ -48,7 +59,9 @@ export function StageControls({
     const v = String(f.get("value") ?? "").trim();
     startTransition(async () => {
       const res = await updateLeadInfo(customerId, String(f.get("source") ?? ""), v ? parseBRLToCents(v) : null);
-      setMsg(res.ok ? "Salvo." : res.error);
+      if (res.ok) toast("Origem e valor potencial salvos.");
+      else toast(res.error, "error");
+      setMsg(res.ok ? null : res.error);
       router.refresh();
     });
   }

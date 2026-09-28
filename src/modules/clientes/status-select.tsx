@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/toast";
 import { useState, useTransition } from "react";
 import { setCustomerStatus } from "./actions";
 
@@ -18,10 +19,15 @@ export function CustomerStatusSelect({
 }) {
   const [value, setValue] = useState(status);
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function change(next: "active" | "inactive" | "blocked") {
     setValue(next);
-    startTransition(() => setCustomerStatus(customerId, next).then(() => {}));
+    startTransition(async () => {
+      await setCustomerStatus(customerId, next);
+      const label = { active: "Ativo", inactive: "Inativo", blocked: "Bloqueado" }[next];
+      toast(`Status do cliente alterado para ${label}.`);
+    });
   }
 
   return (

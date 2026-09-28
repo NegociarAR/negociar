@@ -1,5 +1,6 @@
 "use client";
 
+import { FlashOnSubmit } from "@/components/toast";
 import { useState } from "react";
 import { createFollowup } from "./actions";
 import { Field, Input, Button } from "@/components/ui/form";
@@ -24,6 +25,7 @@ export function NewFollowupForm({
       action={createFollowup}
       className="space-y-4 rounded-lg border bg-surface p-5"
     >
+      <FlashOnSubmit message="Follow-up criado." immediate />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Cliente">
           <select
