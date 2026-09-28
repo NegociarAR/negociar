@@ -57,6 +57,7 @@ export interface BillingOverview {
   invoices: Invoice[];
   access: CompanyAccess[];
   companies: { id: string; name: string }[];
+  exemptCount: number;
 }
 
 const BUCKETS: { label: string; min: number; max: number }[] = [
@@ -76,12 +77,12 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
   const [inv, comp, set] = await Promise.all([
     supabase
       .from("billing_invoices")
-      .select("id, company_id, reference_period, description, amount_cents, due_date, status, paid_at, paid_amount_cents, payment_method, companies(name)")
+      .select("id, company_id, reference_period, description, amount_cents, due_date, status, paid_at, paid_amount_cents, payment_method, companies(name, billing_exempt)")
       .order("due_date", { ascending: false })
       .limit(2000),
     supabase
       .from("companies")
-      .select("id, name, status, suspended_reason, subscriptions(status, current_period_end, plans(name, price_cents))")
+      .select("id, name, status, suspended_reason, billing_exempt, subscriptions(status, current_period_end, plans(name, price_cents))")
       .order("name"),
     supabase.from("platform_settings").select("grace_days, payment_instructions").maybeSingle(),
   ]);
@@ -93,11 +94,13 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
     paymentInstructions: set.data?.payment_instructions ?? null,
     metrics: { mrr: 0, payingCompanies: 0, invoicedMonth: 0, receivedMonth: 0, openCents: 0, openCount: 0, overdueCents: 0, overdueCount: 0, overdueCompanies: 0, delinquencyPct: 0 },
     aging: BUCKETS.map((b) => ({ label: b.label, cents: 0, count: 0 })),
-    invoices: [], access: [], companies: [],
+    invoices: [], access: [], companies: [], exemptCount: 0,
   };
   if (inv.error || comp.error) return { ...empty, setupNeeded: true };
 
-  const invoices: Invoice[] = (inv.data ?? []).map((r) => {
+  const invoices: Invoice[] = (inv.data ?? [])
+    .filter((r) => !(r as { companies?: { billing_exempt?: boolean } }).companies?.billing_exempt)
+    .map((r) => {
     const status = r.status as Invoice["status"];
     const overdue = status === "open" && r.due_date < today;
     return {
@@ -129,10 +132,12 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
   const base = sum(dueSoFar, (i) => i.amount_cents);
 
   type CompRow = {
-    id: string; name: string; status: string; suspended_reason: string | null;
+    id: string; name: string; status: string; suspended_reason: string | null; billing_exempt: boolean | null;
     subscriptions: { status: string; current_period_end: string | null; plans: { name: string; price_cents: number } | null }[];
   };
-  const companies = (comp.data ?? []) as unknown as CompRow[];
+  const allCompanies = (comp.data ?? []) as unknown as CompRow[];
+  const exemptCount = allCompanies.filter((c) => c.billing_exempt).length;
+  const companies = allCompanies.filter((c) => !c.billing_exempt);
 
   let mrr = 0;
   let paying = 0;
@@ -177,5 +182,6 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
     invoices,
     access,
     companies: companies.filter((c) => c.status !== "pending").map((c) => ({ id: c.id, name: c.name })),
+    exemptCount,
   };
 }

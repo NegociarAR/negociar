@@ -10,6 +10,7 @@ export interface AdminCompany {
   plan_name: string | null;
   current_period_end: string | null;
   is_expired: boolean;
+  billing_exempt: boolean;
   owner_email: string | null;
 }
 
@@ -28,7 +29,7 @@ export async function listCompanies(filter?: string) {
   let query = supabase
     .from("companies")
     .select(
-      "id, name, status, created_at, subscriptions(plan_id, current_period_end, status, plans(name))",
+      "id, name, status, created_at, billing_exempt, subscriptions(plan_id, current_period_end, status, plans(name))",
     )
     .order("created_at", { ascending: false });
 
@@ -42,6 +43,7 @@ export async function listCompanies(filter?: string) {
     name: string;
     status: AdminCompany["status"];
     created_at: string;
+    billing_exempt: boolean | null;
     subscriptions: Array<{
       plan_id: string;
       current_period_end: string | null;
@@ -66,6 +68,7 @@ export async function listCompanies(filter?: string) {
       plan_name: sub?.plans?.name ?? null,
       current_period_end: periodEnd,
       is_expired: Boolean(periodEnd && periodEnd < today),
+      billing_exempt: Boolean(r.billing_exempt),
       owner_email: null,
     } as AdminCompany;
   });
@@ -81,7 +84,8 @@ export async function expiredSubscriptions() {
   const today = new Date().toISOString();
   const { data } = await supabase
     .from("subscriptions")
-    .select("company_id, current_period_end, plan_id, companies(name), plans(name)")
+    .select("company_id, current_period_end, plan_id, companies!inner(name, billing_exempt), plans(name)")
+    .eq("companies.billing_exempt", false)
     .in("status", ["active", "trialing"])
     .not("current_period_end", "is", null)
     .lt("current_period_end", today);
@@ -102,7 +106,7 @@ export async function getCompanyDetail(id: string) {
   const { data: company } = await supabase
     .from("companies")
     .select(
-      "id, name, legal_name, cnpj, email, phone, city, state, status, created_at",
+      "id, name, legal_name, cnpj, email, phone, city, state, status, created_at, billing_exempt",
     )
     .eq("id", id)
     .maybeSingle();

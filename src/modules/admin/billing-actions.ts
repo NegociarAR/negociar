@@ -113,3 +113,13 @@ export async function saveBillingSettings(graceDays: number, instructions: strin
   if (error) return { ok: false, error: error.message };
   return done();
 }
+
+// Isenta (ou remove a isenção de) uma empresa de cobrança. Ao isentar, cancela títulos em aberto.
+export async function setBillingExempt(companyId: string, exempt: boolean): Promise<Result> {
+  const { supabase } = await adminSupabase();
+  const { data, error } = await supabase.rpc("billing_set_exempt", { p_company: companyId, p_exempt: exempt });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/empresas/${companyId}`);
+  done();
+  return { ok: true, n: (data as number) ?? 0 };
+}

@@ -53,7 +53,7 @@ export default async function AdminFinanceiroPage({
       <div className="space-y-3">
         <h1 className="text-xl font-semibold">Financeiro</h1>
         <p className="rounded-lg border border-dashed p-6 text-sm text-muted">
-          A estrutura financeira ainda não existe no banco. Rode a migration <code>0031_billing.sql</code> no Supabase.
+          A estrutura financeira ainda não existe no banco. Rode as migrations <code>0031_billing.sql</code> e <code>0032_billing_exempt.sql</code> no Supabase.
         </p>
       </div>
     );
@@ -75,7 +75,10 @@ export default async function AdminFinanceiroPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-semibold">Financeiro</h1>
-        <p className="text-sm text-muted">Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.</p>
+        <p className="text-sm text-muted">
+          Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
+          {o.exemptCount > 0 && ` ${o.exemptCount} empresa(s) isenta(s) não entram nestas métricas.`}
+        </p>
       </div>
 
       {/* métricas */}

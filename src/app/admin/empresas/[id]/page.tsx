@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCompanyDetail } from "@/modules/admin/queries";
 import { StatusBadge } from "@/modules/admin/status-badge";
 import { AdminActions } from "@/modules/admin/admin-actions";
+import { ExemptToggle } from "@/modules/admin/exempt-toggle";
+import { BackLink } from "@/components/back-link";
 import { createClient } from "@/lib/supabase/server";
 
 function fmtDate(iso?: string | null) {
@@ -44,12 +45,7 @@ export default async function AdminCompanyPage({
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-muted">
-        <Link href="/admin" className="hover:text-foreground">
-          Empresas
-        </Link>{" "}
-        / {company.name}
-      </div>
+      <BackLink href="/admin" label="Voltar para empresas" />
 
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{company.name}</h1>
@@ -74,6 +70,12 @@ export default async function AdminCompanyPage({
 
         <div className="rounded-lg border bg-surface p-5">
           <h2 className="mb-4 text-sm font-semibold">Ações</h2>
+          <div className="mb-4 border-b pb-4">
+            <ExemptToggle
+              companyId={company.id}
+              exempt={Boolean((company as { billing_exempt?: boolean }).billing_exempt)}
+            />
+          </div>
           <AdminActions
             companyId={company.id}
             status={company.status}

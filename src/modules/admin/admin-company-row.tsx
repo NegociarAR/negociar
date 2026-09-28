@@ -9,6 +9,7 @@ interface CompanyRow {
   plan_name: string | null;
   created_at: string;
   status: "pending" | "active" | "suspended";
+  billing_exempt?: boolean;
 }
 
 function fmtDate(iso: string) {
@@ -26,7 +27,12 @@ export function AdminCompanyRow({ c }: { c: CompanyRow }) {
       onClick={() => router.push(`/admin/empresas/${c.id}`)}
       className="cursor-pointer border-b transition last:border-0 hover:bg-subtle"
     >
-      <td className="px-4 py-3 font-medium">{c.name}</td>
+      <td className="px-4 py-3 font-medium">
+        {c.name}
+        {c.billing_exempt && (
+          <span className="ml-2 rounded-full border px-2 py-0.5 text-xs font-normal text-muted">Isenta</span>
+        )}
+      </td>
       <td className="px-4 py-3 text-muted">{c.plan_name ?? "—"}</td>
       <td className="tabular px-4 py-3 text-muted">{fmtDate(c.created_at)}</td>
       <td className="px-4 py-3">
