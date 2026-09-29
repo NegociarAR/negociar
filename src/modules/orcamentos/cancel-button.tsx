@@ -13,7 +13,12 @@ export function CancelQuoteButton({ quoteId }: { quoteId: string }) {
     <button
       onClick={() => {
         if (!confirm("Cancelar este orçamento?")) return;
-        startTransition(() => cancelQuote(quoteId).then(() => { toast("Orçamento cancelado."); router.refresh(); }));
+        startTransition(() =>
+          cancelQuote(quoteId).then((res) => {
+            toast(res.ok ? "Orçamento cancelado." : (res as { error?: string }).error ?? "Não foi possível cancelar.", res.ok ? "success" : "error");
+            router.refresh();
+          }),
+        );
       }}
       disabled={pending}
       className="text-sm text-danger underline hover:opacity-80 disabled:opacity-50"

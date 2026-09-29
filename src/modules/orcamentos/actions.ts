@@ -24,29 +24,20 @@ export interface CreateQuoteInput {
   notes: string | null;
 }
 
-// incrementa contador mensal via RPC (atômica, sem race condition, sem escrita direta)
-async function bumpQuoteUsage(companyId: string) {
-  const supabase = await createClient();
-  const period = currentPeriod();
-  await supabase.rpc("increment_usage", {
-    p_company: companyId,
-    p_metric: "quotes_created",
-    p_period: period,
-  });
-}
+// Item 8 (auditoria): criação e edição de orçamento passaram a ser uma
+// única transação no banco (funções create_quote/edit_quote) — ou grava
+// tudo (orçamento + itens + timeline + contador), ou não grava nada.
 
 export async function createQuote(input: CreateQuoteInput) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   if (!input.customer_id) return { ok: false, error: "Selecione um cliente." };
-  const items = input.items.filter(
-    (i) => i.description.trim() && i.quantity > 0,
-  );
-  if (items.length === 0)
-    return { ok: false, error: "Adicione ao menos um item." };
+  const items = input.items.filter((i) => i.description.trim() && i.quantity > 0);
+  if (items.length === 0) return { ok: false, error: "Adicione ao menos um item." };
 
-  // GATE: limite mensal de orçamentos
+  // GATE: limite mensal de orçamentos (checagem amigável antes de tentar gravar;
+  // increment_usage dentro da transação ainda protege contra corrida)
   const ent = await getEntitlements();
   const period = currentPeriod();
   const supabase = await createClient();
@@ -66,64 +57,20 @@ export async function createQuote(input: CreateQuoteInput) {
     };
   }
 
-  // totais
-  const subtotal = items.reduce(
-    (s, i) => s + Math.round(i.quantity * i.unit_price_cents),
-    0,
-  );
-  const total = Math.max(0, subtotal - input.discount_cents);
-
-  // número sequencial por empresa (RPC)
-  const { data: number, error: numErr } = await supabase.rpc(
-    "next_quote_number",
-    { p_company: session.companyId },
-  );
-  if (numErr) return { ok: false, error: numErr.message };
-
-  // cria orçamento
-  const { data: quote, error } = await supabase
-    .from("quotes")
-    .insert({
-      company_id: session.companyId,
-      customer_id: input.customer_id,
-      number,
-      status: "draft",
-      discount_cents: input.discount_cents,
-      subtotal_cents: subtotal,
-      total_cents: total,
-      valid_until: input.valid_until,
-      payment_terms: input.payment_terms,
-      delivery_terms: input.delivery_terms,
-      notes: input.notes,
-    })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.rpc("create_quote", {
+    p_company: session.companyId,
+    p_customer: input.customer_id,
+    p_items: items,
+    p_discount_cents: input.discount_cents,
+    p_valid_until: input.valid_until,
+    p_payment_terms: input.payment_terms,
+    p_delivery_terms: input.delivery_terms,
+    p_notes: input.notes,
+  });
   if (error) return { ok: false, error: error.message };
 
-  // itens
-  const rows = items.map((i, idx) => ({
-    quote_id: quote.id,
-    company_id: session.companyId,
-    product_id: i.product_id,
-    description: i.description.trim(),
-    quantity: i.quantity,
-    unit_price_cents: i.unit_price_cents,
-    total_cents: Math.round(i.quantity * i.unit_price_cents),
-    sort_order: idx,
-  }));
-  await supabase.from("quote_items").insert(rows);
-
-  // timeline do cliente + contador de uso
-  await supabase.from("activities").insert({
-    company_id: session.companyId,
-    customer_id: input.customer_id,
-    type: "quote_created",
-    title: `Orçamento #${number} criado`,
-  });
-  await bumpQuoteUsage(session.companyId);
-
   revalidatePath("/orcamentos");
-  return { ok: true, id: quote.id as string };
+  return { ok: true, id: (data as { id: string }).id };
 }
 
 export async function deleteQuote(id: string) {
@@ -208,7 +155,9 @@ export async function sendQuote(id: string, followupDays = 3) {
 export async function updateQuoteStatus(id: string, status: string) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
-  const valid = ["draft", "sent", "viewed", "negotiation", "approved", "rejected"];
+  // item 11: só os destinos que a máquina de estados aceita a partir de
+  // um status manual (não inclui "draft" — voltar a rascunho não é permitido)
+  const valid = ["sent", "viewed", "negotiation", "approved", "rejected", "canceled"];
   if (!valid.includes(status)) return { ok: false, error: "Status inválido." };
 
   const supabase = await createClient();
@@ -216,11 +165,12 @@ export async function updateQuoteStatus(id: string, status: string) {
   if (status === "approved" || status === "rejected") {
     patch.decided_at = new Date().toISOString();
   }
-  await supabase
+  const { error } = await supabase
     .from("quotes")
     .update(patch)
     .eq("id", id)
     .eq("company_id", session.companyId);
+  if (error) return { ok: false, error: error.message };
 
   await supabase.from("quote_status_history").insert({
     quote_id: id,
@@ -233,61 +183,9 @@ export async function updateQuoteStatus(id: string, status: string) {
   return { ok: true };
 }
 
-// Recalcula totais e regrava itens de um orçamento (rascunho editável).
-async function rewriteQuoteContent(
-  quoteId: string,
-  companyId: string,
-  input: {
-    customer_id: string;
-    items: { product_id: string | null; description: string; quantity: number; unit_price_cents: number }[];
-    discount_cents: number;
-    valid_until: string | null;
-    payment_terms: string | null;
-    delivery_terms: string | null;
-    notes: string | null;
-  },
-) {
-  const supabase = await createClient();
-  const subtotal = input.items.reduce(
-    (s, i) => s + Math.round(i.quantity * i.unit_price_cents),
-    0,
-  );
-  const total = Math.max(0, subtotal - input.discount_cents);
-
-  await supabase
-    .from("quotes")
-    .update({
-      customer_id: input.customer_id,
-      discount_cents: input.discount_cents,
-      subtotal_cents: subtotal,
-      total_cents: total,
-      valid_until: input.valid_until,
-      payment_terms: input.payment_terms,
-      delivery_terms: input.delivery_terms,
-      notes: input.notes,
-    })
-    .eq("id", quoteId)
-    .eq("company_id", companyId);
-
-  // substitui os itens
-  await supabase.from("quote_items").delete().eq("quote_id", quoteId);
-  await supabase.from("quote_items").insert(
-    input.items.map((i, idx) => ({
-      quote_id: quoteId,
-      company_id: companyId,
-      product_id: i.product_id,
-      description: i.description,
-      quantity: i.quantity,
-      unit_price_cents: i.unit_price_cents,
-      total_cents: Math.round(i.quantity * i.unit_price_cents),
-      sort_order: idx,
-    })),
-  );
-}
-
 // Edita um orçamento. Se for rascunho, edita no lugar. Se já foi enviado
 // (sent/viewed/negotiation/negotiation_requested), cria uma revisão v+1
-// e aplica as mudanças nela. Retorna o id a ser aberto.
+// e aplica as mudanças nela — tudo em uma única transação (edit_quote).
 export async function editQuote(
   quoteId: string,
   input: {
@@ -302,36 +200,24 @@ export async function editQuote(
 ) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
+
+  const items = input.items.filter((i) => i.description.trim() && i.quantity > 0);
+  if (items.length === 0) return { ok: false, error: "Adicione ao menos um item." };
+
   const supabase = await createClient();
+  const { data, error } = await supabase.rpc("edit_quote", {
+    p_quote_id: quoteId,
+    p_customer: input.customer_id,
+    p_items: items,
+    p_discount_cents: input.discount_cents,
+    p_valid_until: input.valid_until,
+    p_payment_terms: input.payment_terms,
+    p_delivery_terms: input.delivery_terms,
+    p_notes: input.notes,
+  });
+  if (error) return { ok: false, error: error.message };
 
-  const { data: quote } = await supabase
-    .from("quotes")
-    .select("id, status")
-    .eq("id", quoteId)
-    .eq("company_id", session.companyId)
-    .maybeSingle();
-  if (!quote) return { ok: false, error: "Orçamento não encontrado." };
-
-  // aprovado/recusado/substituído não editam
-  if (["approved", "rejected", "superseded"].includes(quote.status)) {
-    return { ok: false, error: "Este orçamento não pode mais ser editado." };
-  }
-
-  let targetId = quoteId;
-
-  // já enviado -> cria revisão e edita a nova versão
-  if (quote.status !== "draft") {
-    const { data: newId, error } = await supabase.rpc("create_quote_revision", {
-      p_quote_id: quoteId,
-    });
-    if (error || !newId) {
-      return { ok: false, error: error?.message ?? "Erro ao criar revisão." };
-    }
-    targetId = newId as string;
-  }
-
-  await rewriteQuoteContent(targetId, session.companyId, input);
-
+  const targetId = (data as { id: string }).id;
   revalidatePath(`/orcamentos/${targetId}`);
   revalidatePath("/orcamentos");
   return { ok: true, id: targetId };
@@ -342,11 +228,12 @@ export async function cancelQuote(id: string) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false };
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("quotes")
     .update({ status: "canceled", decided_at: new Date().toISOString() })
     .eq("id", id)
     .eq("company_id", session.companyId);
+  if (error) return { ok: false, error: error.message };
   await supabase.from("quote_status_history").insert({
     quote_id: id,
     company_id: session.companyId,

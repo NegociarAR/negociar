@@ -64,7 +64,12 @@ export function QuoteRowMenu({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!confirm("Cancelar este orçamento?")) return;
-                startTransition(() => cancelQuote(quoteId).then(() => { toast("Orçamento cancelado."); router.refresh(); }));
+                startTransition(() =>
+                  cancelQuote(quoteId).then((res) => {
+                    toast(res.ok ? "Orçamento cancelado." : (res as { error?: string }).error ?? "Não foi possível cancelar.", res.ok ? "success" : "error");
+                    router.refresh();
+                  }),
+                );
               }}
               disabled={pending}
               className="block w-full rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-subtle disabled:opacity-50"
