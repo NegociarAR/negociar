@@ -106,6 +106,7 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
     version: q.version ?? 1,
     is_hourly_contract: q.is_hourly_contract ?? false,
     hourly_rate_cents: q.hourly_rate_cents ?? null,
+    decided_at: q.decided_at ?? null,
     public_token: q.public_token,
     created_at: q.created_at,
     items: (items ?? []) as QuoteItem[],

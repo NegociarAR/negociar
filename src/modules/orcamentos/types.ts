@@ -62,6 +62,7 @@ export interface QuoteDetail {
   version: number;
   is_hourly_contract: boolean;
   hourly_rate_cents: number | null;
+  decided_at: string | null;
   public_token: string;
   created_at: string;
   items: QuoteItem[];

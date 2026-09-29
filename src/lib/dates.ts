@@ -10,3 +10,12 @@ export function addDays(iso: string, n: number): string {
 export function fmtDay(iso: string): string {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR");
 }
+
+// Meses completos desde uma data-hora ISO (timestamptz) até hoje.
+export function monthsSince(isoDateTime: string): number {
+  const then = new Date(isoDateTime);
+  const now = new Date();
+  let months = (now.getFullYear() - then.getFullYear()) * 12 + (now.getMonth() - then.getMonth());
+  if (now.getDate() < then.getDate()) months -= 1;
+  return Math.max(0, months);
+}

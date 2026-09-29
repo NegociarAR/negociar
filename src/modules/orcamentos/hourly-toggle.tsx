@@ -15,16 +15,21 @@ export function HourlyToggle({
   quoteId,
   active,
   rateCents,
+  suggestedRateCents,
+  monthsSinceApproval,
 }: {
   quoteId: string;
   active: boolean;
   rateCents: number | null;
+  suggestedRateCents?: number | null;
+  monthsSinceApproval?: number | null;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const needsReview = active && (monthsSinceApproval ?? 0) >= 3;
 
   function activate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,6 +79,11 @@ export function HourlyToggle({
             Desativar
           </button>
         </div>
+        {needsReview && (
+          <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+            Este orçamento foi aprovado há {monthsSinceApproval} meses ou mais. Vale reavaliar a taxa e as condições com o cliente.
+          </p>
+        )}
         <Link href={`/orcamentos/${quoteId}/horas`} className={`${btnPrimary} inline-flex items-center`}>
           Lançar horas e faturar →
         </Link>
@@ -89,6 +99,8 @@ export function HourlyToggle({
     );
   }
 
+  const defaultRate = suggestedRateCents ? (suggestedRateCents / 100).toFixed(2).replace(".", ",") : "";
+
   return (
     <form onSubmit={activate} className="flex flex-wrap items-end gap-2 rounded-lg border bg-subtle p-3">
       <label className="space-y-1 text-xs text-muted">
@@ -97,10 +109,14 @@ export function HourlyToggle({
           name="rate"
           inputMode="decimal"
           autoFocus
+          defaultValue={defaultRate}
           placeholder="0,00"
           className="block h-9 w-32 rounded-md border bg-surface px-2 text-sm"
         />
       </label>
+      {suggestedRateCents ? (
+        <p className="basis-full text-xs text-muted">Valor sugerido a partir do item aprovado no orçamento — confira e ajuste se precisar.</p>
+      ) : null}
       <button type="submit" disabled={pending} className={btnPrimary}>
         {pending ? "Salvando..." : "Ativar"}
       </button>

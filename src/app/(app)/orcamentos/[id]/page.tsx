@@ -9,6 +9,7 @@ import { QuoteActions } from "@/modules/orcamentos/quote-actions";
 import { CloseSaleForm } from "@/modules/vendas/close-sale-form";
 import { CancelQuoteButton } from "@/modules/orcamentos/cancel-button";
 import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
+import { monthsSince } from "@/lib/dates";
 import { brl } from "@/lib/format";
 import { HistoryPanel } from "@/modules/historico/history-panel";
 
@@ -45,6 +46,8 @@ export default async function OrcamentoDetailPage({
   const hourlySales = quote.is_hourly_contract ? (sales ?? []) : [];
 
   const canCancel = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status);
+  const suggestedRateCents = quote.items[0]?.unit_price_cents ?? null;
+  const monthsSinceApproval = quote.decided_at ? monthsSince(quote.decided_at) : null;
 
   return (
     <div className="space-y-6">
@@ -188,6 +191,7 @@ export default async function OrcamentoDetailPage({
               quoteId={quote.id}
               active={quote.is_hourly_contract}
               rateCents={quote.hourly_rate_cents}
+              monthsSinceApproval={monthsSinceApproval}
             />
             {hourlySales.length > 0 && (
               <div className="rounded-lg border bg-surface p-4 text-sm">
@@ -227,7 +231,12 @@ export default async function OrcamentoDetailPage({
             grossCents={quote.total_cents}
           />
           <p className="text-center text-xs text-muted">— ou —</p>
-          <HourlyToggle quoteId={quote.id} active={false} rateCents={null} />
+          <HourlyToggle
+            quoteId={quote.id}
+            active={false}
+            rateCents={null}
+            suggestedRateCents={suggestedRateCents}
+          />
         </div>
       ) : (
         <p className="text-xs text-muted">
