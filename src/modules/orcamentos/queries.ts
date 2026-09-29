@@ -104,6 +104,8 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
     notes: q.notes,
     decision_reason: q.decision_reason ?? null,
     version: q.version ?? 1,
+    is_hourly_contract: q.is_hourly_contract ?? false,
+    hourly_rate_cents: q.hourly_rate_cents ?? null,
     public_token: q.public_token,
     created_at: q.created_at,
     items: (items ?? []) as QuoteItem[],
@@ -143,7 +145,6 @@ export async function quoteFormOptions() {
     supabase
       .from("products")
       .select("id, name, current_price_cents, cost_cents")
-      .eq("is_active", true)
       .eq("is_active", true)
       .eq("company_id", session.companyId)
       .is("deleted_at", null)

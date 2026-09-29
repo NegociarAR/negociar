@@ -60,6 +60,8 @@ export interface QuoteDetail {
   notes: string | null;
   decision_reason: string | null;
   version: number;
+  is_hourly_contract: boolean;
+  hourly_rate_cents: number | null;
   public_token: string;
   created_at: string;
   items: QuoteItem[];

@@ -8,6 +8,7 @@ import { QuoteStatusBadge } from "@/modules/orcamentos/status-badge";
 import { QuoteActions } from "@/modules/orcamentos/quote-actions";
 import { CloseSaleForm } from "@/modules/vendas/close-sale-form";
 import { CancelQuoteButton } from "@/modules/orcamentos/cancel-button";
+import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
 import { brl } from "@/lib/format";
 import { HistoryPanel } from "@/modules/historico/history-panel";
 
@@ -34,12 +35,14 @@ export default async function OrcamentoDetailPage({
     .maybeSingle();
   const companyName = company?.name ?? "";
 
-  // já existe venda para este orçamento?
-  const { data: existingSale } = await supabase
+  // vendas deste orçamento — normal tem no máximo 1; contrato por hora pode ter várias (uma por mês)
+  const { data: sales } = await supabase
     .from("sales")
-    .select("id, net_cents")
+    .select("id, net_cents, reference_period")
     .eq("quote_id", quote.id)
-    .maybeSingle();
+    .order("reference_period", { ascending: false });
+  const existingSale = quote.is_hourly_contract ? null : (sales ?? [])[0] ?? null;
+  const hourlySales = quote.is_hourly_contract ? (sales ?? []) : [];
 
   const canCancel = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status);
 
@@ -177,8 +180,36 @@ export default async function OrcamentoDetailPage({
         }}
       />
 
-      {/* Fechamento de venda: aparece quando aprovado e sem venda ainda */}
-      {existingSale ? (
+      {/* Contrato por hora: ativa e mostra o resumo; venda normal: fluxo de sempre */}
+      {quote.is_hourly_contract ? (
+        quote.status === "approved" ? (
+          <div className="space-y-3">
+            <HourlyToggle
+              quoteId={quote.id}
+              active={quote.is_hourly_contract}
+              rateCents={quote.hourly_rate_cents}
+            />
+            {hourlySales.length > 0 && (
+              <div className="rounded-lg border bg-surface p-4 text-sm">
+                <p className="mb-2 font-medium">
+                  {hourlySales.length} fatura(s) gerada(s) · total {brl(hourlySales.reduce((s, x) => s + x.net_cents, 0))}
+                </p>
+                <ul className="space-y-1 text-muted">
+                  {hourlySales.map((s) => (
+                    <li key={s.id} className="tabular">
+                      {s.reference_period} — {brl(s.net_cents)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted">
+            O contrato por hora fica disponível para lançar horas após a aprovação do orçamento.
+          </p>
+        )
+      ) : existingSale ? (
         <div className="rounded-lg border border-l-2 border-l-primary bg-primary-soft p-4 text-sm">
           <span className="font-medium">Venda registrada</span> ·{" "}
           <span className="tabular">
@@ -189,18 +220,22 @@ export default async function OrcamentoDetailPage({
           </span>
         </div>
       ) : quote.status === "approved" ? (
-        <CloseSaleForm
-          quoteId={quote.id}
-          companyId={session!.companyId!}
-          grossCents={quote.total_cents}
-        />
+        <div className="space-y-3">
+          <CloseSaleForm
+            quoteId={quote.id}
+            companyId={session!.companyId!}
+            grossCents={quote.total_cents}
+          />
+          <p className="text-center text-xs text-muted">— ou —</p>
+          <HourlyToggle quoteId={quote.id} active={false} rateCents={null} />
+        </div>
       ) : (
         <p className="text-xs text-muted">
           O fechamento de venda fica disponível após a aprovação do orçamento.
         </p>
       )}
 
-      <HistoryPanel entityIds={[quote.id, ...(existingSale ? [existingSale.id] : [])]} />
+      <HistoryPanel entityIds={[quote.id, ...(sales ?? []).map((s) => s.id)]} />
     </div>
   );
 }
