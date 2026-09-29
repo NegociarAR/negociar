@@ -153,7 +153,7 @@ export default async function PublicQuotePage({
                 )}
               </div>
               {quote.notes && (
-                <p className="mt-3 text-sm text-muted">{quote.notes}</p>
+                <p className="mt-3 whitespace-pre-line text-sm text-muted">{quote.notes}</p>
               )}
             </div>
           )}

@@ -161,7 +161,9 @@ export function QuotePdf({ data, logoAbsUrl }: { data: QuotePdfData; logoAbsUrl?
         )}
 
         {data.notes ? (
-          <Text style={{ fontSize: 9, color: "#6b6b75", marginTop: 12 }}>{data.notes}</Text>
+          <Text style={{ fontSize: 9, color: "#6b6b75", marginTop: 12, lineHeight: 1.5 }}>
+            {data.notes}
+          </Text>
         ) : null}
 
         <View style={s.footer} fixed>

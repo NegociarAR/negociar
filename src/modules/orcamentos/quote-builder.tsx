@@ -314,7 +314,13 @@ export function QuoteBuilder({
         </Field>
         <div className="sm:col-span-2">
           <Field label="Observações">
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              placeholder="Ex.: condições de atendimento, escopo detalhado, diretrizes..."
+              className="w-full rounded-lg border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
           </Field>
         </div>
       </div>
