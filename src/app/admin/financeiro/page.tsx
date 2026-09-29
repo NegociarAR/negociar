@@ -73,12 +73,20 @@ export default async function AdminFinanceiroPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-semibold">Financeiro</h1>
-        <p className="text-sm text-muted">
-          Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
-          {o.exemptCount > 0 && ` ${o.exemptCount} empresa(s) isenta(s) não entram nestas métricas.`}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Financeiro</h1>
+          <p className="text-sm text-muted">
+            Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
+            {o.exemptCount > 0 && ` ${o.exemptCount} empresa(s) isenta(s) não entram nestas métricas.`}
+          </p>
+        </div>
+        <Link
+          href="/admin/financeiro/recebimentos"
+          className="h-9 shrink-0 rounded-lg border px-4 text-sm font-medium leading-9 transition hover:bg-subtle"
+        >
+          Ver recebimentos →
+        </Link>
       </div>
 
       {/* métricas */}
