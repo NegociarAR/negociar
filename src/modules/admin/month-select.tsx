@@ -16,7 +16,7 @@ export function MonthSelect({
     <select
       value={value}
       onChange={(e) => router.push(`/admin/financeiro/recebimentos?mes=${e.target.value}`)}
-      className="h-9 rounded-lg border bg-surface px-3 text-sm"
+      className="h-10 md:h-9 rounded-lg border bg-surface px-3 text-sm"
     >
       {options.map((m) => (
         <option key={m} value={m}>

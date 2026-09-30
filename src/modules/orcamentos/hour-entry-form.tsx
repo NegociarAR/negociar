@@ -40,19 +40,19 @@ export function HourEntryForm({ quoteId }: { quoteId: string }) {
 
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-2 rounded-lg border bg-surface p-4 shadow-card">
-      <label className="space-y-1 text-xs text-muted">
+      <label className="flex-1 space-y-1 text-xs text-muted sm:flex-none">
         Data
-        <input type="date" name="date" required defaultValue={todayBRT()} className="block h-9 rounded-md border bg-surface px-2 text-sm" />
+        <input type="date" name="date" required defaultValue={todayBRT()} className="block h-10 md:h-9 w-full rounded-md border bg-surface px-2 text-sm" />
       </label>
       <label className="space-y-1 text-xs text-muted">
         Horas
-        <input name="hours" inputMode="decimal" required placeholder="2,5" className="block h-9 w-24 rounded-md border bg-surface px-2 text-sm" />
+        <input name="hours" inputMode="decimal" required placeholder="2,5" className="block h-10 md:h-9 w-24 rounded-md border bg-surface px-2 text-sm" />
       </label>
-      <label className="min-w-40 flex-1 space-y-1 text-xs text-muted">
+      <label className="min-w-0 flex-1 basis-full space-y-1 text-xs text-muted sm:basis-40">
         Descrição
-        <input name="description" placeholder="Ex.: Reunião + ajustes no site" className="block h-9 w-full rounded-md border bg-surface px-2 text-sm" />
+        <input name="description" placeholder="Ex.: Reunião + ajustes no site" className="block h-10 md:h-9 w-full rounded-md border bg-surface px-2 text-sm" />
       </label>
-      <button type="submit" disabled={pending} className="h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg disabled:opacity-50">
+      <button type="submit" disabled={pending} className="h-10 md:h-9 w-full rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg disabled:opacity-50 sm:w-auto">
         {pending ? "Salvando..." : "Lançar"}
       </button>
       {error && <p className="w-full text-xs text-danger">{error}</p>}

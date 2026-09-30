@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { blockCompany, unblockCompany, blockEligible } from "./billing-actions";
 
-const btn = "h-7 rounded-md border px-2.5 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
+const btn = "h-10 md:h-7 rounded-md border px-2.5 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
 
 export function AccessButton({ companyId, name, blocked }: { companyId: string; name: string; blocked: boolean }) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function BlockEligibleButton({ count }: { count: number }) {
   return (
     <span className="flex items-center gap-3">
       <button
-        className="h-8 rounded-md bg-danger px-3 text-xs font-medium text-white disabled:opacity-50"
+        className="h-10 md:h-8 rounded-md bg-danger px-3 text-xs font-medium text-white disabled:opacity-50"
         disabled={pending}
         onClick={() => {
           if (!confirm(`Bloquear ${count} empresa(s) com título em atraso além da tolerância?`)) return;

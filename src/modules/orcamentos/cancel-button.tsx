@@ -21,7 +21,7 @@ export function CancelQuoteButton({ quoteId }: { quoteId: string }) {
         );
       }}
       disabled={pending}
-      className="text-sm text-danger underline hover:opacity-80 disabled:opacity-50"
+      className="py-2 text-sm text-danger underline hover:opacity-80 disabled:opacity-50"
     >
       {pending ? "Cancelando..." : "Cancelar"}
     </button>

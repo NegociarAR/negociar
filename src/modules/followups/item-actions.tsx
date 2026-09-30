@@ -8,7 +8,7 @@ export function FollowupItemActions({ id }: { id: string }) {
   const [pending, startTransition] = useTransition();
   const toast = useToast();
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="flex items-center gap-4 text-sm md:gap-3 [&>button]:py-2 md:[&>button]:py-0">
       <button
         onClick={() => startTransition(async () => { await completeFollowup(id); toast("Follow-up concluído."); })}
         disabled={pending}
@@ -34,7 +34,7 @@ export function ReopenButton({ id }: { id: string }) {
     <button
       onClick={() => startTransition(async () => { await reopenFollowup(id); toast("Follow-up reaberto."); })}
       disabled={pending}
-      className="text-sm text-muted underline hover:text-foreground disabled:opacity-50"
+      className="shrink-0 py-2 text-sm text-muted underline hover:text-foreground disabled:opacity-50"
     >
       Reabrir
     </button>

@@ -41,7 +41,7 @@ export function QuoteRowMenu({
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition hover:bg-subtle hover:text-foreground"
+        className="flex h-10 w-10 md:h-8 md:w-8 items-center justify-center rounded-md text-muted transition hover:bg-subtle hover:text-foreground"
         aria-label="Ações"
       >
         <MoreHorizontal size={16} />

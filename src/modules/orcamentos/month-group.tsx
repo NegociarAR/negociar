@@ -75,22 +75,22 @@ export function MonthGroupCard({
           </span>
         ) : group.hours > 0 ? (
           generating ? (
-            <form onSubmit={generate} className="flex items-center gap-2">
+            <form onSubmit={generate} className="flex flex-wrap items-center gap-2">
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="h-8 rounded-md border bg-surface px-2 text-xs"
+                className="h-10 md:h-8 rounded-md border bg-surface px-2 text-xs"
               />
-              <button type="submit" disabled={pending} className="h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg disabled:opacity-50">
+              <button type="submit" disabled={pending} className="h-10 md:h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg disabled:opacity-50">
                 Confirmar
               </button>
-              <button type="button" onClick={() => setGenerating(false)} className="h-8 rounded-md border px-2 text-xs">
+              <button type="button" onClick={() => setGenerating(false)} aria-label="Cancelar" className="h-10 md:h-8 min-w-10 rounded-md border px-2 text-xs md:min-w-0">
                 x
               </button>
             </form>
           ) : (
-            <button onClick={() => setGenerating(true)} className="h-8 rounded-md border px-3 text-xs font-medium hover:bg-subtle">
+            <button onClick={() => setGenerating(true)} className="h-10 md:h-8 rounded-md border px-3 text-xs font-medium hover:bg-subtle">
               Gerar fatura do mês
             </button>
           )
@@ -101,7 +101,7 @@ export function MonthGroupCard({
         <ul className="divide-y">
           {group.entries.map((e) => (
             <li key={e.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-              <span className="min-w-0">
+              <span className="min-w-0 break-words">
                 <span className="tabular mr-2 text-muted">
                   {new Date(e.entry_date + "T00:00:00").toLocaleDateString("pt-BR")}
                 </span>
@@ -109,7 +109,7 @@ export function MonthGroupCard({
                 {e.description}
               </span>
               {!group.invoiced && (
-                <button onClick={() => removeEntry(e.id)} disabled={pending} className="shrink-0 text-xs text-danger disabled:opacity-50">
+                <button onClick={() => removeEntry(e.id)} disabled={pending} className="-my-2 shrink-0 py-2.5 text-xs text-danger disabled:opacity-50">
                   Excluir
                 </button>
               )}

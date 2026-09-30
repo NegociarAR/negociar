@@ -36,7 +36,7 @@ export default async function SignupPage({
       </Button>
       <p className="text-center text-sm text-muted">
         Já tem conta?{" "}
-        <Link href="/login" className="text-primary hover:underline">
+        <Link href="/login" className="inline-block py-2.5 text-primary hover:underline">
           Entrar
         </Link>
       </p>

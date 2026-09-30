@@ -66,7 +66,7 @@ export function LogoUpload({
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border bg-subtle">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-subtle">
           {url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="Logo" className="h-full w-full object-contain" />
@@ -74,19 +74,19 @@ export function LogoUpload({
             <span className="text-xs text-muted">sem logo</span>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="min-w-0 flex-1 space-y-2">
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
             disabled={pending}
-            className="block text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-1.5 file:text-sm"
+            className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-2.5 file:text-sm md:file:py-1.5"
           />
           {url && (
             <button
               onClick={remove}
               disabled={pending}
-              className="text-xs text-danger underline disabled:opacity-50"
+              className="py-2 text-xs text-danger underline disabled:opacity-50"
             >
               Remover logo
             </button>

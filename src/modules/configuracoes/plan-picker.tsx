@@ -39,7 +39,7 @@ export function PlanPicker({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-sm font-medium text-primary hover:underline"
+        className="py-2 text-sm font-medium text-primary hover:underline"
       >
         Ver planos e solicitar mudança
       </button>
@@ -70,7 +70,7 @@ export function PlanPicker({
               key={p.id}
               className={`rounded-lg border p-4 ${current ? "border-primary bg-primary-soft" : ""}`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <span className="font-medium">{p.name}</span>
                 <span className="tabular text-sm">
                   {p.price_cents === 0 ? "Grátis" : `${brl(p.price_cents)}/mês`}
@@ -83,7 +83,7 @@ export function PlanPicker({
                 <button
                   onClick={() => request(p.id)}
                   disabled={busy}
-                  className="mt-2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                  className="mt-1 py-2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
                 >
                   Solicitar este plano
                 </button>
@@ -93,7 +93,7 @@ export function PlanPicker({
         })}
       </div>
       {result && <p className="text-sm text-muted">{result}</p>}
-      <button onClick={() => setOpen(false)} className="text-sm text-muted hover:text-foreground">
+      <button onClick={() => setOpen(false)} className="py-2 text-sm text-muted hover:text-foreground">
         Fechar
       </button>
     </div>

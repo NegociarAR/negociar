@@ -204,7 +204,7 @@ export function QuoteBuilder({
           <button
             type="button"
             onClick={() => setItems((p) => [...p, newItem()])}
-            className="text-sm text-foreground underline"
+            className="py-2 text-sm text-foreground underline"
           >
             + Adicionar item
           </button>
@@ -234,7 +234,7 @@ export function QuoteBuilder({
                   onClick={() =>
                     setItems((p) => p.filter((x) => x.key !== it.key))
                   }
-                  className="text-sm text-muted underline hover:text-foreground"
+                  className="justify-self-start py-2 text-sm text-muted underline hover:text-foreground"
                 >
                   Remover
                 </button>
@@ -247,7 +247,7 @@ export function QuoteBuilder({
               onChange={(e) => updateItem(it.key, { description: e.target.value })}
             />
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <Field label="Qtd">
                 <Input
                   inputMode="decimal"
@@ -268,7 +268,7 @@ export function QuoteBuilder({
                 />
               </Field>
               <Field label="Total">
-                <div className="tabular flex h-10 items-center px-1 text-sm">
+                <div className="tabular flex h-10 items-center whitespace-nowrap px-1 text-sm">
                   {brl(
                     Math.round(
                       qty(it.quantity) * parseBRLToCents(it.unitPrice),
@@ -326,8 +326,8 @@ export function QuoteBuilder({
       </div>
 
       {/* totais + salvar */}
-      <div className="flex items-end justify-between rounded-lg border bg-surface p-5">
-        <div className="space-y-1 text-sm">
+      <div className="sticky bottom-[4.5rem] z-10 flex flex-wrap items-end justify-between gap-3 rounded-lg border bg-surface p-4 shadow-pop md:static md:bottom-auto md:p-5 md:shadow-none">
+        <div className="flex-1 space-y-1 text-sm">
           <div className="flex gap-6">
             <span className="text-muted">Subtotal</span>
             <span className="tabular">{brl(subtotal)}</span>
@@ -343,7 +343,7 @@ export function QuoteBuilder({
             <span className="tabular">{brl(total)}</span>
           </div>
         </div>
-        <Button type="button" onClick={save} disabled={pending}>
+        <Button type="button" onClick={save} disabled={pending} className="w-full sm:w-auto">
           {pending
             ? "Salvando..."
             : initial

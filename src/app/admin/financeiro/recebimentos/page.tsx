@@ -8,9 +8,9 @@ import { currentPeriod } from "@/lib/period";
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
+    <div className="min-w-0 rounded-lg border bg-surface p-3 shadow-card sm:p-4">
       <p className="text-sm text-muted">{label}</p>
-      <p className="tabular mt-1 text-xl font-semibold">{value}</p>
+      <p className="tabular mt-1 break-words text-lg font-semibold sm:text-xl">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
     </div>
   );
@@ -50,7 +50,7 @@ export default async function RecebimentosPage({
             Histórico de títulos recebidos, por forma de pagamento — para conferência com o extrato bancário.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <MonthSelect options={options} value={month} currentMonth={currentPeriod()} />
           <ExportCsvButton rows={report.rows} month={month} />
         </div>
@@ -71,7 +71,7 @@ export default async function RecebimentosPage({
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-surface">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">Data</th>

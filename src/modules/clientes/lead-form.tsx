@@ -49,18 +49,18 @@ export function LeadForm() {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/40 p-4"
       onClick={() => setOpen(false)}
     >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md space-y-4 rounded-lg border bg-surface p-5 shadow-pop"
+        className="my-auto w-full max-w-md space-y-4 rounded-lg border bg-surface p-5 shadow-pop"
       >
         <h2 className="text-sm font-semibold">Novo lead</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="Tipo">
-            <select name="type" className="h-9 w-full rounded-lg border bg-surface px-2 text-sm">
+            <select name="type" className="h-10 md:h-9 w-full rounded-lg border bg-surface px-2 text-sm">
               <option value="pf">Pessoa</option>
               <option value="pj">Empresa</option>
             </select>
@@ -74,9 +74,9 @@ export function LeadForm() {
         <Field label="WhatsApp">
           <Input name="whatsapp" inputMode="tel" placeholder="47 99999-0000" />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Origem">
-            <select name="source" className="h-9 w-full rounded-lg border bg-surface px-2 text-sm">
+            <select name="source" className="h-10 md:h-9 w-full rounded-lg border bg-surface px-2 text-sm">
               <option value="">—</option>
               {LEAD_SOURCES.map((s) => (
                 <option key={s} value={s}>{s}</option>

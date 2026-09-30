@@ -83,14 +83,14 @@ export default async function ClientesPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Clientes</h1>
           <p className="text-sm text-muted">
             {gate.limit === null ? `${used} contatos` : `${used}/${gate.limit} contatos`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ImportCustomers />
           <LeadForm />
           <Link href="/clientes/novo">
@@ -100,7 +100,7 @@ export default async function ClientesPage({
       </header>
 
       {limite && (
-        <div className="flex items-center justify-between rounded-lg border border-l-2 border-l-primary bg-primary-soft px-4 py-3 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-l-2 border-l-primary bg-primary-soft px-4 py-3 text-sm">
           <span>Você atingiu o limite de {gate.limit} clientes do seu plano.</span>
           <Link href="/configuracoes" className="font-medium text-foreground underline">Fazer upgrade</Link>
         </div>
@@ -118,7 +118,7 @@ export default async function ClientesPage({
             <Link
               key={t.key}
               href={`/clientes${qs ? `?${qs}` : ""}`}
-              className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 ${
+              className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 ${
                 active ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"
               }`}
             >
@@ -129,7 +129,7 @@ export default async function ClientesPage({
       </div>
 
       {/* stats clicáveis */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatCard label="Todos" value={stats.all} active={!f} href={fHref()} />
         <StatCard label="Em dia" value={stats.active} active={f === "active"} href={fHref("active")} />
         <StatCard label="Sem retorno" value={stats.stale} active={f === "stale"} href={fHref("stale")} />
@@ -140,7 +140,7 @@ export default async function ClientesPage({
 
       {/* busca + ordenação */}
       <div className="flex flex-wrap items-center gap-2">
-        <form className="flex flex-1 gap-2">
+        <form className="flex min-w-0 flex-1 basis-64 gap-2">
           {f && <input type="hidden" name="f" value={f} />}
           {stageFilter && <input type="hidden" name="etapa" value={stageFilter} />}
           <input type="hidden" name="sort" value={activeSort} />
@@ -163,7 +163,7 @@ export default async function ClientesPage({
               <Link
                 key={sOpt.key}
                 href={`/clientes?${params.toString()}`}
-                className={`rounded-lg px-3 py-1.5 ${
+                className={`rounded-lg px-3 py-2.5 md:py-1.5 ${
                   activeSort === sOpt.key ? "bg-primary text-primary-fg" : "text-muted hover:text-foreground"
                 }`}
               >
@@ -188,10 +188,10 @@ export default async function ClientesPage({
                 key={c.id}
                 className={`px-4 py-3 ${c.status === "inactive" ? "opacity-55" : ""}`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <Link href={`/clientes/${c.id}`} className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-medium">{name}</span>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <Link href={`/clientes/${c.id}`} className="min-w-0 flex-1 basis-48">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="max-w-full truncate font-medium">{name}</span>
                       <RelBadge status={status} />
                       {stageOf(c) !== "customer" && (
                         <span className={`rounded-full border px-2 py-0.5 text-xs ${STAGE_BADGE[stageOf(c)]}`}>

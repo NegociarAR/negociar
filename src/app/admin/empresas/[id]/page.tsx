@@ -47,17 +47,17 @@ export default async function AdminCompanyPage({
     <div className="space-y-6">
       <BackLink href="/admin" label="Voltar para empresas" />
 
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{company.name}</h1>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="min-w-0 break-words text-xl font-semibold">{company.name}</h1>
         <StatusBadge status={company.status} />
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-3 rounded-lg border bg-surface p-5">
           {rows.map(([label, value]) => (
-            <div key={label} className="flex justify-between text-sm">
-              <span className="text-muted">{label}</span>
-              <span className="tabular">{value ?? "—"}</span>
+            <div key={label} className="flex justify-between gap-4 text-sm">
+              <span className="shrink-0 text-muted">{label}</span>
+              <span className="tabular min-w-0 break-words text-right">{value ?? "—"}</span>
             </div>
           ))}
           <div className="flex justify-between border-t pt-3 text-sm">

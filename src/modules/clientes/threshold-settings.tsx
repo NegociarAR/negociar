@@ -31,7 +31,7 @@ export function ThresholdSettings({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-sm text-muted underline hover:text-foreground"
+        className="py-2 text-sm text-muted underline hover:text-foreground"
       >
         Prazos de status
       </button>
@@ -42,7 +42,7 @@ export function ThresholdSettings({
     <div className="space-y-3 rounded-lg border bg-surface p-4 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-medium">Prazos de status</span>
-        <button onClick={() => setOpen(false)} className="text-muted">
+        <button onClick={() => setOpen(false)} className="-my-2 py-2 text-muted">
           Fechar
         </button>
       </div>
@@ -76,7 +76,7 @@ export function ThresholdSettings({
         <button
           onClick={save}
           disabled={pending}
-          className="h-9 rounded-lg bg-primary px-4 font-medium text-primary-fg disabled:opacity-50"
+          className="h-10 md:h-9 rounded-lg bg-primary px-4 font-medium text-primary-fg disabled:opacity-50"
         >
           {pending ? "Salvando..." : "Salvar"}
         </button>

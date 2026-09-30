@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/auth",
   "/status",
   "/api/cron",  // autenticado pelo próprio segredo do cron, não por sessão
+  "/negociar",   // landing page pública
 ];
 
 export async function updateSession(request: NextRequest) {

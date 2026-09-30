@@ -61,13 +61,13 @@ export default async function AppLayout({
         modules={modules}
         badges={badges}
       />
-      <main className="flex flex-1 flex-col pb-16 md:pb-0">
+      <main className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
         <Topbar />
         <div className="mx-auto w-full max-w-5xl flex-1 p-5 md:p-7">
           {children}
         </div>
       </main>
-      <BottomNav items={items} quickActions={quick} />
+      <BottomNav items={items} quickActions={quick} badges={badges} />
     </div>
   );
 }

@@ -62,15 +62,15 @@ export default async function ClienteDetailPage({
     <div className="space-y-6">
       <BackLink href="/clientes" label="Voltar para clientes" />
 
-      <header className="flex items-start justify-between">
-        <h1 className="text-xl font-semibold">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="min-w-0 break-words text-xl font-semibold">
           {customerDisplayName(customer)}
         </h1>
         <div className="flex items-center gap-4">
           <CustomerStatusSelect customerId={id} status={customer.status} />
           <Link
             href={`/clientes/${id}/editar`}
-            className="text-sm text-primary hover:underline"
+            className="py-2 text-sm text-primary hover:underline"
           >
             Editar
           </Link>
@@ -78,7 +78,7 @@ export default async function ClienteDetailPage({
       </header>
 
       {/* funil comercial + próxima ação */}
-      <div className="space-y-5 rounded-lg border bg-surface p-5">
+      <div className="space-y-5 rounded-lg border bg-surface p-4 sm:p-5">
         <StageControls
           customerId={id}
           stage={stage}
@@ -109,9 +109,9 @@ export default async function ClienteDetailPage({
         {/* dados */}
         <div className="md:col-span-2 space-y-3 rounded-lg border bg-surface p-5">
           {rows.map(([label, value]) => (
-            <div key={label} className="flex justify-between text-sm">
-              <span className="text-muted">{label}</span>
-              <span>{value ?? "—"}</span>
+            <div key={label} className="flex justify-between gap-4 text-sm">
+              <span className="shrink-0 text-muted">{label}</span>
+              <span className="min-w-0 break-words text-right">{value ?? "—"}</span>
             </div>
           ))}
           {customer.notes && (

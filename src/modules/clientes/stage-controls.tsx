@@ -14,8 +14,8 @@ const STAGE_MSG: Record<Stage, string> = {
   lost: "Marcado como perdido.",
 };
 
-const btn = "h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
-const btnPrimary = "h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
+const btn = "h-10 md:h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
+const btnPrimary = "h-10 md:h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
 
 // Estágio do contato + ações de funil (oportunidade, converter, perdido, reabrir).
 export function StageControls({
@@ -104,7 +104,7 @@ export function StageControls({
         <form onSubmit={saveInfo} className="flex flex-wrap items-end gap-2">
           <label className="space-y-1 text-xs text-muted">
             Origem
-            <select name="source" defaultValue={source ?? ""} className="block h-8 rounded-md border bg-surface px-2 text-sm text-foreground">
+            <select name="source" defaultValue={source ?? ""} className="block h-10 md:h-8 rounded-md border bg-surface px-2 text-sm text-foreground">
               <option value="">—</option>
               {LEAD_SOURCES.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -117,7 +117,7 @@ export function StageControls({
               name="value"
               inputMode="decimal"
               defaultValue={estimatedValueCents ? (estimatedValueCents / 100).toFixed(2).replace(".", ",") : ""}
-              className="block h-8 w-32 rounded-md border bg-surface px-2 text-sm text-foreground"
+              className="block h-10 md:h-8 w-32 rounded-md border bg-surface px-2 text-sm text-foreground"
             />
           </label>
           <button type="submit" className={btn} disabled={pending}>Salvar</button>

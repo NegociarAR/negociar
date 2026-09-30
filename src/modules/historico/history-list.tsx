@@ -13,7 +13,7 @@ export function HistoryList({ rows }: { rows: AuditRow[] }) {
       {rows.map((r) => {
         const lines = changeLines(r);
         return (
-          <li key={r.id} className="space-y-1 px-4 py-3 text-sm">
+          <li key={r.id} className="space-y-1 break-words px-4 py-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <p className="min-w-0">
                 <span className="font-medium">{ACTION_LABELS[r.action] ?? r.action}</span>

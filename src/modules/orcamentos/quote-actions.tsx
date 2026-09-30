@@ -67,9 +67,9 @@ export function QuoteActions({
     status === "sent" || status === "viewed" ? "Cobrar retorno" : "Enviar por WhatsApp";
 
   const btn =
-    "h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle";
+    "h-10 md:h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle";
   const btnPrimary =
-    "h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg transition hover:opacity-90";
+    "h-10 md:h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg transition hover:opacity-90";
 
   return (
     <div className="space-y-3">
@@ -88,7 +88,7 @@ export function QuoteActions({
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="h-9 rounded-lg border bg-surface px-2 text-sm"
+            className="h-10 md:h-9 rounded-lg border bg-surface px-2 text-sm"
           >
             <option value={0}>sem lembrete</option>
             <option value={2}>2 dias</option>

@@ -26,7 +26,7 @@ export default async function RecoverPage({
         </>
       )}
       <p className="text-center text-sm text-muted">
-        <Link href="/login" className="hover:text-foreground">
+        <Link href="/login" className="inline-block py-2.5 hover:text-foreground">
           Voltar para entrar
         </Link>
       </p>

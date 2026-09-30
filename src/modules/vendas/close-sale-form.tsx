@@ -132,18 +132,18 @@ export function CloseSaleForm({
   }
 
   return (
-    <div className="space-y-5 rounded-lg border bg-surface p-5 shadow-card">
+    <div className="space-y-5 rounded-lg border bg-surface p-4 shadow-card sm:p-5">
       <h2 className="text-sm font-semibold">Fechar venda</h2>
 
       {/* pagamento */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Forma de pagamento">
-          <select value={method} onChange={(e) => setMethod(e.target.value)} className="h-9 w-full rounded-md border bg-surface px-3 text-sm">
+          <select value={method} onChange={(e) => setMethod(e.target.value)} className="h-10 md:h-9 w-full rounded-md border bg-surface px-3 text-sm">
             {METHODS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
           </select>
         </Field>
         <Field label="Documento">
-          <select value={docType} onChange={(e) => setDocType(e.target.value)} className="h-9 w-full rounded-md border bg-surface px-3 text-sm">
+          <select value={docType} onChange={(e) => setDocType(e.target.value)} className="h-10 md:h-9 w-full rounded-md border bg-surface px-3 text-sm">
             {DOCS.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
           </select>
         </Field>
@@ -193,14 +193,14 @@ export function CloseSaleForm({
         <div className="inline-flex rounded-md border p-0.5">
           {(["aceite", "upload"] as const).map((s) => (
             <button key={s} type="button" onClick={() => setSignature(s)}
-              className={`rounded px-3 py-1.5 text-sm font-medium ${signature === s ? "bg-primary text-primary-fg" : "text-muted"}`}>
+              className={`rounded px-3 py-2.5 text-sm font-medium md:py-1.5 ${signature === s ? "bg-primary text-primary-fg" : "text-muted"}`}>
               {s === "aceite" ? "Aceite simples" : "Upload assinado"}
             </button>
           ))}
         </div>
         {signature === "upload" && (
           <input type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-1.5 file:text-sm" />
+            className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-2.5 file:text-sm md:file:py-1.5" />
         )}
       </div>
 
@@ -210,7 +210,7 @@ export function CloseSaleForm({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <Button type="button" onClick={submit} disabled={pending || !calc.ok}>
+      <Button type="button" onClick={submit} disabled={pending || !calc.ok} className="w-full sm:w-auto">
         {pending ? "Registrando..." : "Registrar venda"}
       </Button>
     </div>

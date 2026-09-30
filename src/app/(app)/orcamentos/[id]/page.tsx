@@ -59,8 +59,8 @@ export default async function OrcamentoDetailPage({
         Voltar para orçamentos
       </Link>
 
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-semibold">
             Orçamento #{quote.number}
             {quote.version > 1 && (
@@ -73,7 +73,7 @@ export default async function OrcamentoDetailPage({
           {!["approved", "rejected", "superseded"].includes(quote.status) && (
             <Link
               href={`/orcamentos/${id}/editar`}
-              className="text-sm text-primary hover:underline"
+              className="py-2 text-sm text-primary hover:underline"
             >
               Editar
             </Link>
@@ -101,7 +101,7 @@ export default async function OrcamentoDetailPage({
           </div>
         )}
 
-      <div className="rounded-lg border bg-surface p-6">
+      <div className="rounded-lg border bg-surface p-4 sm:p-6">
         <p className="text-sm text-muted">Cliente</p>
         <p className="font-medium">{quote.customer_name ?? "—"}</p>
 
@@ -109,18 +109,23 @@ export default async function OrcamentoDetailPage({
           <thead>
             <tr className="border-b text-left text-muted">
               <th className="py-2 font-medium">Item</th>
-              <th className="py-2 text-right font-medium">Qtd</th>
-              <th className="py-2 text-right font-medium">Unit.</th>
+              <th className="hidden py-2 text-right font-medium sm:table-cell">Qtd</th>
+              <th className="hidden py-2 text-right font-medium sm:table-cell">Unit.</th>
               <th className="py-2 text-right font-medium">Total</th>
             </tr>
           </thead>
           <tbody>
             {quote.items.map((it) => (
               <tr key={it.id} className="border-b last:border-0">
-                <td className="py-2">{it.description}</td>
-                <td className="tabular py-2 text-right">{it.quantity}</td>
-                <td className="tabular py-2 text-right">{brl(it.unit_price_cents)}</td>
-                <td className="tabular py-2 text-right">{brl(it.total_cents)}</td>
+                <td className="py-2 pr-3 break-words">
+                  {it.description}
+                  <span className="tabular block text-xs text-muted sm:hidden">
+                    {it.quantity} × {brl(it.unit_price_cents)}
+                  </span>
+                </td>
+                <td className="tabular hidden py-2 text-right sm:table-cell">{it.quantity}</td>
+                <td className="tabular hidden py-2 text-right sm:table-cell">{brl(it.unit_price_cents)}</td>
+                <td className="tabular whitespace-nowrap py-2 text-right align-top">{brl(it.total_cents)}</td>
               </tr>
             ))}
           </tbody>
@@ -145,7 +150,7 @@ export default async function OrcamentoDetailPage({
       </div>
 
       {(quote.valid_until || quote.payment_terms || quote.delivery_terms || quote.notes) && (
-        <div className="space-y-2 rounded-lg border bg-surface p-6 text-sm">
+        <div className="space-y-2 rounded-lg border bg-surface p-4 text-sm sm:p-6">
           {quote.valid_until && <Row label="Validade" value={fmtDate(quote.valid_until)} />}
           {quote.payment_terms && <Row label="Pagamento" value={quote.payment_terms} />}
           {quote.delivery_terms && <Row label="Entrega" value={quote.delivery_terms} />}
@@ -251,9 +256,9 @@ export default async function OrcamentoDetailPage({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
-      <span className="text-muted">{label}</span>
-      <span>{value}</span>
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+      <span className="shrink-0 text-muted">{label}</span>
+      <span className="min-w-0 whitespace-pre-line break-words sm:text-right">{value}</span>
     </div>
   );
 }

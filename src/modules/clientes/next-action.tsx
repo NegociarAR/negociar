@@ -73,7 +73,7 @@ export function NextAction({
               <button
                 onClick={() => finish(a.id)}
                 disabled={pending}
-                className="shrink-0 text-xs font-medium underline disabled:opacity-50"
+                className="-my-2 shrink-0 py-2.5 text-xs font-medium underline disabled:opacity-50"
               >
                 Concluir
               </button>
@@ -82,14 +82,14 @@ export function NextAction({
         </ul>
       )}
       <form onSubmit={schedule} className="flex flex-wrap items-end gap-2">
-        <select name="kind" className="h-8 rounded-md border bg-surface px-2 text-sm">
+        <select name="kind" className="h-10 md:h-8 rounded-md border bg-surface px-2 text-sm">
           {ACTION_KINDS.map((k) => (
             <option key={k.key} value={k.key}>{k.label}</option>
           ))}
         </select>
-        <input type="date" name="date" required defaultValue={today} className="h-8 rounded-md border bg-surface px-2 text-sm" />
-        <input name="note" placeholder="Observação (opcional)" className="h-8 min-w-40 flex-1 rounded-md border bg-surface px-2 text-sm" />
-        <button type="submit" disabled={pending} className="h-8 rounded-md border px-3 text-xs font-medium hover:bg-subtle disabled:opacity-50">
+        <input type="date" name="date" required defaultValue={today} className="h-10 md:h-8 rounded-md border bg-surface px-2 text-sm" />
+        <input name="note" placeholder="Observação (opcional)" className="h-10 md:h-8 min-w-0 flex-1 basis-40 rounded-md border bg-surface px-2 text-sm" />
+        <button type="submit" disabled={pending} className="h-10 md:h-8 rounded-md border px-3 text-xs font-medium hover:bg-subtle disabled:opacity-50">
           Agendar
         </button>
       </form>

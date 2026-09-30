@@ -29,7 +29,7 @@ export function ProductStatusSelect({ productId, active }: { productId: string; 
         value={value ? "1" : "0"}
         onChange={(e) => change(e.target.value === "1")}
         disabled={pending}
-        className="h-8 rounded-md border bg-surface px-2 text-sm"
+        className="h-10 md:h-8 rounded-md border bg-surface px-2 text-sm"
       >
         <option value="1">Ativo</option>
         <option value="0">Inativo</option>

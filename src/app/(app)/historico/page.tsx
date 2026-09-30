@@ -43,7 +43,7 @@ export default async function HistoricoPage({
           <Link
             key={t.key}
             href={href(t.key)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 ${
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 ${
               tab.key === t.key ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"
             }`}
           >
@@ -57,8 +57,8 @@ export default async function HistoricoPage({
       </div>
 
       <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={href(tab.key, page - 1)} className="text-muted hover:text-foreground">← Mais recentes</Link> : <span />}
-        {hasMore && <Link href={href(tab.key, page + 1)} className="text-muted hover:text-foreground">Mais antigos →</Link>}
+        {page > 1 ? <Link href={href(tab.key, page - 1)} className="py-2.5 text-muted hover:text-foreground">← Mais recentes</Link> : <span />}
+        {hasMore && <Link href={href(tab.key, page + 1)} className="py-2.5 text-muted hover:text-foreground">Mais antigos →</Link>}
       </div>
     </div>
   );

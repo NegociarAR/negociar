@@ -14,14 +14,14 @@ export function PlanRequestActions({ requestId }: { requestId: string }) {
       <button
         onClick={() => startTransition(() => approvePlanRequest(requestId).then(() => { toast("Solicitação aprovada. O plano da empresa foi alterado."); router.refresh(); }))}
         disabled={pending}
-        className="h-8 rounded-md bg-foreground px-3 text-xs font-medium text-background disabled:opacity-50"
+        className="h-10 md:h-8 rounded-md bg-foreground px-3 text-xs font-medium text-background disabled:opacity-50"
       >
         Aprovar
       </button>
       <button
         onClick={() => startTransition(() => rejectPlanRequest(requestId).then(() => { toast("Solicitação rejeitada."); router.refresh(); }))}
         disabled={pending}
-        className="h-8 rounded-md border px-3 text-xs font-medium disabled:opacity-50"
+        className="h-10 md:h-8 rounded-md border px-3 text-xs font-medium disabled:opacity-50"
       >
         Rejeitar
       </button>

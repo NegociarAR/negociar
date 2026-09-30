@@ -61,9 +61,9 @@ export default async function AdminHomePage({
               <Link
                 key={e.companyId}
                 href={`/admin/empresas/${e.companyId}`}
-                className="flex items-center justify-between gap-4 px-4 py-3 text-sm transition hover:bg-subtle"
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm transition hover:bg-subtle"
               >
-                <div>
+                <div className="min-w-0">
                   <span className="font-medium">{e.companyName}</span>
                   <span className="text-muted"> · plano {e.planName}</span>
                 </div>
@@ -83,7 +83,7 @@ export default async function AdminHomePage({
             <Link
               key={t.key}
               href={t.key ? `/admin?status=${t.key}` : "/admin"}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm ${
+              className={`-mb-px border-b-2 px-3 py-2.5 text-sm ${
                 active
                   ? "border-foreground font-medium text-foreground"
                   : "border-transparent text-muted hover:text-foreground"
@@ -101,8 +101,8 @@ export default async function AdminHomePage({
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-surface">
-          <table className="w-full text-sm">
-            <thead>
+          <table className="block w-full text-sm sm:table">
+            <thead className="hidden sm:table-header-group">
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">Empresa</th>
                 <th className="px-4 py-3 font-medium">Plano</th>
@@ -110,7 +110,7 @@ export default async function AdminHomePage({
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block sm:table-row-group">
               {companies.map((c) => (
                 <AdminCompanyRow key={c.id} c={c} />
               ))}

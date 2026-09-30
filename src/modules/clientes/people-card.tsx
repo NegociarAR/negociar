@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { savePerson, makePrimary, deletePerson } from "./people-actions";
 import type { Person } from "./people-types";
 
-const inputCls = "h-9 w-full rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
-const btn = "h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
+const inputCls = "h-10 md:h-9 w-full rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+const btn = "h-10 md:h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
 
 function waLink(phone: string) {
   const d = phone.replace(/\D/g, "");
@@ -83,7 +83,7 @@ function PersonForm({
       )}
       {error && <p className="text-xs text-danger">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={pending} className="h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg disabled:opacity-50">
+        <button type="submit" disabled={pending} className="h-10 md:h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg disabled:opacity-50">
           {pending ? "Salvando..." : "Salvar"}
         </button>
         <button type="button" onClick={onDone} className={btn}>Cancelar</button>
@@ -137,8 +137,8 @@ export function PeopleCard({ customerId, people }: { customerId: string; people:
             </li>
           ) : (
             <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
-              <div className="min-w-0 space-y-0.5 text-sm">
-                <p className="flex items-center gap-2">
+              <div className="min-w-0 space-y-0.5 break-words text-sm">
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="font-medium">{p.name}</span>
                   {p.is_primary && (
                     <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">Principal</span>
@@ -158,7 +158,7 @@ export function PeopleCard({ customerId, people }: { customerId: string; people:
                   {!p.phone && !p.email && "Sem telefone ou e-mail"}
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-4 text-xs md:gap-3 [&>button]:py-2.5 md:[&>button]:py-0">
                 {!p.is_primary && (
                   <button disabled={pending} onClick={() => run(() => makePrimary(p.id, customerId), "Contato principal alterado.")} className="font-medium underline disabled:opacity-50">
                     Tornar principal

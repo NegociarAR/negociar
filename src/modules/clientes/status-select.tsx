@@ -37,7 +37,7 @@ export function CustomerStatusSelect({
         value={value}
         onChange={(e) => change(e.target.value as typeof value)}
         disabled={pending}
-        className="h-8 rounded-md border bg-surface px-2 text-sm"
+        className="h-10 md:h-8 rounded-md border bg-surface px-2 text-sm"
       >
         {OPTIONS.map((o) => (
           <option key={o.id} value={o.id}>

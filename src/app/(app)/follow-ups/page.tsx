@@ -13,9 +13,9 @@ function fmtDate(iso: string) {
 
 function Item({ f }: { f: Followup }) {
   return (
-    <li className="flex items-start justify-between gap-4 px-4 py-3">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
+    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 px-4 py-3">
+      <div className="min-w-0 flex-1 basis-48">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="tabular text-sm font-medium">{fmtDate(f.due_date)}</span>
           <Link
             href={`/clientes/${f.customer_id}`}
@@ -101,7 +101,7 @@ export default async function FollowupsPage() {
             {done.map((f) => (
               <li key={f.id} className="flex items-center justify-between gap-4 px-4 py-3 opacity-70">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <Link href={`/clientes/${f.customer_id}`} className="truncate font-medium line-through hover:no-underline">
                       {f.customer_name ?? "Cliente"}
                     </Link>

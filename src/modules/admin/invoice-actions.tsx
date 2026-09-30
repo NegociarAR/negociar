@@ -7,7 +7,7 @@ import { markPaid, reopenInvoice, cancelInvoice } from "./billing-actions";
 import { parseBRLToCents } from "@/lib/format";
 import { todayBRT } from "@/lib/period";
 
-const btn = "h-7 rounded-md border px-2.5 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
+const btn = "h-10 md:h-7 rounded-md border px-2.5 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
 
 export function InvoiceActions({ id, status, amountCents }: { id: string; status: "open" | "paid" | "canceled"; amountCents: number }) {
   const router = useRouter();
@@ -52,7 +52,7 @@ export function InvoiceActions({ id, status, amountCents }: { id: string; status
   if (paying) {
     return (
       <form onSubmit={pay} className="flex flex-wrap items-center justify-end gap-1.5">
-        <select name="method" className="h-7 rounded-md border bg-surface px-1.5 text-xs">
+        <select name="method" className="h-10 md:h-7 rounded-md border bg-surface px-1.5 text-xs">
           <option value="pix">Pix</option>
           <option value="boleto">Boleto</option>
           <option value="transferencia">Transferência</option>
@@ -60,9 +60,9 @@ export function InvoiceActions({ id, status, amountCents }: { id: string; status
           <option value="dinheiro">Dinheiro</option>
           <option value="outro">Outro</option>
         </select>
-        <input type="date" name="date" defaultValue={todayBRT()} className="h-7 rounded-md border bg-surface px-1.5 text-xs" />
-        <input name="amount" inputMode="decimal" placeholder={(amountCents / 100).toFixed(2).replace(".", ",")} className="h-7 w-20 rounded-md border bg-surface px-1.5 text-xs" />
-        <button type="submit" disabled={pending} className="h-7 rounded-md bg-primary px-2.5 text-xs font-medium text-primary-fg disabled:opacity-50">Confirmar</button>
+        <input type="date" name="date" defaultValue={todayBRT()} className="h-10 md:h-7 rounded-md border bg-surface px-1.5 text-xs" />
+        <input name="amount" inputMode="decimal" placeholder={(amountCents / 100).toFixed(2).replace(".", ",")} className="h-10 md:h-7 w-20 rounded-md border bg-surface px-1.5 text-xs" />
+        <button type="submit" disabled={pending} className="h-10 md:h-7 rounded-md bg-primary px-2.5 text-xs font-medium text-primary-fg disabled:opacity-50">Confirmar</button>
         <button type="button" onClick={() => setPaying(false)} className={btn}>x</button>
         {error && <span className="basis-full text-right text-xs text-danger">{error}</span>}
       </form>

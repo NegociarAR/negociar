@@ -75,13 +75,13 @@ export function PublicDecision({ token }: { token: string }) {
           <button
             onClick={() => submitReason(isReject ? "rejected" : "negotiate")}
             disabled={pending}
-            className="h-10 flex-1 rounded-lg bg-foreground text-sm font-medium text-background disabled:opacity-50"
+            className="h-11 flex-1 rounded-lg bg-foreground text-sm font-medium text-background disabled:opacity-50"
           >
             {pending ? "Enviando..." : isReject ? "Confirmar recusa" : "Enviar pedido"}
           </button>
           <button
             onClick={() => { setPanel(null); setReason(""); setError(null); }}
-            className="h-10 rounded-lg border px-4 text-sm"
+            className="h-11 rounded-lg border px-4 text-sm"
           >
             Voltar
           </button>
@@ -103,13 +103,13 @@ export function PublicDecision({ token }: { token: string }) {
       <div className="flex gap-2">
         <button
           onClick={() => setPanel("negotiate")}
-          className="h-10 flex-1 rounded-lg border text-sm font-medium transition hover:bg-subtle"
+          className="h-11 flex-1 rounded-lg border text-sm font-medium transition hover:bg-subtle"
         >
           Quero negociar
         </button>
         <button
           onClick={() => setPanel("reject")}
-          className="h-10 flex-1 rounded-lg border text-sm font-medium text-muted transition hover:bg-subtle"
+          className="h-11 flex-1 rounded-lg border text-sm font-medium text-muted transition hover:bg-subtle"
         >
           Recusar
         </button>

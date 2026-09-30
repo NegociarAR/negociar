@@ -14,9 +14,9 @@ function fmtDate(iso: string) {
 
 function Item({ r, received }: { r: Receivable; received?: boolean }) {
   return (
-    <li className="flex items-center justify-between gap-4 px-4 py-3">
+    <li className="flex items-center justify-between gap-3 px-4 py-3">
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="tabular text-sm font-medium">{fmtDate(r.due_date)}</span>
           <span className="truncate text-sm">{r.customer_name ?? "Cliente"}</span>
           {r.quote_number && (
@@ -27,8 +27,8 @@ function Item({ r, received }: { r: Receivable; received?: boolean }) {
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="tabular text-sm font-medium">{brl(r.amount_cents)}</span>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="tabular whitespace-nowrap text-sm font-medium">{brl(r.amount_cents)}</span>
         <ReceiveButton id={r.id} received={received} />
       </div>
     </li>
@@ -71,9 +71,9 @@ function Group({
 
 function TotalCard({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
   return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
+    <div className="min-w-0 rounded-lg border bg-surface p-3 shadow-card sm:p-4">
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>
+      <p className={`tabular mt-1 break-words text-lg font-semibold sm:text-xl ${danger ? "text-danger" : ""}`}>
         {value}
       </p>
     </div>
@@ -91,7 +91,7 @@ export default async function RecebiveisPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Recebíveis</h1>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <TotalCard label="A receber" value={brl(totals.toReceive)} />
         <TotalCard label="Vencido" value={brl(totals.overdue)} danger={totals.overdue > 0} />
         <TotalCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />

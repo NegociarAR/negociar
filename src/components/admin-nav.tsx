@@ -20,7 +20,7 @@ export function AdminNav() {
             key={i.href}
             href={i.href}
             aria-current={active ? "page" : undefined}
-            className={`flex h-14 items-center border-b-2 px-3 transition ${
+            className={`flex h-12 items-center whitespace-nowrap border-b-2 px-3 transition md:h-14 ${
               active
                 ? "border-primary font-medium text-primary"
                 : "border-transparent text-muted hover:text-foreground"

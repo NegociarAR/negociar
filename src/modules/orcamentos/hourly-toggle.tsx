@@ -7,8 +7,8 @@ import { setHourlyContract } from "./hourly-actions";
 import { parseBRLToCents, brl } from "@/lib/format";
 import { useToast } from "@/components/toast";
 
-const btn = "h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle disabled:opacity-50";
-const btnPrimary = "h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
+const btn = "h-10 md:h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle disabled:opacity-50";
+const btnPrimary = "h-10 md:h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50";
 
 // Ativa/mostra/desativa o contrato por hora de um orçamento aprovado.
 export function HourlyToggle({
@@ -70,12 +70,12 @@ export function HourlyToggle({
   if (active) {
     return (
       <div className="space-y-3 rounded-lg border border-l-2 border-l-primary bg-primary-soft p-4 text-sm">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <p className="font-medium">Contrato por hora ativo</p>
             <p className="text-muted">Taxa: {brl(rateCents ?? 0)}/hora</p>
           </div>
-          <button onClick={deactivate} disabled={pending} className="text-xs text-muted underline disabled:opacity-50">
+          <button onClick={deactivate} disabled={pending} className="shrink-0 py-2 text-xs text-muted underline disabled:opacity-50">
             Desativar
           </button>
         </div>
@@ -111,7 +111,7 @@ export function HourlyToggle({
           autoFocus
           defaultValue={defaultRate}
           placeholder="0,00"
-          className="block h-9 w-32 rounded-md border bg-surface px-2 text-sm"
+          className="block h-10 md:h-9 w-32 rounded-md border bg-surface px-2 text-sm"
         />
       </label>
       {suggestedRateCents ? (

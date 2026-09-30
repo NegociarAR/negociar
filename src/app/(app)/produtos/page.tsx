@@ -28,7 +28,7 @@ export default async function ProdutosPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Produtos</h1>
           <p className="text-sm text-muted">
@@ -41,7 +41,7 @@ export default async function ProdutosPage({
       </header>
 
       {limite && (
-        <div className="flex items-center justify-between rounded-lg border border-l-2 border-l-primary bg-primary-soft px-4 py-3 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-l-2 border-l-primary bg-primary-soft px-4 py-3 text-sm">
           <span>Você atingiu o limite de {gate.limit} produtos do seu plano.</span>
           <Link href="/configuracoes" className="font-medium text-foreground underline">
             Fazer upgrade
@@ -49,12 +49,12 @@ export default async function ProdutosPage({
         </div>
       )}
 
-      <div className="flex gap-1 border-b text-sm">
+      <div className="flex gap-1 overflow-x-auto border-b text-sm">
         {([["all", "Todos"], ["active", "Ativos"], ["inactive", "Inativos"]] as const).map(([k, label]) => (
           <Link
             key={k}
             href={tabHref(k)}
-            className={`-mb-px border-b-2 px-3 py-2 ${
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 ${
               filter === k ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"
             }`}
           >
@@ -81,9 +81,9 @@ export default async function ProdutosPage({
       ) : (
         <ul className="divide-y rounded-lg border bg-surface">
           {products.map((p) => (
-            <li key={p.id} className={`flex items-center justify-between px-4 py-3 ${isActive(p) ? "" : "opacity-55"}`}>
-              <div>
-                <p className="flex items-center gap-2 font-medium">
+            <li key={p.id} className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 ${isActive(p) ? "" : "opacity-55"}`}>
+              <div className="min-w-0 flex-1 basis-48 break-words">
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
                   {p.name}
                   {!isActive(p) && <span className="rounded-full border px-2 py-0.5 text-xs font-normal text-muted">Inativo</span>}
                 </p>
@@ -92,11 +92,11 @@ export default async function ProdutosPage({
                   {p.current_price_cents != null && ` · Preço ${brl(p.current_price_cents)}`}
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Link href={`/precificar?produto=${p.id}`} className="text-primary hover:underline">
+              <div className="flex items-center gap-4 text-sm md:gap-3">
+                <Link href={`/precificar?produto=${p.id}`} className="py-2 text-primary hover:underline md:py-0">
                   Precificar
                 </Link>
-                <Link href={`/produtos/${p.id}/editar`} className="text-muted hover:text-foreground">
+                <Link href={`/produtos/${p.id}/editar`} className="py-2 text-muted hover:text-foreground md:py-0">
                   Editar
                 </Link>
               </div>

@@ -47,14 +47,14 @@ export default async function RelatoriosPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Relatórios</h1>
-        <div className="flex gap-1 text-sm">
+        <div className="flex flex-wrap gap-1 text-sm">
           {PERIODS.map((p) => (
             <Link
               key={p}
               href={`/relatorios?periodo=${p}`}
-              className={`rounded-md px-3 py-1.5 ${
+              className={`rounded-md px-3 py-2.5 md:py-1.5 ${
                 period === p ? "bg-primary text-primary-fg" : "text-muted hover:text-foreground"
               }`}
             >
@@ -67,20 +67,20 @@ export default async function RelatoriosPage({
       {/* 2. FATURAMENTO (topo, cards) */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Faturamento</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Card label="Total vendido" value={brl(revenue.totalCents)} />
           <Card label="Vendas" value={String(revenue.count)} />
           <Card label="Ticket médio" value={brl(revenue.avgTicketCents)} />
         </div>
         {revenue.byMonth.length > 0 && (
-          <div className="space-y-2 rounded-lg border bg-surface p-5 shadow-card">
+          <div className="space-y-2 rounded-lg border bg-surface p-4 shadow-card sm:p-5">
             {revenue.byMonth.map((m) => (
               <div key={m.month} className="flex items-center gap-3 text-sm">
                 <span className="w-14 shrink-0 text-muted">{monthLabel(m.month)}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
                   <div className="h-full rounded-full bg-primary" style={{ width: `${(m.cents / maxMonth) * 100}%` }} />
                 </div>
-                <span className="tabular w-24 shrink-0 text-right">{brl(m.cents)}</span>
+                <span className="tabular shrink-0 whitespace-nowrap text-right sm:w-24">{brl(m.cents)}</span>
               </div>
             ))}
           </div>
@@ -89,17 +89,17 @@ export default async function RelatoriosPage({
 
       {/* 1. FUNIL */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <h2 className="text-sm font-semibold">Funil de conversão</h2>
           <span className="text-sm text-muted">
             Conversão: <strong className="text-foreground">{funnel.conversion.toFixed(0)}%</strong>{" "}
             ({funnel.won} de {funnel.sent} enviados)
           </span>
         </div>
-        <div className="space-y-2 rounded-lg border bg-surface p-5 shadow-card">
+        <div className="space-y-2 rounded-lg border bg-surface p-4 shadow-card sm:p-5">
           {FUNNEL_ORDER.filter((s) => funnel.byStatus[s]).map((s) => (
             <div key={s} className="flex items-center gap-3 text-sm">
-              <span className="w-40 shrink-0 text-muted">{STATUS_LABELS[s as keyof typeof STATUS_LABELS] ?? s}</span>
+              <span className="w-28 shrink-0 text-muted sm:w-40">{STATUS_LABELS[s as keyof typeof STATUS_LABELS] ?? s}</span>
               <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
                 <div
                   className={`h-full rounded-full ${s === "approved" ? "bg-primary" : "bg-foreground/40"}`}
@@ -116,25 +116,25 @@ export default async function RelatoriosPage({
       {/* LEADS -> CLIENTES */}
       {leads && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <h2 className="text-sm font-semibold">Leads e conversão</h2>
             <span className="text-sm text-muted">
               Conversão: <strong className="text-foreground">{leads.rate.toFixed(0)}%</strong> ({leads.converted} de {leads.leads})
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Card label="Leads no período" value={String(leads.leads)} />
             <Card label="Viraram cliente" value={String(leads.converted)} />
             <Card label="Perdidos" value={String(leads.lost)} />
           </div>
-          <div className="rounded-lg border bg-surface p-5 shadow-card">
+          <div className="rounded-lg border bg-surface p-4 shadow-card sm:p-5">
             {leads.bySource.length === 0 ? (
               <p className="text-sm text-muted">Nenhum lead no período.</p>
             ) : (
               <ul className="space-y-2">
                 {leads.bySource.map((s) => (
                   <li key={s.source} className="flex items-center gap-3 text-sm">
-                    <span className="w-36 shrink-0 text-muted">{s.source}</span>
+                    <span className="w-24 shrink-0 break-words text-muted sm:w-36">{s.source}</span>
                     <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
                       <div className="h-full rounded-full bg-primary" style={{ width: `${s.total ? (s.converted / s.total) * 100 : 0}%` }} />
                     </div>
@@ -150,20 +150,20 @@ export default async function RelatoriosPage({
       {/* 3. MOTIVOS */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Motivos de recusa e negociação</h2>
-        <div className="rounded-lg border bg-surface p-5 shadow-card">
+        <div className="rounded-lg border bg-surface p-4 shadow-card sm:p-5">
           {reasons.length === 0 ? (
             <p className="text-sm text-muted">Nenhum motivo registrado no período.</p>
           ) : (
             <ul className="space-y-2">
               {reasons.map((r, i) => (
                 <li key={i} className="flex items-center gap-3 text-sm">
-                  <span className="flex-1">
+                  <span className="min-w-0 flex-1 break-words">
                     {r.reason}
                     <span className="ml-2 text-xs text-muted">
                       {r.kind === "rejected" ? "recusa" : "negociação"}
                     </span>
                   </span>
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-subtle">
+                  <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full bg-subtle sm:w-24">
                     <div className="h-full rounded-full bg-foreground/40" style={{ width: `${(r.count / maxReason) * 100}%` }} />
                   </div>
                   <span className="tabular w-6 text-right">{r.count}</span>
@@ -177,7 +177,7 @@ export default async function RelatoriosPage({
       {/* 4. RECEBÍVEIS */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Recebíveis</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Card label="A receber" value={brl(receivables.toReceiveCents)} />
           <Card label="Vencido" value={brl(receivables.overdueCents)} danger={receivables.overdueCents > 0} />
           <Card label="Recebido no período" value={brl(receivables.receivedCents)} />
@@ -189,9 +189,9 @@ export default async function RelatoriosPage({
 
 function Card({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
   return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
+    <div className="min-w-0 rounded-lg border bg-surface p-3 shadow-card sm:p-4">
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      <p className={`tabular mt-1 break-words text-lg font-semibold sm:text-xl ${danger ? "text-danger" : ""}`}>{value}</p>
     </div>
   );
 }

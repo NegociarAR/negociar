@@ -29,8 +29,8 @@ export default async function EditarProdutoPage({
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <BackLink href="/produtos" label="Voltar para produtos" />
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-xl font-semibold">{product.name}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="min-w-0 break-words text-xl font-semibold">{product.name}</h1>
         <ProductStatusSelect
           productId={id}
           active={(product as { is_active?: boolean }).is_active !== false}

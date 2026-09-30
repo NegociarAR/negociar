@@ -38,7 +38,7 @@ export function RecoveryAction({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-sm font-medium text-foreground underline"
+        className="py-2 text-sm font-medium text-foreground underline"
       >
         {label}
       </button>
@@ -46,7 +46,7 @@ export function RecoveryAction({
   }
 
   return (
-    <div className="mt-2 space-y-2 rounded-lg border bg-subtle p-3">
+    <div className="mt-2 w-full space-y-2 rounded-lg border bg-subtle p-3">
       <textarea
         value={msg}
         onChange={(e) => setMsg(e.target.value)}
@@ -56,13 +56,13 @@ export function RecoveryAction({
       <div className="flex gap-2">
         <button
           onClick={send}
-          className="h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg"
+          className="h-10 md:h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg"
         >
           Enviar WhatsApp
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="h-9 rounded-lg border px-4 text-sm"
+          className="h-10 md:h-9 rounded-lg border px-4 text-sm"
         >
           Cancelar
         </button>

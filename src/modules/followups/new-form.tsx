@@ -31,7 +31,7 @@ export function NewFollowupForm({
           <select
             name="customer_id"
             required
-            className="h-9 w-full rounded-lg border bg-surface px-3 text-sm"
+            className="h-10 md:h-9 w-full rounded-lg border bg-surface px-3 text-sm"
           >
             <option value="">Selecione...</option>
             {customers.map((c) => (

@@ -64,8 +64,8 @@ export function ImportCustomers() {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border bg-surface p-5 shadow-card">
-      <div className="flex items-start justify-between">
+    <div className="w-full space-y-4 rounded-lg border bg-surface p-5 shadow-card">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Importar clientes</h2>
           <p className="text-sm text-muted">
@@ -74,7 +74,7 @@ export function ImportCustomers() {
         </div>
         <button
           onClick={() => { setOpen(false); setParsed(null); setResult(null); }}
-          className="text-sm text-muted hover:text-foreground"
+          className="-my-2 shrink-0 py-2 text-sm text-muted hover:text-foreground"
         >
           Fechar
         </button>
@@ -82,7 +82,7 @@ export function ImportCustomers() {
 
       <button
         onClick={downloadTemplate}
-        className="text-sm font-medium text-primary hover:underline"
+        className="py-2 text-sm font-medium text-primary hover:underline"
       >
         Baixar planilha-modelo
       </button>
@@ -92,7 +92,7 @@ export function ImportCustomers() {
           type="file"
           accept=".xlsx,.xls,.csv"
           onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-          className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-1.5 file:text-sm"
+          className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border file:bg-subtle file:px-3 file:py-2.5 file:text-sm md:file:py-1.5"
         />
         {fileName && <p className="mt-1 text-xs text-muted">{fileName}</p>}
       </div>

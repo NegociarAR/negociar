@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { generateInvoices, createInvoice, saveBillingSettings } from "./billing-actions";
 import { parseBRLToCents } from "@/lib/format";
 
-const input = "h-9 w-full rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
-const btn = "h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
-const btnPrimary = "h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-fg disabled:opacity-50";
+const input = "h-10 md:h-9 w-full rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+const btn = "h-10 md:h-8 rounded-md border px-3 text-xs font-medium transition hover:bg-subtle disabled:opacity-50";
+const btnPrimary = "h-10 md:h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-fg disabled:opacity-50";
 
 type Panel = null | "gen" | "new" | "cfg";
 

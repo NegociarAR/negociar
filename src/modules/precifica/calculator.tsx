@@ -174,7 +174,7 @@ export function PriceCalculator({
               key={m}
               type="button"
               onClick={() => setMode(m)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${
+              className={`rounded-md px-3 py-2.5 text-sm font-medium transition sm:px-4 md:py-1.5 ${
                 mode === m ? "bg-primary text-primary-fg" : "text-muted hover:text-foreground"
               }`}
             >
@@ -188,7 +188,7 @@ export function PriceCalculator({
             <select
               value={segmentId}
               onChange={(e) => applySegment(e.target.value)}
-              className="h-9 w-full rounded-lg border bg-surface px-3 text-sm"
+              className="h-10 md:h-9 w-full rounded-lg border bg-surface px-3 text-sm"
             >
               {SEGMENTS.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -224,7 +224,7 @@ export function PriceCalculator({
               <select
                 value={taxRegime}
                 onChange={(e) => applyTaxRegime(e.target.value)}
-                className="h-9 w-full rounded-lg border bg-surface px-3 text-sm"
+                className="h-10 md:h-9 w-full rounded-lg border bg-surface px-3 text-sm"
               >
                 {TAX_PRESETS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -360,9 +360,9 @@ export function PriceCalculator({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between gap-3 text-sm">
       <span className="text-muted">{label}</span>
-      <span className="tabular">{value}</span>
+      <span className="tabular shrink-0">{value}</span>
     </div>
   );
 }

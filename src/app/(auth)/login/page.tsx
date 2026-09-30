@@ -35,11 +35,11 @@ export default async function LoginPage({
       <Button type="submit" className="w-full">
         Entrar
       </Button>
-      <div className="flex justify-between text-sm text-muted">
-        <Link href="/recuperar" className="hover:text-foreground">
+      <div className="-my-2 flex justify-between text-sm text-muted">
+        <Link href="/recuperar" className="py-2.5 hover:text-foreground">
           Esqueci a senha
         </Link>
-        <Link href="/signup" className="hover:text-foreground">
+        <Link href="/signup" className="py-2.5 hover:text-foreground">
           Criar conta
         </Link>
       </div>

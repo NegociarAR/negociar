@@ -24,9 +24,9 @@ const SITUATION: Record<Situation, { label: string; cls: string }> = {
 
 function Card({ label, value, sub, danger }: { label: string; value: string; sub?: string; danger?: boolean }) {
   return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
+    <div className="min-w-0 rounded-lg border bg-surface p-3 shadow-card sm:p-4">
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      <p className={`tabular mt-1 break-words text-lg font-semibold sm:text-xl ${danger ? "text-danger" : ""}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
     </div>
   );
@@ -73,8 +73,8 @@ export default async function AdminFinanceiroPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 basis-64">
           <h1 className="text-xl font-semibold">Financeiro</h1>
           <p className="text-sm text-muted">
             Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
@@ -83,7 +83,7 @@ export default async function AdminFinanceiroPage({
         </div>
         <Link
           href="/admin/financeiro/recebimentos"
-          className="h-9 shrink-0 rounded-lg border px-4 text-sm font-medium leading-9 transition hover:bg-subtle"
+          className="inline-flex h-10 md:h-9 shrink-0 items-center rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle"
         >
           Ver recebimentos →
         </Link>
@@ -119,7 +119,7 @@ export default async function AdminFinanceiroPage({
           <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">Nenhuma empresa com pendência ou bloqueio.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-surface">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b text-left text-muted">
                   <th className="px-4 py-3 font-medium">Empresa</th>
@@ -167,15 +167,15 @@ export default async function AdminFinanceiroPage({
               <Link
                 key={t.key}
                 href={href(t.key)}
-                className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 ${tab.key === t.key ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"}`}
+                className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 ${tab.key === t.key ? "border-primary font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"}`}
               >
                 {t.label} <span className="tabular text-xs text-muted">{o.invoices.filter(t.match).length}</span>
               </Link>
             ))}
           </div>
-          <form className="pb-2">
+          <form className="w-full pb-2 sm:w-auto">
             <input type="hidden" name="aba" value={tab.key} />
-            <input name="q" defaultValue={q ?? ""} placeholder="Buscar empresa..." className="h-8 w-44 rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary" />
+            <input name="q" defaultValue={q ?? ""} placeholder="Buscar empresa..." className="h-10 md:h-8 w-full rounded-md border bg-surface px-2 text-sm outline-none focus:border-primary sm:w-44" />
           </form>
         </div>
 
@@ -183,7 +183,7 @@ export default async function AdminFinanceiroPage({
           <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">Nenhum título nesta visão.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-surface">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b text-left text-muted">
                   <th className="px-4 py-3 font-medium">Empresa</th>

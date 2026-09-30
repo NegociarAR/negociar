@@ -34,7 +34,7 @@ export function ExportCsvButton({ rows, month }: { rows: PaymentRow[]; month: st
     <button
       onClick={download}
       disabled={rows.length === 0}
-      className="h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle disabled:opacity-50"
+      className="h-10 md:h-9 rounded-lg border px-4 text-sm font-medium transition hover:bg-subtle disabled:opacity-50"
     >
       Exportar CSV
     </button>
