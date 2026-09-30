@@ -17,16 +17,21 @@ export default async function OrcamentosPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Orçamentos</h1>
           <p className="text-sm text-muted">
             {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
           </p>
         </div>
-        <Link href="/orcamentos/novo">
-          <Button>+ Novo orçamento</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/orcamentos/horas" className="text-sm font-medium text-primary hover:underline">
+            Faturamento por hora
+          </Link>
+          <Link href="/orcamentos/novo">
+            <Button>+ Novo orçamento</Button>
+          </Link>
+        </div>
       </header>
 
       <form className="flex gap-2">
@@ -45,8 +50,8 @@ export default async function OrcamentosPage({
         </div>
       ) : (
         <div className="rounded-lg border bg-surface">
-          <table className="block w-full text-sm sm:table">
-            <thead className="hidden sm:table-header-group">
+          <table className="w-full text-sm">
+            <thead>
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
@@ -56,7 +61,7 @@ export default async function OrcamentosPage({
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="block sm:table-row-group">
+            <tbody>
               {quotes.map((qt) => (
                 <QuoteRow key={qt.id} qt={qt} />
               ))}
