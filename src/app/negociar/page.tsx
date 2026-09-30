@@ -33,6 +33,7 @@ const MODULES = [
   {
     name: "ClienteZap",
     color: "#2E7BE4",
+    icon: MessageCircle,
     tag: "Relacionamento",
     tagline: "Organize seus clientes e relacionamentos.",
     features: [
@@ -46,6 +47,7 @@ const MODULES = [
   {
     name: "Precifica",
     color: "#22C55E",
+    icon: Tag,
     tag: "Precificação",
     tagline: "Encontre o preço certo para vender.",
     features: [
@@ -59,6 +61,7 @@ const MODULES = [
   {
     name: "OrçaFácil",
     color: "#7C3AED",
+    icon: FileText,
     tag: "Propostas",
     tagline: "Transforme oportunidades em propostas.",
     features: [
@@ -79,9 +82,9 @@ const EXTRAS = [
 
 const PLANS = [
   { name: "Free", price: "Grátis", desc: "Para começar", features: ["Até 5 clientes", "Até 5 produtos", "5 orçamentos/mês"] },
-  { name: "ClienteZap", price: "R$ 29,90/mês", desc: "Só relacionamento", features: ["Clientes ilimitados", "Funil + follow-ups", "Contatos por empresa"] },
   { name: "Precifica", price: "R$ 9,90/mês", desc: "Só precificação", features: ["Produtos ilimitados", "Calculadora completa", "Cobrança por hora"] },
   { name: "OrçaFácil", price: "R$ 29,90/mês", desc: "Só orçamentos", features: ["Orçamentos ilimitados", "Link público + PDF", "Vendas e recebíveis"] },
+  { name: "ClienteZap", price: "R$ 35,90/mês", desc: "Só relacionamento", features: ["Clientes ilimitados", "Funil + follow-ups", "Contatos por empresa"] },
   { name: "Pro", price: "R$ 59,90/mês", desc: "Tudo incluído", features: ["Os 3 módulos", "Tudo ilimitado", "Relatórios completos"], highlight: true },
 ];
 
@@ -189,10 +192,10 @@ export default function LandingPage() {
           {MODULES.map((m) => (
             <div key={m.name} className="rounded-xl border bg-surface p-6 shadow-card">
               <div
-                className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg text-sm font-bold text-white"
+                className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg text-white"
                 style={{ backgroundColor: m.color }}
               >
-                {m.name[0]}
+                <m.icon size={20} />
               </div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted">{m.tag}</p>
               <h3 className="mt-1 text-lg font-bold">{m.name}</h3>
@@ -252,6 +255,15 @@ export default function LandingPage() {
         </div>
         <p className="mt-6 text-center text-xs text-muted">
           Preços de referência — fale com a gente para condições especiais.
+        </p>
+      </Section>
+
+      {/* frase de reforço */}
+      <Section className="text-center">
+        <p className="text-xl font-semibold text-muted sm:text-2xl">
+          Mais que ferramentas.
+          <br />
+          Uma suíte para o seu <span className="text-primary">negócio</span>.
         </p>
       </Section>
 
