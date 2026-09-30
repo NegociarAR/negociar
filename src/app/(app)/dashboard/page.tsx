@@ -49,11 +49,12 @@ async function metrics(companyId: string, mods: Mods) {
   return { customers, leads, opportunities, products: p, openQuotes: o, salesValue: v };
 }
 
-function Card({ label, value, href }: { label: string; value: string; href?: string }) {
+function Card({ label, value, href, danger, sub }: { label: string; value: string; href?: string; danger?: boolean; sub?: string }) {
   const inner = (
     <>
       <p className="text-sm text-muted">{label}</p>
-      <p className="tabular mt-1 text-2xl font-semibold">{value}</p>
+      <p className={`tabular mt-1 text-2xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      {sub && <p className={`mt-0.5 text-xs ${danger ? "text-danger" : "text-muted"}`}>{sub}</p>}
     </>
   );
   if (href) {
@@ -183,6 +184,19 @@ export default async function DashboardPage() {
         {mods.orcamentos && <Card label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />}
         {mods.orcamentos && <Card label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />}
         {mods.orcamentos && <Card label="Vendas no mês" value={brl(m.salesValue)} href="/relatorios" />}
+        {mods.orcamentos && hourly && hourly.contracts.length > 0 && (
+          <Card
+            label="Faturamento por hora"
+            value={brl(hourly.totals.pendingInvoiceCents)}
+            href="/orcamentos/horas"
+            danger={hourly.totals.pendingInvoiceCount > 0}
+            sub={
+              hourly.totals.pendingInvoiceCount > 0
+                ? `a faturar · ${hourly.totals.pendingInvoiceCount} contrato(s)`
+                : "tudo faturado"
+            }
+          />
+        )}
       </div>
 
       {rec.overdue > 0 && (
