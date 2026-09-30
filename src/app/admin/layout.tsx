@@ -21,7 +21,7 @@ export default async function AdminLayout({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-4 md:h-14 md:flex-nowrap">
           <div className="flex h-14 items-center gap-3">
             <LogoN size={26} />
-            <Link href="/admin" className="text-sm font-semibold">
+            <Link href="/admin" className="-my-2 py-2.5 text-sm font-semibold">
               Admin · NEGOCIAR
             </Link>
           </div>
@@ -29,7 +29,7 @@ export default async function AdminLayout({
             <AdminNav />
           </div>
           <form action={signOut}>
-            <button className="py-2.5 text-sm text-muted underline hover:text-foreground">
+            <button className="px-2 py-2.5 text-sm text-muted underline hover:text-foreground">
               Sair
             </button>
           </form>

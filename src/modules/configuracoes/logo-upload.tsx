@@ -86,7 +86,7 @@ export function LogoUpload({
             <button
               onClick={remove}
               disabled={pending}
-              className="py-2 text-xs text-danger underline disabled:opacity-50"
+              className="py-2.5 text-xs text-danger underline disabled:opacity-50"
             >
               Remover logo
             </button>

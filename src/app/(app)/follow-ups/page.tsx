@@ -19,7 +19,7 @@ function Item({ f }: { f: Followup }) {
           <span className="tabular text-sm font-medium">{fmtDate(f.due_date)}</span>
           <Link
             href={`/clientes/${f.customer_id}`}
-            className="truncate font-medium hover:underline"
+            className="-my-2.5 truncate py-2.5 font-medium hover:underline"
           >
             {f.customer_name ?? "Cliente"}
           </Link>
@@ -94,7 +94,7 @@ export default async function FollowupsPage() {
 
       {done.length > 0 && (
         <details className="group">
-          <summary className="cursor-pointer text-sm font-medium text-muted hover:text-foreground">
+          <summary className="-my-2 cursor-pointer py-2.5 text-sm font-medium text-muted hover:text-foreground">
             Concluídos recentemente ({done.length})
           </summary>
           <ul className="mt-2 divide-y rounded-lg border bg-surface">
@@ -102,7 +102,7 @@ export default async function FollowupsPage() {
               <li key={f.id} className="flex items-center justify-between gap-4 px-4 py-3 opacity-70">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <Link href={`/clientes/${f.customer_id}`} className="truncate font-medium line-through hover:no-underline">
+                    <Link href={`/clientes/${f.customer_id}`} className="-my-2.5 truncate py-2.5 font-medium line-through hover:no-underline">
                       {f.customer_name ?? "Cliente"}
                     </Link>
                     {f.quote_number && <span className="text-xs text-muted">#{f.quote_number}</span>}
