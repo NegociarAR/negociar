@@ -6,6 +6,8 @@ import { receivableTotals } from "@/modules/recebiveis/queries";
 import { attentionToday } from "@/modules/clientes/attention";
 import { myBilling } from "@/modules/configuracoes/billing";
 import { getHourlyOverview } from "@/modules/orcamentos/hourly-overview-queries";
+import { getMonthlyGoalsProgress } from "@/modules/configuracoes/goals-queries";
+import { GoalCard } from "@/modules/configuracoes/goal-card";
 import { fmtDay } from "@/lib/dates";
 import Link from "next/link";
 
@@ -89,7 +91,7 @@ export default async function DashboardPage() {
   };
   const companyId = session?.companyId ?? null;
 
-  const [m, att, rec, billing, hourly] = await Promise.all([
+  const [m, att, rec, billing, hourly, goals] = await Promise.all([
     companyId
       ? metrics(companyId, mods)
       : Promise.resolve({ customers: 0, leads: 0, opportunities: 0, leadsValueCents: 0, opportunitiesValueCents: 0, products: 0, openQuotes: 0, salesValue: 0 }),
@@ -101,6 +103,7 @@ export default async function DashboardPage() {
       : Promise.resolve({ toReceive: 0, overdue: 0, receivedThisMonth: 0 }),
     companyId ? myBilling(companyId) : Promise.resolve(null),
     companyId && mods.orcamentos ? getHourlyOverview() : Promise.resolve(null),
+    companyId ? getMonthlyGoalsProgress(companyId) : Promise.resolve([]),
   ]);
 
   const hour = brtHour();
@@ -111,6 +114,14 @@ export default async function DashboardPage() {
       <header>
         <h1 className="text-xl font-semibold">{greeting}</h1>
       </header>
+
+      {goals.length > 0 && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {goals.map((g) => (
+            <GoalCard key={g.metric} goal={g} />
+          ))}
+        </div>
+      )}
 
       {/* mensalidade do NEGOCIAR em atraso */}
       {billing?.alert && (
