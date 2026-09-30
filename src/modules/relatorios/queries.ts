@@ -19,6 +19,16 @@ export const PERIOD_LABELS: Record<Period, string> = {
   year: "Último ano",
 };
 
+// intervalo [início, fim) do período ANTERIOR equivalente — para comparação
+function previousPeriodRange(period: Period): { start: string; end: string } {
+  const end = periodStart(period);
+  const start = new Date(end);
+  if (period === "month") start.setMonth(start.getMonth() - 1);
+  else if (period === "quarter") start.setMonth(start.getMonth() - 3);
+  else start.setFullYear(start.getFullYear() - 1);
+  return { start: start.toISOString(), end };
+}
+
 // ---------- 1. FUNIL DE CONVERSÃO ----------
 export interface Funnel {
   byStatus: Record<string, number>;
@@ -62,19 +72,30 @@ export interface Revenue {
   count: number;
   avgTicketCents: number;
   byMonth: { month: string; cents: number }[];
+  previousTotalCents: number;
+  variancePct: number | null; // null = sem base de comparação (período anterior sem vendas)
 }
 
 export async function getRevenue(period: Period): Promise<Revenue> {
   const session = await getSession();
-  const empty: Revenue = { totalCents: 0, count: 0, avgTicketCents: 0, byMonth: [] };
+  const empty: Revenue = { totalCents: 0, count: 0, avgTicketCents: 0, byMonth: [], previousTotalCents: 0, variancePct: null };
   if (!session?.companyId) return empty;
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("sales")
-    .select("net_cents, total_cents, sold_at")
-    .eq("company_id", session.companyId)
-    .gte("sold_at", periodStart(period));
+  const prev = previousPeriodRange(period);
+  const [{ data }, { data: prevData }] = await Promise.all([
+    supabase
+      .from("sales")
+      .select("net_cents, total_cents, sold_at")
+      .eq("company_id", session.companyId)
+      .gte("sold_at", periodStart(period)),
+    supabase
+      .from("sales")
+      .select("net_cents, total_cents")
+      .eq("company_id", session.companyId)
+      .gte("sold_at", prev.start)
+      .lt("sold_at", prev.end),
+  ]);
 
   const rows = data ?? [];
   const val = (r: { net_cents?: number; total_cents?: number }) =>
@@ -94,7 +115,10 @@ export async function getRevenue(period: Period): Promise<Revenue> {
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, cents]) => ({ month, cents }));
 
-  return { totalCents, count, avgTicketCents, byMonth };
+  const previousTotalCents = (prevData ?? []).reduce((s, r) => s + val(r), 0);
+  const variancePct = previousTotalCents > 0 ? ((totalCents - previousTotalCents) / previousTotalCents) * 100 : null;
+
+  return { totalCents, count, avgTicketCents, byMonth, previousTotalCents, variancePct };
 }
 
 // ---------- 3. MOTIVOS DE RECUSA / NEGOCIAÇÃO ----------
