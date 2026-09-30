@@ -8,17 +8,19 @@ import { myBilling } from "@/modules/configuracoes/billing";
 import { getHourlyOverview } from "@/modules/orcamentos/hourly-overview-queries";
 import { getMonthlyGoalsProgress } from "@/modules/configuracoes/goals-queries";
 import { GoalCard } from "@/modules/configuracoes/goal-card";
+import { getSalesTrend, getRevenueVariance, getTopCustomers, monthLabel } from "@/modules/relatorios/dashboard-insights";
+import { Sparkline } from "@/components/sparkline";
 import { fmtDay } from "@/lib/dates";
 import Link from "next/link";
 
 type Mods = { clientes: boolean; precifica: boolean; orcamentos: boolean };
 
-// Só consulta o que o plano libera. Vendas = mês corrente (Brasília).
+// Só consulta o que o plano libera. Não inclui vendas/faturamento — isso
+// vem de getRevenueVariance, que já calcula o mês atual e o anterior juntos
+// (evita duplicar a mesma query em dois lugares).
 async function metrics(companyId: string, mods: Mods) {
   const supabase = await createClient();
-  const monthStart = `${currentPeriod()}-01T00:00:00-03:00`;
 
-  // conta + soma o valor potencial do estágio (lead/oportunidade), numa só query
   const stageAgg = (stage: string) =>
     mods.clientes
       ? supabase.from("customers").select("estimated_value_cents")
@@ -38,24 +40,14 @@ async function metrics(companyId: string, mods: Mods) {
         .eq("company_id", companyId).is("deleted_at", null)
         .in("status", ["sent", "viewed", "negotiation", "negotiation_requested"]).then((r) => r.count ?? 0)
     : Promise.resolve(0);
-  const salesValue = mods.orcamentos
-    ? supabase.from("sales").select("total_cents")
-        .eq("company_id", companyId).eq("status", "won").gte("sold_at", monthStart)
-        .then((r) => r.data?.reduce((s, x) => s + (x.total_cents ?? 0), 0) ?? 0)
-    : Promise.resolve(0);
 
-  const [customerAgg, leadAgg, oppAgg, p, o, v] = await Promise.all([
-    stageAgg("customer"),
-    stageAgg("lead"),
-    stageAgg("opportunity"),
-    products,
-    openQuotes,
-    salesValue,
+  const [customerAgg, leadAgg, oppAgg, p, o] = await Promise.all([
+    stageAgg("customer"), stageAgg("lead"), stageAgg("opportunity"), products, openQuotes,
   ]);
   return {
     customers: customerAgg.count, leads: leadAgg.count, opportunities: oppAgg.count,
     leadsValueCents: leadAgg.valueCents, opportunitiesValueCents: oppAgg.valueCents,
-    products: p, openQuotes: o, salesValue: v,
+    products: p, openQuotes: o,
   };
 }
 
@@ -63,7 +55,7 @@ function Card({ label, value, href, danger, sub }: { label: string; value: strin
   const inner = (
     <>
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-2xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
       {sub && <p className={`mt-0.5 text-xs ${danger ? "text-danger" : "text-muted"}`}>{sub}</p>}
     </>
   );
@@ -91,23 +83,25 @@ export default async function DashboardPage() {
   };
   const companyId = session?.companyId ?? null;
 
-  const [m, att, rec, billing, hourly, goals] = await Promise.all([
+  const [m, att, rec, billing, hourly, goals, trend, revenue, topCustomers] = await Promise.all([
     companyId
       ? metrics(companyId, mods)
-      : Promise.resolve({ customers: 0, leads: 0, opportunities: 0, leadsValueCents: 0, opportunitiesValueCents: 0, products: 0, openQuotes: 0, salesValue: 0 }),
-    companyId && mods.clientes
-      ? attentionToday(companyId)
-      : Promise.resolve({ items: [], total: 0, noAction: 0 }),
-    mods.orcamentos
-      ? receivableTotals()
-      : Promise.resolve({ toReceive: 0, overdue: 0, receivedThisMonth: 0 }),
+      : Promise.resolve({ customers: 0, leads: 0, opportunities: 0, leadsValueCents: 0, opportunitiesValueCents: 0, products: 0, openQuotes: 0 }),
+    companyId && mods.clientes ? attentionToday(companyId) : Promise.resolve({ items: [], total: 0, noAction: 0 }),
+    mods.orcamentos ? receivableTotals() : Promise.resolve({ toReceive: 0, overdue: 0, receivedThisMonth: 0 }),
     companyId ? myBilling(companyId) : Promise.resolve(null),
     companyId && mods.orcamentos ? getHourlyOverview() : Promise.resolve(null),
     companyId ? getMonthlyGoalsProgress(companyId) : Promise.resolve([]),
+    companyId && mods.orcamentos ? getSalesTrend(companyId) : Promise.resolve([]),
+    companyId && mods.orcamentos ? getRevenueVariance(companyId) : Promise.resolve({ currentCents: 0, variancePct: null }),
+    companyId && mods.orcamentos ? getTopCustomers(companyId) : Promise.resolve([]),
   ]);
 
   const hour = brtHour();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+
+  // qualquer pendência de dinheiro (vencido, mensalidade, fatura de hora) sobe pro topo
+  const hasMoneyAlert = rec.overdue > 0 || billing?.alert || (hourly && hourly.totals.pendingInvoiceCount > 0);
 
   return (
     <div className="space-y-6">
@@ -115,41 +109,56 @@ export default async function DashboardPage() {
         <h1 className="text-xl font-semibold">{greeting}</h1>
       </header>
 
+      {/* dinheiro parado vem antes de tudo */}
+      {hasMoneyAlert && (
+        <div className="space-y-2">
+          {rec.overdue > 0 && (
+            <Link
+              href="/recebiveis"
+              className="flex items-center justify-between rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
+            >
+              <span>
+                <strong className="font-semibold text-danger">{brl(rec.overdue)}</strong> em parcelas vencidas
+              </span>
+              <span className="text-muted">Ver →</span>
+            </Link>
+          )}
+
+          {billing?.alert && (
+            <div className="space-y-1 rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card">
+              <p>
+                <strong className="text-danger">Mensalidade em atraso:</strong>{" "}
+                {billing.alert.count} título(s), {brl(billing.alert.cents)}.{" "}
+                {billing.alert.pastGrace
+                  ? "O prazo de tolerância terminou e o acesso pode ser suspenso a qualquer momento."
+                  : `Regularize até ${fmtDay(billing.alert.regularizeUntil)} para evitar a suspensão do acesso.`}
+              </p>
+              {billing.instructions && <p className="whitespace-pre-line text-xs text-muted">{billing.instructions}</p>}
+              <Link href="/configuracoes" className="text-xs font-medium underline">Ver faturas</Link>
+            </div>
+          )}
+
+          {hourly && hourly.totals.pendingInvoiceCount > 0 && (
+            <Link
+              href="/orcamentos/horas"
+              className="flex items-center justify-between rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
+            >
+              <span>
+                <strong className="text-danger">{hourly.totals.pendingInvoiceCount} contrato(s) por hora</strong>{" "}
+                com mês fechado sem fatura — {brl(hourly.totals.pendingInvoiceCents)} a faturar.
+              </span>
+              <span className="text-muted">Ver →</span>
+            </Link>
+          )}
+        </div>
+      )}
+
       {goals.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {goals.map((g) => (
             <GoalCard key={g.metric} goal={g} />
           ))}
         </div>
-      )}
-
-      {/* mensalidade do NEGOCIAR em atraso */}
-      {billing?.alert && (
-        <div className="space-y-1 rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card">
-          <p>
-            <strong className="text-danger">Mensalidade em atraso:</strong>{" "}
-            {billing.alert.count} título(s), {brl(billing.alert.cents)}.{" "}
-            {billing.alert.pastGrace
-              ? "O prazo de tolerância terminou e o acesso pode ser suspenso a qualquer momento."
-              : `Regularize até ${fmtDay(billing.alert.regularizeUntil)} para evitar a suspensão do acesso.`}
-          </p>
-          {billing.instructions && <p className="whitespace-pre-line text-xs text-muted">{billing.instructions}</p>}
-          <Link href="/configuracoes" className="text-xs font-medium underline">Ver faturas</Link>
-        </div>
-      )}
-
-      {/* contratos por hora com mês fechado sem fatura */}
-      {hourly && hourly.totals.pendingInvoiceCount > 0 && (
-        <Link
-          href="/orcamentos/horas"
-          className="flex items-center justify-between rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
-        >
-          <span>
-            <strong className="text-danger">{hourly.totals.pendingInvoiceCount} contrato(s) por hora</strong>{" "}
-            com mês fechado sem fatura — {brl(hourly.totals.pendingInvoiceCents)} a faturar.
-          </span>
-          <span className="text-muted">Ver →</span>
-        </Link>
       )}
 
       {/* atenção hoje: quem eu preciso acompanhar */}
@@ -195,6 +204,34 @@ export default async function DashboardPage() {
         </section>
       )}
 
+      {/* vendas em destaque: valor + variação + tendência dos últimos 6 meses */}
+      {mods.orcamentos && (
+        <Link
+          href="/relatorios"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-surface p-5 shadow-card transition hover:border-border-strong hover:bg-subtle"
+        >
+          <div>
+            <p className="text-sm text-muted">Vendas no mês</p>
+            <p className="tabular mt-1 text-3xl font-semibold">{brl(revenue.currentCents)}</p>
+            {revenue.variancePct !== null && (
+              <p className={`mt-1 text-sm ${revenue.variancePct >= 0 ? "text-success" : "text-danger"}`}>
+                {revenue.variancePct >= 0 ? "+" : ""}
+                {revenue.variancePct.toFixed(0)}% vs mês anterior
+              </p>
+            )}
+          </div>
+          {trend.some((t) => t.cents > 0) && (
+            <div className="text-right">
+              <Sparkline points={trend.map((t) => t.cents)} />
+              <p className="mt-1 text-xs text-muted">
+                {monthLabel(trend[0].month)} — {monthLabel(trend[trend.length - 1].month)}
+              </p>
+            </div>
+          )}
+        </Link>
+      )}
+
+      {/* métricas secundárias */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {mods.clientes && (
           <Card label="Leads" value={String(m.leads)} href="/clientes?etapa=lead" sub={m.leadsValueCents > 0 ? brl(m.leadsValueCents) + " em potencial" : undefined} />
@@ -206,7 +243,6 @@ export default async function DashboardPage() {
         {mods.precifica && <Card label="Produtos" value={String(m.products)} href="/produtos" />}
         {mods.orcamentos && <Card label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />}
         {mods.orcamentos && <Card label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />}
-        {mods.orcamentos && <Card label="Vendas no mês" value={brl(m.salesValue)} href="/relatorios" />}
         {mods.orcamentos && hourly && hourly.contracts.length > 0 && (
           <Card
             label="Faturamento por hora"
@@ -222,16 +258,24 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {rec.overdue > 0 && (
-        <Link
-          href="/recebiveis"
-          className="flex items-center justify-between rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
-        >
-          <span>
-            <strong className="font-semibold text-danger">{brl(rec.overdue)}</strong> em parcelas vencidas
-          </span>
-          <span className="text-muted">Ver →</span>
-        </Link>
+      {/* top 3 clientes dos últimos 90 dias — onde o dinheiro está vindo */}
+      {topCustomers.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold">Seus melhores clientes <span className="font-normal text-muted">(90 dias)</span></h2>
+          <ul className="divide-y rounded-lg border bg-surface shadow-card">
+            {topCustomers.map((c, i) => (
+              <li key={c.id}>
+                <Link href={`/clientes/${c.id}`} className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:bg-subtle">
+                  <span className="flex items-center gap-2 min-w-0 truncate">
+                    <span className="tabular text-xs text-muted">#{i + 1}</span>
+                    <span className="font-medium">{c.name}</span>
+                  </span>
+                  <span className="tabular shrink-0 font-medium">{brl(c.totalCents)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );
