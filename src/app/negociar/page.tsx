@@ -80,7 +80,7 @@ const EXTRAS = [
 const PLANS = [
   { name: "Free", price: "Grátis", desc: "Para começar", features: ["Até 5 clientes", "Até 5 produtos", "5 orçamentos/mês"] },
   { name: "ClienteZap", price: "R$ 29,90/mês", desc: "Só relacionamento", features: ["Clientes ilimitados", "Funil + follow-ups", "Contatos por empresa"] },
-  { name: "Precifica", price: "R$ 29,90/mês", desc: "Só precificação", features: ["Produtos ilimitados", "Calculadora completa", "Cobrança por hora"] },
+  { name: "Precifica", price: "R$ 9,90/mês", desc: "Só precificação", features: ["Produtos ilimitados", "Calculadora completa", "Cobrança por hora"] },
   { name: "OrçaFácil", price: "R$ 29,90/mês", desc: "Só orçamentos", features: ["Orçamentos ilimitados", "Link público + PDF", "Vendas e recebíveis"] },
   { name: "Pro", price: "R$ 59,90/mês", desc: "Tudo incluído", features: ["Os 3 módulos", "Tudo ilimitado", "Relatórios completos"], highlight: true },
 ];
