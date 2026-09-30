@@ -53,18 +53,18 @@ function Card({ label, value, href, danger, sub }: { label: string; value: strin
   const inner = (
     <>
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-2xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      <p className={`tabular mt-1 break-words text-xl font-semibold sm:text-2xl ${danger ? "text-danger" : ""}`}>{value}</p>
       {sub && <p className={`mt-0.5 text-xs ${danger ? "text-danger" : "text-muted"}`}>{sub}</p>}
     </>
   );
   if (href) {
     return (
-      <Link href={href} className="rounded-lg border bg-surface p-4 shadow-card transition hover:border-border-strong hover:bg-subtle">
+      <Link href={href} className="min-w-0 rounded-lg border bg-surface p-3 shadow-card transition hover:border-border-strong hover:bg-subtle sm:p-4">
         {inner}
       </Link>
     );
   }
-  return <div className="rounded-lg border bg-surface p-4 shadow-card">{inner}</div>;
+  return <div className="min-w-0 rounded-lg border bg-surface p-3 shadow-card sm:p-4">{inner}</div>;
 }
 
 function fmtShort(iso: string) {
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
               : `Regularize até ${fmtDay(billing.alert.regularizeUntil)} para evitar a suspensão do acesso.`}
           </p>
           {billing.instructions && <p className="whitespace-pre-line text-xs text-muted">{billing.instructions}</p>}
-          <Link href="/configuracoes" className="text-xs font-medium underline">Ver faturas</Link>
+          <Link href="/configuracoes" className="inline-block py-2 text-xs font-medium underline">Ver faturas</Link>
         </div>
       )}
 
@@ -123,13 +123,13 @@ export default async function DashboardPage() {
       {hourly && hourly.totals.pendingInvoiceCount > 0 && (
         <Link
           href="/orcamentos/horas"
-          className="flex items-center justify-between rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
+          className="flex items-center justify-between gap-3 rounded-lg border border-l-2 border-l-danger bg-surface px-4 py-3 text-sm shadow-card transition hover:bg-subtle"
         >
           <span>
             <strong className="text-danger">{hourly.totals.pendingInvoiceCount} contrato(s) por hora</strong>{" "}
             com mês fechado sem fatura — {brl(hourly.totals.pendingInvoiceCents)} a faturar.
           </span>
-          <span className="text-muted">Ver →</span>
+          <span className="shrink-0 text-muted">Ver →</span>
         </Link>
       )}
 
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold">
               Atenção hoje {att.total > 0 && <span className="text-muted">({att.total})</span>}
             </h2>
-            <Link href="/follow-ups" className="text-sm text-muted hover:text-foreground">Ver todos →</Link>
+            <Link href="/follow-ups" className="-my-2 py-2.5 text-sm text-muted hover:text-foreground">Ver todos →</Link>
           </div>
           <ul className="divide-y rounded-lg border border-l-2 border-l-primary bg-surface shadow-card">
             {att.items.map((i) => (
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
               <li>
                 <Link
                   href="/clientes?etapa=lead"
-                  className="flex items-center justify-between px-4 py-3 text-sm transition hover:bg-subtle"
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:bg-subtle"
                 >
                   <span>
                     {att.noAction} {att.noAction === 1 ? "lead/oportunidade" : "leads/oportunidades"} sem próxima ação
@@ -207,7 +207,7 @@ export default async function DashboardPage() {
           <span>
             <strong className="font-semibold text-danger">{brl(rec.overdue)}</strong> em parcelas vencidas
           </span>
-          <span className="text-muted">Ver →</span>
+          <span className="shrink-0 text-muted">Ver →</span>
         </Link>
       )}
     </div>
