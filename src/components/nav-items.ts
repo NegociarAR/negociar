@@ -9,7 +9,10 @@ export type IconKey =
   | "bell"
   | "settings"
   | "wallet"
-  | "chart";
+  | "chart"
+  | "pipeline"
+  | "clock"
+  | "history";
 
 export type BadgeKey = "followups" | "openQuotes" | "receivables";
 
@@ -34,6 +37,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Comercial",
     items: [
       { href: "/clientes", label: "Clientes", icon: "users", module: "clientes" },
+      { href: "/pipeline", label: "Pipeline", icon: "pipeline", module: "clientes" },
       { href: "/precificar", label: "Precificar", icon: "calc", module: "precifica" },
       {
         href: "/orcamentos",
@@ -42,6 +46,11 @@ export const NAV_SECTIONS: NavSection[] = [
         module: "orcamentos",
         badge: "openQuotes",
       },
+    ],
+  },
+  {
+    label: "Cadastros",
+    items: [
       { href: "/produtos", label: "Produtos", icon: "box", module: "precifica" },
     ],
   },
@@ -67,17 +76,14 @@ export const NAV_SECTIONS: NavSection[] = [
         module: "orcamentos",
         badge: "receivables",
       },
+      { href: "/orcamentos/horas", label: "Faturamento por hora", icon: "clock", module: "orcamentos" },
     ],
   },
   {
     label: "Análise",
     items: [
-      {
-        href: "/relatorios",
-        label: "Relatórios",
-        icon: "chart",
-        module: "orcamentos",
-      },
+      { href: "/relatorios", label: "Relatórios", icon: "chart", module: "orcamentos" },
+      { href: "/historico", label: "Histórico", icon: "history" },
     ],
   },
   {

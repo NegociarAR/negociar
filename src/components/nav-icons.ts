@@ -10,6 +10,9 @@ import {
   Settings,
   Wallet,
   BarChart3,
+  Columns3,
+  Clock,
+  History,
   type LucideIcon,
 } from "lucide-react";
 import type { IconKey } from "./nav-items";
@@ -24,4 +27,7 @@ export const ICONS: Record<IconKey, LucideIcon> = {
   settings: Settings,
   wallet: Wallet,
   chart: BarChart3,
+  pipeline: Columns3,
+  clock: Clock,
+  history: History,
 };
