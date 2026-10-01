@@ -27,3 +27,36 @@ export interface InvoiceResult {
   pdfUrl?: string;
   errorMessage?: string;
 }
+
+// Cadastro da empresa como emitente na Focus NFe — feito pelo NEGOCIAR,
+// usando o token de REVENDA (nunca o da empresa, que ainda não existe
+// neste ponto). O certificado chega como base64 e a senha em texto puro
+// só para esta chamada — nenhum dos dois é armazenado em lugar nenhum
+// do NEGOCIAR, nem antes nem depois desta função.
+export interface CompanyRegistration {
+  cnpj: string;
+  legalName: string;
+  tradeName: string;
+  email: string;
+  municipalRegistration: string;
+  taxRegime: "mei" | "simples_nacional" | "lucro_presumido" | "lucro_real";
+  address: {
+    street: string;
+    number: string;
+    complement: string | null;
+    district: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    ibgeCityCode: string;
+  };
+  certificateBase64: string;
+  certificatePassword: string;
+}
+
+export interface CompanyRegistrationResult {
+  ok: boolean;
+  focusCompanyId?: string;
+  apiToken?: string; // token "revendido" específico desta empresa, devolvido pelo cadastro
+  errorMessage?: string;
+}

@@ -1,4 +1,4 @@
-import type { InvoiceRequest, InvoiceResult } from "./types";
+import type { InvoiceRequest, InvoiceResult, CompanyRegistration, CompanyRegistrationResult } from "./types";
 
 // Cliente da API da Focus NFe (https://focusnfe.com.br). Emissão de NFS-e
 // é assíncrona: este POST só "protocola" o pedido; o resultado real
@@ -17,6 +17,60 @@ const REGIME_CODE: Record<InvoiceRequest["taxRegime"], number> = {
 
 function baseUrl(env: "homologacao" | "producao") {
   return env === "producao" ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
+}
+
+// Cadastra a empresa como emitente na Focus NFe, usando o token de
+// REVENDA (variável de ambiente FOCUS_NFE_RESELLER_TOKEN — nunca salvo
+// no banco). O certificado e a senha passam só nesta chamada, em
+// memória, e não são persistidos pelo NEGOCIAR em nenhum momento.
+//
+// Nomes de campo seguem o padrão documentado publicamente da Focus NFe;
+// como este endpoint específico de cadastro via API de revenda não pôde
+// ser testado contra uma conta real, pequenos ajustes de nome de campo
+// podem ser necessários no primeiro teste em homologação.
+export async function registerCompanyEmitter(
+  resellerToken: string,
+  environment: "homologacao" | "producao",
+  data: CompanyRegistration,
+): Promise<CompanyRegistrationResult> {
+  const payload = {
+    cnpj: data.cnpj,
+    nome: data.legalName,
+    nome_fantasia: data.tradeName,
+    email: data.email,
+    inscricao_municipal: data.municipalRegistration,
+    regime_tributario: REGIME_CODE[data.taxRegime],
+    logradouro: data.address.street,
+    numero: data.address.number,
+    complemento: data.address.complement ?? undefined,
+    bairro: data.address.district,
+    municipio: data.address.city,
+    uf: data.address.state,
+    cep: data.address.zipCode,
+    codigo_municipio: data.address.ibgeCityCode,
+    habilita_nfse: true,
+    arquivo_certificado_base64: data.certificateBase64,
+    senha_certificado: data.certificatePassword,
+  };
+
+  try {
+    const res = await fetch(`${baseUrl(environment)}/v2/empresas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(`${resellerToken}:`).toString("base64")}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const resData = await res.json().catch(() => ({}));
+
+    if (res.status === 200 || res.status === 201) {
+      return { ok: true, focusCompanyId: resData.id ?? resData.cnpj, apiToken: resData.token_producao ?? resData.token };
+    }
+    return { ok: false, errorMessage: resData.mensagem ?? resData.erros?.[0]?.mensagem ?? `Erro HTTP ${res.status}` };
+  } catch (e) {
+    return { ok: false, errorMessage: e instanceof Error ? e.message : "Falha de conexão com o provedor." };
+  }
 }
 
 export async function issueInvoice(req: InvoiceRequest): Promise<InvoiceResult> {
