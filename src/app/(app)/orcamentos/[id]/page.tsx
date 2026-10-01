@@ -12,6 +12,8 @@ import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
 import { monthsSince } from "@/lib/dates";
 import { brl } from "@/lib/format";
 import { HistoryPanel } from "@/modules/historico/history-panel";
+import { PageIcon } from "@/components/page-icon";
+import { FileText } from "lucide-react";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
@@ -61,6 +63,7 @@ export default async function OrcamentoDetailPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
+          <PageIcon module="orcamentos" icon={FileText} />
           <h1 className="text-xl font-semibold">
             Orçamento #{quote.number}
             {quote.version > 1 && (

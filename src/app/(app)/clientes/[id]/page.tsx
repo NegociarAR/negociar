@@ -15,6 +15,8 @@ import { pendingActionsFor } from "@/modules/clientes/attention";
 import { listPeople } from "@/modules/clientes/people";
 import { PeopleCard } from "@/modules/clientes/people-card";
 import { HistoryPanel } from "@/modules/historico/history-panel";
+import { PageIcon } from "@/components/page-icon";
+import { Users } from "lucide-react";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -63,9 +65,12 @@ export default async function ClienteDetailPage({
       <BackLink href="/clientes" label="Voltar para clientes" />
 
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="min-w-0 break-words text-xl font-semibold">
-          {customerDisplayName(customer)}
-        </h1>
+        <div className="flex min-w-0 items-center gap-3">
+          <PageIcon module="clientes" icon={Users} />
+          <h1 className="min-w-0 break-words text-xl font-semibold">
+            {customerDisplayName(customer)}
+          </h1>
+        </div>
         <div className="flex items-center gap-4">
           <CustomerStatusSelect customerId={id} status={customer.status} />
           <Link
