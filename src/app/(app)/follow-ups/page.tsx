@@ -3,6 +3,8 @@ import { getFollowups, customersForFollowup } from "@/modules/followups/queries"
 import { FollowupItemActions, ReopenButton } from "@/modules/followups/item-actions";
 import { NewFollowupForm } from "@/modules/followups/new-form";
 import type { Followup } from "@/modules/followups/queries";
+import { PageIcon } from "@/components/page-icon";
+import { Bell } from "lucide-react";
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
@@ -74,7 +76,10 @@ export default async function FollowupsPage() {
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Follow-ups</h1>
+        <div className="flex items-center gap-3">
+          <PageIcon module="clientes" icon={Bell} />
+          <h1 className="text-xl font-semibold">Follow-ups</h1>
+        </div>
       </header>
 
       <NewFollowupForm customers={customers} />

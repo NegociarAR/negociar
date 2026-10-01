@@ -3,6 +3,8 @@ import { listProducts, countProducts } from "@/modules/produtos/queries";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/form";
+import { PageIcon } from "@/components/page-icon";
+import { Package } from "lucide-react";
 
 export default async function ProdutosPage({
   searchParams,
@@ -29,11 +31,14 @@ export default async function ProdutosPage({
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Produtos</h1>
-          <p className="text-sm text-muted">
-            {gate.limit === null ? `${used} produtos` : `${used}/${gate.limit} produtos`}
-          </p>
+        <div className="flex items-center gap-3">
+          <PageIcon module="precifica" icon={Package} />
+          <div>
+            <h1 className="text-xl font-semibold">Produtos</h1>
+            <p className="text-sm text-muted">
+              {gate.limit === null ? `${used} produtos` : `${used}/${gate.limit} produtos`}
+            </p>
+          </div>
         </div>
         <Link href="/produtos/novo">
           <Button>+ Novo produto</Button>

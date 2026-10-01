@@ -16,6 +16,8 @@ import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
 import { LeadForm } from "@/modules/clientes/lead-form";
 import { STAGE_TABS, STAGE_LABELS, STAGE_BADGE, type Stage } from "@/modules/clientes/stages";
+import { PageIcon } from "@/components/page-icon";
+import { Users } from "lucide-react";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
   { key: "recent", label: "Contato recente" },
@@ -84,11 +86,14 @@ export default async function ClientesPage({
   return (
     <div className="space-y-5">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Clientes</h1>
-          <p className="text-sm text-muted">
-            {gate.limit === null ? `${used} contatos` : `${used}/${gate.limit} contatos`}
-          </p>
+        <div className="flex items-center gap-3">
+          <PageIcon module="clientes" icon={Users} />
+          <div>
+            <h1 className="text-xl font-semibold">Clientes</h1>
+            <p className="text-sm text-muted">
+              {gate.limit === null ? `${used} contatos` : `${used}/${gate.limit} contatos`}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <ImportCustomers />

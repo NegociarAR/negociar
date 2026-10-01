@@ -3,6 +3,8 @@ import { getReceivables, receivableTotals } from "@/modules/recebiveis/queries";
 import { ReceiveButton } from "@/modules/recebiveis/receive-button";
 import { brl } from "@/lib/format";
 import type { Receivable } from "@/modules/recebiveis/queries";
+import { PageIcon } from "@/components/page-icon";
+import { Wallet } from "lucide-react";
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
@@ -89,7 +91,10 @@ export default async function RecebiveisPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Recebíveis</h1>
+      <div className="flex items-center gap-3">
+        <PageIcon module="orcamentos" icon={Wallet} />
+        <h1 className="text-xl font-semibold">Recebíveis</h1>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <TotalCard label="A receber" value={brl(totals.toReceive)} />

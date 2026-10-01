@@ -88,7 +88,7 @@ export default async function RelatoriosPage({
               <div key={m.month} className="flex items-center gap-3 text-sm">
                 <span className="w-14 shrink-0 text-muted">{monthLabel(m.month)}</span>
                 <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${(m.cents / maxMonth) * 100}%` }} />
+                  <div className="h-full rounded-full bg-module-orcamentos" style={{ width: `${(m.cents / maxMonth) * 100}%` }} />
                 </div>
                 <span className="tabular w-24 shrink-0 text-right">{brl(m.cents)}</span>
               </div>
@@ -112,7 +112,7 @@ export default async function RelatoriosPage({
               <span className="w-40 shrink-0 text-muted">{STATUS_LABELS[s as keyof typeof STATUS_LABELS] ?? s}</span>
               <div className="h-3 flex-1 overflow-hidden rounded-full bg-subtle">
                 <div
-                  className={`h-full rounded-full ${s === "approved" ? "bg-primary" : "bg-foreground/40"}`}
+                  className={`h-full rounded-full ${s === "approved" ? "bg-module-orcamentos" : "bg-module-orcamentos/30"}`}
                   style={{ width: `${(funnel.byStatus[s] / maxFunnel) * 100}%` }}
                 />
               </div>
@@ -215,7 +215,7 @@ export default async function RelatoriosPage({
                     </span>
                   </span>
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-subtle">
-                    <div className="h-full rounded-full bg-foreground/40" style={{ width: `${(r.count / maxReason) * 100}%` }} />
+                    <div className="h-full rounded-full bg-module-orcamentos/50" style={{ width: `${(r.count / maxReason) * 100}%` }} />
                   </div>
                   <span className="tabular w-6 text-right">{r.count}</span>
                 </li>

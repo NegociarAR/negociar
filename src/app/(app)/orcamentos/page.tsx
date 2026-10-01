@@ -3,6 +3,8 @@ import { listQuotes, countQuotesThisMonth } from "@/modules/orcamentos/queries";
 import { QuoteRow } from "@/modules/orcamentos/quote-row";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
+import { PageIcon } from "@/components/page-icon";
+import { FileText } from "lucide-react";
 
 export default async function OrcamentosPage({
   searchParams,
@@ -18,11 +20,14 @@ export default async function OrcamentosPage({
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Orçamentos</h1>
-          <p className="text-sm text-muted">
-            {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
-          </p>
+        <div className="flex items-center gap-3">
+          <PageIcon module="orcamentos" icon={FileText} />
+          <div>
+            <h1 className="text-xl font-semibold">Orçamentos</h1>
+            <p className="text-sm text-muted">
+              {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/orcamentos/horas" className="py-2 text-sm font-medium text-primary hover:underline">
