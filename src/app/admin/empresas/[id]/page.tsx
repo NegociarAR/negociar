@@ -5,6 +5,8 @@ import { AdminActions } from "@/modules/admin/admin-actions";
 import { ExemptToggle } from "@/modules/admin/exempt-toggle";
 import { BackLink } from "@/components/back-link";
 import { createClient } from "@/lib/supabase/server";
+import { PageIcon } from "@/components/page-icon";
+import { Building2 } from "lucide-react";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
@@ -48,7 +50,10 @@ export default async function AdminCompanyPage({
       <BackLink href="/admin" label="Voltar para empresas" />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="min-w-0 break-words text-xl font-semibold">{company.name}</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          <PageIcon module="admin" icon={Building2} />
+          <h1 className="min-w-0 break-words text-xl font-semibold">{company.name}</h1>
+        </div>
         <StatusBadge status={company.status} />
       </header>
 

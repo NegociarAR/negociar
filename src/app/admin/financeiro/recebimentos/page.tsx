@@ -5,6 +5,8 @@ import { ExportCsvButton } from "@/modules/admin/export-csv-button";
 import { MonthSelect } from "@/modules/admin/month-select";
 import { brl } from "@/lib/format";
 import { currentPeriod } from "@/lib/period";
+import { PageIcon } from "@/components/page-icon";
+import { Receipt } from "lucide-react";
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -44,11 +46,14 @@ export default async function RecebimentosPage({
       <BackLink href="/admin/financeiro" label="Voltar para financeiro" />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Recebimentos</h1>
-          <p className="text-sm text-muted">
-            Histórico de títulos recebidos, por forma de pagamento — para conferência com o extrato bancário.
-          </p>
+        <div className="flex items-center gap-3">
+          <PageIcon module="admin" icon={Receipt} />
+          <div>
+            <h1 className="text-xl font-semibold">Recebimentos</h1>
+            <p className="text-sm text-muted">
+              Histórico de títulos recebidos, por forma de pagamento — para conferência com o extrato bancário.
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSelect options={options} value={month} currentMonth={currentPeriod()} />

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { listCompanies, companyCounts, pendingPlanRequests, expiredSubscriptions } from "@/modules/admin/queries";
 import { PlanRequestActions } from "@/modules/admin/plan-request-actions";
 import { AdminCompanyRow } from "@/modules/admin/admin-company-row";
+import { PageIcon } from "@/components/page-icon";
+import { Building2 } from "lucide-react";
 
 export default async function AdminHomePage({
   searchParams,
@@ -25,7 +27,10 @@ export default async function AdminHomePage({
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-semibold">Empresas</h1>
+      <div className="flex items-center gap-3">
+        <PageIcon module="admin" icon={Building2} />
+        <h1 className="text-xl font-semibold">Empresas</h1>
+      </div>
 
       {requests.length > 0 && (
         <section className="space-y-2">

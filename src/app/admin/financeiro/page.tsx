@@ -5,6 +5,8 @@ import { InvoiceActions } from "@/modules/admin/invoice-actions";
 import { AccessButton, BlockEligibleButton } from "@/modules/admin/access-actions";
 import { brl } from "@/lib/format";
 import { fmtDay } from "@/lib/dates";
+import { PageIcon } from "@/components/page-icon";
+import { Wallet } from "lucide-react";
 
 const TABS: { key: string; label: string; match: (i: Invoice) => boolean }[] = [
   { key: "pendentes", label: "Pendentes", match: (i) => i.state === "open" || i.state === "overdue" },
@@ -74,12 +76,15 @@ export default async function AdminFinanceiroPage({
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 basis-64">
-          <h1 className="text-xl font-semibold">Financeiro</h1>
-          <p className="text-sm text-muted">
-            Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
-            {o.exemptCount > 0 && ` ${o.exemptCount} empresa(s) isenta(s) não entram nestas métricas.`}
-          </p>
+        <div className="flex min-w-0 flex-1 basis-64 items-center gap-3">
+          <PageIcon module="admin" icon={Wallet} />
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold">Financeiro</h1>
+            <p className="text-sm text-muted">
+              Mensalidades das empresas clientes, acesso e bloqueios. Baixa manual.
+              {o.exemptCount > 0 && ` ${o.exemptCount} empresa(s) isenta(s) não entram nestas métricas.`}
+            </p>
+          </div>
         </div>
         <Link
           href="/admin/financeiro/recebimentos"

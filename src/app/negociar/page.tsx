@@ -32,7 +32,7 @@ const FLOW = [
 const MODULES = [
   {
     name: "ClienteZap",
-    color: "#2E7BE4",
+    color: "#2E7CF6",
     icon: MessageCircle,
     tag: "Relacionamento",
     tagline: "Organize seus clientes e relacionamentos.",
@@ -46,7 +46,7 @@ const MODULES = [
   },
   {
     name: "Precifica",
-    color: "#22C55E",
+    color: "#1FAE5E",
     icon: Tag,
     tag: "Precificação",
     tagline: "Encontre o preço certo para vender.",
@@ -137,7 +137,14 @@ export default function LandingPage() {
         </div>
         <h1 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight sm:text-5xl">
           Onde atendimento vira relacionamento
-          <br className="hidden sm:block" /> e relacionamento vira <span className="text-primary">negócio</span>.
+          <br className="hidden sm:block" /> e relacionamento vira{" "}
+          <span
+            className="bg-clip-text text-transparent"
+            style={{ backgroundImage: "linear-gradient(100deg, #2e7cf6 0%, #1fae5e 50%, #7c3aed 100%)" }}
+          >
+            negócio
+          </span>
+          .
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-base text-muted sm:text-lg">
           A suíte comercial completa para o MEI e a pequena empresa: organize clientes,
