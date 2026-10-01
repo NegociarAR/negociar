@@ -75,6 +75,11 @@ export async function generateHourlyInvoice(quoteId: string, period: string, due
     p_due_date: dueDate,
   });
   if (error) return { ok: false, error: error.message };
+  const saleId = (data as { sale_id: string } | null)?.sale_id;
   refresh(quoteId);
-  return { ok: true, id: (data as { sale_id: string } | null)?.sale_id };
+  if (saleId) {
+    const { issueServiceInvoiceForSale } = await import("@/modules/financeiro/invoice-actions");
+    await issueServiceInvoiceForSale(saleId); // silencioso: só emite se a empresa configurou e habilitou
+  }
+  return { ok: true, id: saleId };
 }

@@ -12,7 +12,8 @@ export type IconKey =
   | "chart"
   | "pipeline"
   | "clock"
-  | "history";
+  | "history"
+  | "receipt";
 
 export type BadgeKey = "followups" | "openQuotes" | "receivables";
 
@@ -77,6 +78,7 @@ export const NAV_SECTIONS: NavSection[] = [
         badge: "receivables",
       },
       { href: "/orcamentos/horas", label: "Faturamento por hora", icon: "clock", module: "orcamentos" },
+      { href: "/notas-fiscais", label: "Notas fiscais", icon: "receipt", module: "orcamentos" },
     ],
   },
   {

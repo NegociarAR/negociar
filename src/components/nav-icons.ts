@@ -13,6 +13,7 @@ import {
   Columns3,
   Clock,
   History,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 import type { IconKey } from "./nav-items";
@@ -30,4 +31,5 @@ export const ICONS: Record<IconKey, LucideIcon> = {
   pipeline: Columns3,
   clock: Clock,
   history: History,
+  receipt: Receipt,
 };

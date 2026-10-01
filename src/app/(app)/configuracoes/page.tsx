@@ -7,6 +7,8 @@ import { signOut } from "@/app/(auth)/actions";
 import { brl } from "@/lib/format";
 import { myBilling } from "@/modules/configuracoes/billing";
 import { fmtDay } from "@/lib/dates";
+import { getFiscalSettings } from "@/modules/configuracoes/fiscal-queries";
+import { FiscalSettingsForm } from "@/modules/configuracoes/fiscal-settings-form";
 
 function UsageRow({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
@@ -36,6 +38,7 @@ export default async function ConfiguracoesPage() {
   const plans = await listPlans();
   const pending = await pendingPlanRequest();
   const billing = company ? await myBilling(company.id) : null;
+  const fiscal = company ? await getFiscalSettings(company.id) : null;
 
   return (
     <div className="space-y-6">
@@ -55,7 +58,7 @@ export default async function ConfiguracoesPage() {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
+          <div className="flex items-baseline gap-2 text-sm">
             <span className="text-muted">Mensalidade</span>
             <span className="tabular font-medium">
               {plan.priceCents === 0 ? "Grátis" : `${brl(plan.priceCents)}/mês`}
@@ -89,8 +92,8 @@ export default async function ConfiguracoesPage() {
           <h2 className="text-sm font-semibold">Faturas do NEGOCIAR</h2>
           <ul className="divide-y text-sm">
             {billing.invoices.map((i) => (
-              <li key={i.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2">
-                <span className="min-w-0 flex-1 basis-48">
+              <li key={i.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
                   <span className="font-medium">{i.description ?? `Mensalidade ${i.reference_period}`}</span>
                   <span className="text-muted"> · vence {fmtDay(i.due_date)}</span>
                 </span>
@@ -111,15 +114,17 @@ export default async function ConfiguracoesPage() {
         </div>
       )}
 
+      {fiscal && <FiscalSettingsForm settings={fiscal} />}
+
       <Link
         href="/historico"
-        className="flex items-center justify-between gap-3 rounded-lg border bg-surface p-5 shadow-card transition hover:bg-subtle"
+        className="flex items-center justify-between rounded-lg border bg-surface p-5 shadow-card transition hover:bg-subtle"
       >
-        <div className="min-w-0">
+        <div>
           <h2 className="text-sm font-semibold">Histórico de alterações</h2>
           <p className="text-xs text-muted">Quem alterou o quê e quando: clientes, orçamentos, vendas e produtos.</p>
         </div>
-        <span className="shrink-0 text-muted">Ver →</span>
+        <span className="text-muted">Ver →</span>
       </Link>
 
       {/* Sair (mobile) */}
