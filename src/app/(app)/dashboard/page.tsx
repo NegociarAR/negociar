@@ -12,8 +12,28 @@ import { getSalesTrend, getRevenueVariance, getTopCustomers, monthLabel } from "
 import { Sparkline } from "@/components/sparkline";
 import { fmtDay } from "@/lib/dates";
 import Link from "next/link";
+import { LogoN } from "@/components/logo";
+import {
+  Users,
+  TrendingUp,
+  UserCheck,
+  Package,
+  FileText,
+  Wallet,
+  Clock,
+  type LucideIcon,
+} from "lucide-react";
 
 type Mods = { clientes: boolean; precifica: boolean; orcamentos: boolean };
+
+// Cada métrica pertence a um módulo da marca — o chip do card usa a cor dele
+// (azul = ClienteZap, verde = Precifica, roxo = OrçaFácil).
+type Mod = "clientes" | "precifica" | "orcamentos";
+const MODULE_STYLE: Record<Mod, { text: string; bg: string }> = {
+  clientes: { text: "text-module-clientes", bg: "bg-module-clientes/10" },
+  precifica: { text: "text-module-precifica", bg: "bg-module-precifica/10" },
+  orcamentos: { text: "text-module-orcamentos", bg: "bg-module-orcamentos/10" },
+};
 
 // Só consulta o que o plano libera. Não inclui vendas/faturamento — isso
 // vem de getRevenueVariance, que já calcula o mês atual e o anterior juntos
@@ -51,17 +71,26 @@ async function metrics(companyId: string, mods: Mods) {
   };
 }
 
-function Card({ label, value, href, danger, sub }: { label: string; value: string; href?: string; danger?: boolean; sub?: string }) {
+function Card({
+  label, value, href, danger, sub, module, icon: Icon,
+}: {
+  label: string; value: string; href?: string; danger?: boolean; sub?: string;
+  module: Mod; icon: LucideIcon;
+}) {
+  const style = MODULE_STYLE[module];
   const inner = (
     <>
+      <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${danger ? "bg-danger/10 text-danger" : `${style.bg} ${style.text}`}`}>
+        <Icon size={18} strokeWidth={1.8} />
+      </div>
       <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
-      {sub && <p className={`mt-0.5 text-xs ${danger ? "text-danger" : "text-muted"}`}>{sub}</p>}
+      <p className={`tabular mt-0.5 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      {sub && <p className={`mt-0.5 text-xs font-medium ${danger ? "text-danger" : style.text}`}>{sub}</p>}
     </>
   );
   if (href) {
     return (
-      <Link href={href} className="rounded-lg border bg-surface p-4 shadow-card transition hover:border-border-strong hover:bg-subtle">
+      <Link href={href} className={`rounded-lg border bg-surface p-4 shadow-card transition hover:border-border-strong hover:bg-subtle ${danger ? "border-danger/30" : ""}`}>
         {inner}
       </Link>
     );
@@ -105,9 +134,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-xl font-semibold">{greeting}</h1>
-      </header>
+      <div
+        className="relative overflow-hidden rounded-lg p-6 text-white shadow-brand"
+        style={{ background: "linear-gradient(100deg, #2e7cf6 0%, #1fae5e 50%, #7c3aed 100%)" }}
+      >
+        <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute bottom-[-70px] right-20 h-36 w-36 rounded-full bg-white/10" />
+        <div className="relative flex items-center gap-3">
+          <LogoN size={28} />
+          <h1 className="text-2xl font-semibold">{greeting}</h1>
+        </div>
+      </div>
 
       {/* dinheiro parado vem antes de tudo */}
       {hasMoneyAlert && (
@@ -234,17 +271,19 @@ export default async function DashboardPage() {
       {/* métricas secundárias */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {mods.clientes && (
-          <Card label="Leads" value={String(m.leads)} href="/clientes?etapa=lead" sub={m.leadsValueCents > 0 ? brl(m.leadsValueCents) + " em potencial" : undefined} />
+          <Card module="clientes" icon={Users} label="Leads" value={String(m.leads)} href="/clientes?etapa=lead" sub={m.leadsValueCents > 0 ? brl(m.leadsValueCents) + " em potencial" : undefined} />
         )}
         {mods.clientes && (
-          <Card label="Oportunidades" value={String(m.opportunities)} href="/clientes?etapa=opportunity" sub={m.opportunitiesValueCents > 0 ? brl(m.opportunitiesValueCents) + " em jogo" : undefined} />
+          <Card module="clientes" icon={TrendingUp} label="Oportunidades" value={String(m.opportunities)} href="/clientes?etapa=opportunity" sub={m.opportunitiesValueCents > 0 ? brl(m.opportunitiesValueCents) + " em jogo" : undefined} />
         )}
-        {mods.clientes && <Card label="Clientes" value={String(m.customers)} href="/clientes?etapa=customer" />}
-        {mods.precifica && <Card label="Produtos" value={String(m.products)} href="/produtos" />}
-        {mods.orcamentos && <Card label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />}
-        {mods.orcamentos && <Card label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />}
+        {mods.clientes && <Card module="clientes" icon={UserCheck} label="Clientes" value={String(m.customers)} href="/clientes?etapa=customer" />}
+        {mods.precifica && <Card module="precifica" icon={Package} label="Produtos" value={String(m.products)} href="/produtos" />}
+        {mods.orcamentos && <Card module="orcamentos" icon={FileText} label="Orçamentos abertos" value={String(m.openQuotes)} href="/orcamentos" />}
+        {mods.orcamentos && <Card module="orcamentos" icon={Wallet} label="A receber" value={brl(rec.toReceive)} href="/recebiveis" />}
         {mods.orcamentos && hourly && hourly.contracts.length > 0 && (
           <Card
+            module="orcamentos"
+            icon={Clock}
             label="Faturamento por hora"
             value={brl(hourly.totals.pendingInvoiceCents)}
             href="/orcamentos/horas"

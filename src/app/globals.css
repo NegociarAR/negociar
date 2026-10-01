@@ -1,28 +1,35 @@
 @import "tailwindcss";
 
-/* ===== Tema Linear — Light (default) ===== */
+/* ===== Tema NEGOCIAR — Light (default) =====
+   Paleta da marca: azul (ClienteZap), verde (Precifica), roxo (OrçaFácil). */
 :root {
   --background: #fbfbfc;
   --surface: #ffffff;
   --surface-2: #ffffff;
   --subtle: #f4f4f6;
-  --foreground: #1c1c22;
+  --foreground: #16141f;
   --muted: #6b6b75;
   --border: #e9e9ec;
   --border-strong: #d8d8dd;
-  --primary: #5e6ad2;
+  --primary: #2e7cf6;
   --primary-fg: #ffffff;
-  --primary-soft: #5e6ad20f;
-  --ring: #5e6ad233;
-  --success: #3a7d5c;
+  --primary-soft: #2e7cf614;
+  --ring: #2e7cf640;
+  --success: #1fae5e;
+  --success-soft: #1fae5e14;
   --warning: #a9721f;
   --danger: #c4462f;
-  --radius: 0.5rem;
+  --module-clientes: #2e7cf6;
+  --module-precifica: #1fae5e;
+  --module-orcamentos: #7c3aed;
+  --module-orcamentos-soft: #7c3aed14;
+  --radius: 0.625rem;
   --shadow-sm: 0 1px 2px rgba(20, 20, 30, 0.04), 0 1px 3px rgba(20, 20, 30, 0.06);
   --shadow-md: 0 4px 12px rgba(20, 20, 30, 0.08), 0 2px 4px rgba(20, 20, 30, 0.04);
+  --shadow-brand: 0 10px 30px -14px rgba(46, 124, 246, 0.25), 0 2px 8px rgba(16, 19, 28, 0.05);
 }
 
-/* ===== Tema Linear — Dark ===== */
+/* ===== Tema NEGOCIAR — Dark ===== */
 :root[data-theme="dark"] {
   --background: #0b0b0e;
   --surface: #141418;
@@ -32,16 +39,22 @@
   --muted: #8a8a94;
   --border: #24242a;
   --border-strong: #34343b;
-  --primary: #6b78e0;
+  --primary: #5b92ff;
   --primary-fg: #ffffff;
-  --primary-soft: #6b78e01f;
-  --ring: #6b78e04d;
-  --success: #4ea87a;
+  --primary-soft: #5b92ff22;
+  --ring: #5b92ff4d;
+  --success: #3fc47c;
+  --success-soft: #3fc47c22;
   --warning: #e0a960;
   --danger: #e0664e;
-  --radius: 0.5rem;
+  --module-clientes: #5b92ff;
+  --module-precifica: #3fc47c;
+  --module-orcamentos: #9b6bf2;
+  --module-orcamentos-soft: #9b6bf226;
+  --radius: 0.625rem;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-brand: 0 10px 30px -14px rgba(91, 146, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -57,12 +70,18 @@
   --color-primary-fg: var(--primary-fg);
   --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-inter, "Inter Variable"), ui-sans-serif, system-ui, sans-serif;
+  --color-module-clientes: var(--module-clientes);
+  --color-module-precifica: var(--module-precifica);
+  --color-module-orcamentos: var(--module-orcamentos);
+  --color-module-orcamentos-soft: var(--module-orcamentos-soft);
+  --font-sans: var(--font-sora, "Sora Variable"), ui-sans-serif, system-ui, sans-serif;
   --radius-lg: var(--radius);
   --shadow-card: var(--shadow-sm);
   --shadow-pop: var(--shadow-md);
+  --shadow-brand: var(--shadow-brand);
 }
 
 * {
