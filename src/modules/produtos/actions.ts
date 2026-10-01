@@ -3,9 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireModule, getEntitlements, checkLimit } from "@/lib/entitlements";
+import { getSession, getEntitlements, checkLimit } from "@/lib/entitlements";
 import { parseBRLToCents } from "@/lib/format";
 import { countProducts } from "./queries";
+import { friendlyDbError } from "@/lib/db-errors";
 
 function parseForm(formData: FormData) {
   const str = (k: string) => {
@@ -21,7 +22,7 @@ function parseForm(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
-  const session = await requireModule("precifica");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
 
   const ent = await getEntitlements();
@@ -38,14 +39,14 @@ export async function createProduct(formData: FormData) {
     .select("id")
     .single();
 
-  if (error) redirect(`/produtos/novo?erro=${encodeURIComponent(error.message)}`);
+  if (error) redirect(`/produtos/novo?erro=${encodeURIComponent(friendlyDbError(error))}`);
 
   revalidatePath("/produtos");
   redirect(`/produtos`);
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const session = await requireModule("precifica");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
 
   const fields = parseForm(formData);
@@ -57,14 +58,14 @@ export async function updateProduct(id: string, formData: FormData) {
     .eq("company_id", session.companyId);
 
   if (error)
-    redirect(`/produtos/${id}/editar?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/produtos/${id}/editar?erro=${encodeURIComponent(friendlyDbError(error))}`);
 
   revalidatePath("/produtos");
   redirect("/produtos");
 }
 
 export async function deleteProduct(id: string) {
-  const session = await requireModule("precifica");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
   const supabase = await createClient();
   await supabase

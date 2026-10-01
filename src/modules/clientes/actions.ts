@@ -3,8 +3,9 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireModule, getEntitlements, checkLimit } from "@/lib/entitlements";
+import { getSession, getEntitlements, checkLimit } from "@/lib/entitlements";
 import { isValidCPF, isValidCNPJ, onlyDigits } from "@/lib/br-validators";
+import { friendlyDbError } from "@/lib/db-errors";
 import { countCustomers } from "./queries";
 import type { PersonType } from "./types";
 import type { ParsedCustomer } from "./import-parser";
@@ -52,7 +53,7 @@ function validateDoc(fields: ReturnType<typeof parseForm>): string | null {
 }
 
 export async function createCustomer(formData: FormData) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
 
   // GATE DE LIMITE (freemium): bloqueia ao atingir o teto do plano.
@@ -76,7 +77,7 @@ export async function createCustomer(formData: FormData) {
     .single();
 
   if (error) {
-    redirect(`/clientes/novo?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/clientes/novo?erro=${encodeURIComponent(friendlyDbError(error))}`);
   }
 
   // registra na timeline
@@ -92,7 +93,7 @@ export async function createCustomer(formData: FormData) {
 }
 
 export async function updateCustomer(id: string, formData: FormData) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
 
   const fields = parseForm(formData);
@@ -108,7 +109,7 @@ export async function updateCustomer(id: string, formData: FormData) {
     .eq("company_id", session.companyId);
 
   if (error) {
-    redirect(`/clientes/${id}/editar?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/clientes/${id}/editar?erro=${encodeURIComponent(friendlyDbError(error))}`);
   }
 
   revalidatePath(`/clientes/${id}`);
@@ -116,7 +117,7 @@ export async function updateCustomer(id: string, formData: FormData) {
 }
 
 export async function deleteCustomer(id: string) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) redirect("/login");
 
   const supabase = await createClient();
@@ -134,7 +135,7 @@ export async function deleteCustomer(id: string) {
 // Registra um contato: atualiza last_contact_at e grava na timeline.
 // Usado pelo botão "Enviar WhatsApp" da recuperação.
 export async function registerContact(customerId: string, channel = "whatsapp") {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false };
   const supabase = await createClient();
   const now = new Date().toISOString();
@@ -155,7 +156,7 @@ export async function registerContact(customerId: string, channel = "whatsapp") 
 
 // Configura os prazos de status da empresa (sliders 🟡/🔴).
 export async function setRelThresholds(yellowDays: number, redDays: number) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false };
   const supabase = await createClient();
   await supabase
@@ -169,22 +170,9 @@ export async function setRelThresholds(yellowDays: number, redDays: number) {
   return { ok: true };
 }
 
-// Quantos clientes ainda cabem no plano (null = ilimitado).
-// Importação em massa também respeita o teto do freemium.
-async function customerRoom(): Promise<number | null> {
-  const gate = checkLimit(await getEntitlements(), "customers", await countCustomers());
-  return gate.remaining;
-}
-
-function limitError(room: number) {
-  return room === 0
-    ? "Você atingiu o limite de clientes do seu plano."
-    : `Seu plano permite importar mais ${room} cliente(s). Reduza a planilha ou faça upgrade.`;
-}
-
 // Importa clientes em massa a partir de linhas "Nome, telefone".
 export async function importCustomers(raw: string) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false, imported: 0 };
 
   const lines = raw
@@ -212,10 +200,6 @@ export async function importCustomers(raw: string) {
 
   if (rows.length === 0) return { ok: true, imported: 0 };
 
-  const room = await customerRoom();
-  if (room !== null && rows.length > room)
-    return { ok: false, imported: 0, error: limitError(room) };
-
   const supabase = await createClient();
   const { error } = await supabase.from("customers").insert(rows);
   if (error) return { ok: false, imported: 0, error: error.message };
@@ -226,13 +210,9 @@ export async function importCustomers(raw: string) {
 
 // Grava clientes já parseados/validados (vindos da planilha).
 export async function importParsedCustomers(rows: ParsedCustomer[]) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false, imported: 0 };
   if (rows.length === 0) return { ok: true, imported: 0 };
-
-  const room = await customerRoom();
-  if (room !== null && rows.length > room)
-    return { ok: false, imported: 0, error: limitError(room) };
 
   const supabase = await createClient();
   const now = new Date().toISOString();
@@ -251,11 +231,24 @@ export async function importParsedCustomers(rows: ParsedCustomer[]) {
     last_contact_at: now,
   }));
 
-  const { error } = await supabase.from("customers").insert(payload);
-  if (error) return { ok: false, imported: 0, error: error.message };
+  // insere uma a uma (não em lote): se vier uma linha com CPF/CNPJ já
+  // cadastrado, só ela é pulada — o resto da planilha continua entrando
+  let imported = 0;
+  let skipped = 0;
+  for (const row of payload) {
+    const { error } = await supabase.from("customers").insert(row);
+    if (error) {
+      if (error.code === "23505") {
+        skipped += 1;
+        continue;
+      }
+      return { ok: false, imported, error: error.message };
+    }
+    imported += 1;
+  }
 
   revalidatePath("/clientes");
-  return { ok: true, imported: payload.length };
+  return { ok: true, imported, skipped };
 }
 
 // Muda o status de cadastro do cliente (ativo/inativo/bloqueado).
@@ -263,7 +256,7 @@ export async function setCustomerStatus(
   customerId: string,
   status: "active" | "inactive" | "blocked",
 ) {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return { ok: false };
   const supabase = await createClient();
   await supabase
@@ -280,7 +273,7 @@ export async function setCustomerStatus(
 // orçamento nem venda há mais de 3 meses. Roda na leitura da lista.
 // Idempotente e barato (um update condicional).
 export async function autoInactivateStale() {
-  const session = await requireModule("clientes");
+  const session = await getSession();
   if (!session?.companyId) return;
   const supabase = await createClient();
 
@@ -294,7 +287,6 @@ export async function autoInactivateStale() {
     .select("id, created_at")
     .eq("company_id", session.companyId)
     .eq("status", "active")
-    .eq("stage", "customer")
     .is("deleted_at", null);
   if (!actives || actives.length === 0) return;
 
