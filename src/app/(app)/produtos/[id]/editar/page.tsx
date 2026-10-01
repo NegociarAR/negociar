@@ -6,6 +6,8 @@ import { ProductForm } from "@/modules/produtos/product-form";
 import { brl } from "@/lib/format";
 import { ProductStatusSelect } from "@/modules/produtos/product-status-select";
 import { HistoryPanel } from "@/modules/historico/history-panel";
+import { PageIcon } from "@/components/page-icon";
+import { Package } from "lucide-react";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
@@ -30,7 +32,10 @@ export default async function EditarProdutoPage({
     <div className="mx-auto max-w-2xl space-y-6">
       <BackLink href="/produtos" label="Voltar para produtos" />
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="min-w-0 break-words text-xl font-semibold">{product.name}</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          <PageIcon module="precifica" icon={Package} />
+          <h1 className="min-w-0 break-words text-xl font-semibold">{product.name}</h1>
+        </div>
         <ProductStatusSelect
           productId={id}
           active={(product as { is_active?: boolean }).is_active !== false}
