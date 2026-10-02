@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { Topbar } from "@/components/topbar";
 import { ContentContainer } from "@/components/content-container";
+import { CommandPalette } from "@/components/command-palette";
 import { NAV_ITEMS, QUICK_ACTIONS } from "@/components/nav-items";
 import { getEntitlements, getSession, hasModule } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
@@ -55,18 +56,20 @@ export default async function AppLayout({
   const quick = QUICK_ACTIONS?.filter((a) => !a.module || hasModule(ent, a.module)) ?? [];
 
   return (
-    <div className="flex min-h-dvh">
-      <Sidebar
-        companyName={company?.name ?? "Minha empresa"}
-        userEmail={session.user.email ?? ""}
-        modules={modules}
-        badges={badges}
-      />
-      <main className="flex flex-1 flex-col pb-16 md:pb-0">
-        <Topbar />
-        <ContentContainer>{children}</ContentContainer>
-      </main>
-      <BottomNav items={items} quickActions={quick} />
-    </div>
+    <CommandPalette>
+      <div className="flex min-h-dvh">
+        <Sidebar
+          companyName={company?.name ?? "Minha empresa"}
+          userEmail={session.user.email ?? ""}
+          modules={modules}
+          badges={badges}
+        />
+        <main className="flex flex-1 flex-col pb-16 md:pb-0">
+          <Topbar />
+          <ContentContainer>{children}</ContentContainer>
+        </main>
+        <BottomNav items={items} quickActions={quick} />
+      </div>
+    </CommandPalette>
   );
 }
