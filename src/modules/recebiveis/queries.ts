@@ -10,6 +10,7 @@ export interface Receivable {
   status: "pending" | "received" | "overdue" | "canceled";
   received_at: string | null;
   customer_name: string | null;
+  customer_whatsapp: string | null;
   quote_number: number | null;
 }
 
@@ -38,14 +39,14 @@ export async function getReceivables() {
   const { data } = await supabase
     .from("sale_installments")
     .select(
-      "id, sale_id, number, due_date, amount_cents, status, received_at, sales(quote_id, customers(person_type, name, trade_name, legal_name), quotes(number))",
+      "id, sale_id, number, due_date, amount_cents, status, received_at, sales(quote_id, customers(person_type, name, trade_name, legal_name, whatsapp, phone), quotes(number))",
     )
     .eq("company_id", session.companyId)
     .order("due_date", { ascending: true });
 
   const rows: Receivable[] = (data ?? []).map((r) => {
     const sale = (r as { sales?: unknown }).sales as {
-      customers?: Parameters<typeof customerName>[0];
+      customers?: (Parameters<typeof customerName>[0] & { whatsapp?: string | null; phone?: string | null }) | null;
       quotes?: { number?: number } | null;
     } | null;
     return {
@@ -57,6 +58,7 @@ export async function getReceivables() {
       status: r.status,
       received_at: r.received_at,
       customer_name: customerName(sale?.customers ?? null),
+      customer_whatsapp: sale?.customers?.whatsapp ?? sale?.customers?.phone ?? null,
       quote_number: sale?.quotes?.number ?? null,
     };
   });
