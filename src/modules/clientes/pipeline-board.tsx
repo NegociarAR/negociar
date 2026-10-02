@@ -9,11 +9,14 @@ import { brl } from "@/lib/format";
 import { useToast } from "@/components/toast";
 import type { PipelineBoard as Board, PipelineCard } from "./pipeline-types";
 
-const COLUMNS: { key: Stage; accent: string }[] = [
-  { key: "lead", accent: "border-t-primary" },
-  { key: "opportunity", accent: "border-t-warning" },
-  { key: "customer", accent: "border-t-success" },
-  { key: "lost", accent: "border-t-muted" },
+// Fundo bem claro por coluna — ajuda a reconhecer o estágio de relance,
+// sem precisar ler o texto. Os cards por cima ficam num tom levemente
+// mais claro que o fundo da coluna, pra manter contraste e legibilidade.
+const COLUMNS: { key: Stage; accent: string; bg: string; cardBg: string }[] = [
+  { key: "lead", accent: "border-t-primary", bg: "bg-primary-soft", cardBg: "bg-surface" },
+  { key: "opportunity", accent: "border-t-warning", bg: "bg-warning/[0.06]", cardBg: "bg-surface" },
+  { key: "customer", accent: "border-t-success", bg: "bg-success/[0.06]", cardBg: "bg-surface" },
+  { key: "lost", accent: "border-t-muted", bg: "bg-subtle", cardBg: "bg-surface" },
 ];
 
 function daysSince(iso: string | null): number | null {
@@ -68,7 +71,7 @@ export function PipelineBoardView({ board }: { board: Board }) {
               const card = cards.find((c) => c.id === id) ?? Object.values(board).flat().find((c) => c.id === id);
               if (card) move(card, col.key);
             }}
-            className={`w-72 shrink-0 rounded-lg border-t-2 bg-surface shadow-card transition ${col.accent} ${
+            className={`w-72 shrink-0 rounded-lg border-t-2 shadow-card transition ${col.accent} ${col.bg} ${
               overColumn === col.key ? "ring-2 ring-primary/40" : ""
             }`}
           >
@@ -92,7 +95,7 @@ export function PipelineBoardView({ board }: { board: Board }) {
                       e.dataTransfer.setData("text/plain", c.id);
                     }}
                     onDragEnd={() => setDragId(null)}
-                    className={`group rounded-md border bg-background p-2.5 text-sm shadow-sm transition ${
+                    className={`group rounded-md border ${col.cardBg} p-2.5 text-sm shadow-sm transition ${
                       dragId === c.id ? "opacity-40" : ""
                     }`}
                   >
