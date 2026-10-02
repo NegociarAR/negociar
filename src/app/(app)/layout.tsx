@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { followupCounts } from "@/modules/followups/queries";
 import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
+import { listNotifications } from "@/modules/notifications/notification-queries";
 import type { ModuleKey } from "@/lib/entitlements/types";
 
 async function getCompany(companyId: string) {
@@ -34,12 +35,13 @@ export default async function AppLayout({
 
   // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
   // cookies(), e o Next não permite cookies() dentro de unstable_cache).
-  const [ent, company, fu, openQuotes, overdue] = await Promise.all([
+  const [ent, company, fu, openQuotes, overdue, notifications] = await Promise.all([
     getEntitlements(),
     getCompany(session.companyId),
     followupCounts(),
     countOpenQuotes(),
     overdueCount(),
+    listNotifications(),
   ]);
 
   const moduleKeys: ModuleKey[] = ["clientes", "precifica", "orcamentos", "teams"];
@@ -65,7 +67,7 @@ export default async function AppLayout({
           badges={badges}
         />
         <main className="flex flex-1 flex-col pb-16 md:pb-0">
-          <Topbar />
+          <Topbar notifications={notifications} />
           <ContentContainer>{children}</ContentContainer>
         </main>
         <BottomNav items={items} quickActions={quick} />

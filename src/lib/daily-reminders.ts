@@ -35,6 +35,21 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
 
   const companyEmail = new Map((companies ?? []).map((c) => [c.id, { name: c.name, email: c.email as string }]));
 
+  // usuários de cada empresa, para gravar uma notificação por pessoa
+  // (hoje só o owner — já funciona sozinho quando o multiusuário existir)
+  const { data: members } = await admin.from("company_users").select("company_id, user_id");
+  const usersByCompany = new Map<string, string[]>();
+  for (const m of members ?? []) {
+    const list = usersByCompany.get(m.company_id) ?? [];
+    list.push(m.user_id);
+    usersByCompany.set(m.company_id, list);
+  }
+  async function notify(companyId: string, type: string, title: string, body: string) {
+    const users = usersByCompany.get(companyId) ?? [];
+    if (users.length === 0) return;
+    await admin.from("notifications").insert(users.map((user_id) => ({ company_id: companyId, user_id, type, title, body })));
+  }
+
   const followupsByCompany = new Map<string, { name: string; reason: string | null }[]>();
   for (const f of followups ?? []) {
     if (!companyEmail.has(f.company_id)) continue;
@@ -69,6 +84,12 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
              <p><a href="${APP_URL}/follow-ups">Ver follow-ups →</a></p>`,
     });
     if (res.ok) followupEmails += 1;
+    await notify(
+      companyId,
+      "followup_due",
+      `${items.length} follow-up(s) para hoje`,
+      items.slice(0, 5).map((f) => f.name).join(", ") + (items.length > 5 ? "..." : ""),
+    );
   }
 
   for (const [companyId, items] of overdueByCompany) {
@@ -86,6 +107,12 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
              <p><a href="${APP_URL}/recebiveis">Ver recebíveis →</a></p>`,
     });
     if (res.ok) overdueEmails += 1;
+    await notify(
+      companyId,
+      "installment_overdue",
+      `${items.length} parcela(s) vencida(s)`,
+      `Total: ${(totalCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+    );
   }
 
   return { followupEmails, overdueEmails };
