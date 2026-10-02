@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signIn } from "../actions";
-import { Field, Input, Button } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function LoginPage({
   searchParams,
@@ -32,14 +33,14 @@ export default async function LoginPage({
           autoComplete="current-password"
         />
       </Field>
-      <Button type="submit" className="w-full">
+      <SubmitButton pendingText="Entrando..." className="w-full">
         Entrar
-      </Button>
-      <div className="-my-2 flex justify-between text-sm text-muted">
-        <Link href="/recuperar" className="py-2.5 hover:text-foreground">
+      </SubmitButton>
+      <div className="flex justify-between text-sm text-muted">
+        <Link href="/recuperar" className="hover:text-foreground">
           Esqueci a senha
         </Link>
-        <Link href="/signup" className="py-2.5 hover:text-foreground">
+        <Link href="/signup" className="hover:text-foreground">
           Criar conta
         </Link>
       </div>

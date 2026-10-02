@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/sora";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import { ToastProvider } from "@/components/toast";
+import { RouteProgress } from "@/components/route-progress";
 
 export const metadata: Metadata = {
   title: "NEGOCIAR",
@@ -29,6 +30,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <RouteProgress />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

@@ -12,6 +12,7 @@ import { ICONS } from "./nav-icons";
 import { signOut } from "@/app/(auth)/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoN } from "@/components/logo";
+import { PlainSubmitButton } from "@/components/ui/submit-button";
 
 export function Sidebar({
   companyName,
@@ -89,13 +90,13 @@ export function Sidebar({
         <p className="truncate px-2.5 py-1 text-xs text-muted">{userEmail}</p>
         <ThemeToggle />
         <form action={signOut}>
-          <button
-            type="submit"
+          <PlainSubmitButton
+            pendingText="Saindo..."
             className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted transition hover:bg-subtle hover:text-foreground"
           >
             <LogOut size={16} strokeWidth={1.8} />
             Sair
-          </button>
+          </PlainSubmitButton>
         </form>
       </div>
     </aside>

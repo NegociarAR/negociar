@@ -9,6 +9,7 @@ import { myBilling } from "@/modules/configuracoes/billing";
 import { fmtDay } from "@/lib/dates";
 import { getFiscalSettings } from "@/modules/configuracoes/fiscal-queries";
 import { FiscalSettingsForm } from "@/modules/configuracoes/fiscal-settings-form";
+import { PlainSubmitButton } from "@/components/ui/submit-button";
 
 function UsageRow({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
@@ -129,12 +130,12 @@ export default async function ConfiguracoesPage() {
 
       {/* Sair (mobile) */}
       <form action={signOut}>
-        <button
-          type="submit"
+        <PlainSubmitButton
+          pendingText="Saindo..."
           className="h-10 w-full rounded-lg border text-sm font-medium transition hover:bg-subtle md:hidden"
         >
           Sair da conta
-        </button>
+        </PlainSubmitButton>
       </form>
     </div>
   );

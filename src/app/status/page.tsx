@@ -3,6 +3,7 @@ import { getSession } from "@/lib/entitlements";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoN } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
+import { PlainSubmitButton } from "@/components/ui/submit-button";
 
 export default async function StatusPage() {
   const session = await getSession();
@@ -44,12 +45,12 @@ export default async function StatusPage() {
           <p className="mt-4 whitespace-pre-line rounded-md bg-subtle p-3 text-left text-xs text-muted">{instructions}</p>
         )}
         <form action={signOut} className="mt-6">
-          <button
-            type="submit"
+          <PlainSubmitButton
+            pendingText="Saindo..."
             className="text-sm text-muted underline transition hover:text-foreground"
           >
             Sair
-          </button>
+          </PlainSubmitButton>
         </form>
       </div>
     </div>

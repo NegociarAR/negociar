@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { resetPassword } from "../actions";
-import { Field, Input, Button } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function RecoverPage({
   searchParams,
@@ -20,13 +21,13 @@ export default async function RecoverPage({
           <Field label="E-mail">
             <Input name="email" type="email" required autoComplete="email" />
           </Field>
-          <Button type="submit" className="w-full">
+          <SubmitButton pendingText="Enviando..." className="w-full">
             Enviar link
-          </Button>
+          </SubmitButton>
         </>
       )}
       <p className="text-center text-sm text-muted">
-        <Link href="/login" className="inline-block py-2.5 hover:text-foreground">
+        <Link href="/login" className="hover:text-foreground">
           Voltar para entrar
         </Link>
       </p>

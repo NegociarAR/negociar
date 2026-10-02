@@ -2,9 +2,10 @@
 
 import { FlashOnSubmit } from "@/components/toast";
 import { useState } from "react";
-import { Field, Input, Button } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import { DocInput, CepInput } from "@/components/ui/br-inputs";
 import type { Customer, PersonType } from "@/modules/clientes/types";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export function CustomerForm({
   action,
@@ -139,7 +140,7 @@ export function CustomerForm({
         </div>
       </div>
 
-      <Button type="submit">{submitLabel}</Button>
+      <SubmitButton pendingText="Salvando...">{submitLabel}</SubmitButton>
     </form>
   );
 }

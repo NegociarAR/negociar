@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signUp } from "../actions";
-import { Field, Input, Button } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function SignupPage({
   searchParams,
@@ -31,12 +32,12 @@ export default async function SignupPage({
           autoComplete="new-password"
         />
       </Field>
-      <Button type="submit" className="w-full">
+      <SubmitButton pendingText="Criando conta..." className="w-full">
         Começar grátis
-      </Button>
+      </SubmitButton>
       <p className="text-center text-sm text-muted">
         Já tem conta?{" "}
-        <Link href="/login" className="inline-block py-2.5 text-primary hover:underline">
+        <Link href="/login" className="text-primary hover:underline">
           Entrar
         </Link>
       </p>

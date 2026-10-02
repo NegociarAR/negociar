@@ -4,6 +4,7 @@ import { getSession } from "@/lib/entitlements";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoN } from "@/components/logo";
 import { AdminNav } from "@/components/admin-nav";
+import { PlainSubmitButton } from "@/components/ui/submit-button";
 
 export default async function AdminLayout({
   children,
@@ -18,20 +19,20 @@ export default async function AdminLayout({
   return (
     <div className="min-h-dvh">
       <header className="border-b bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-4 md:h-14 md:flex-nowrap">
-          <div className="flex h-14 items-center gap-3">
-            <LogoN size={26} />
-            <Link href="/admin" className="-my-2 py-2.5 text-sm font-semibold">
-              Admin · NEGOCIAR
-            </Link>
-          </div>
-          <div className="order-last -mx-4 w-[calc(100%+2rem)] overflow-x-auto border-t px-1 md:order-none md:mx-0 md:w-auto md:flex-1 md:border-t-0 md:px-0">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <LogoN size={26} />
+              <Link href="/admin" className="text-sm font-semibold">
+                Admin · NEGOCIAR
+              </Link>
+            </div>
             <AdminNav />
           </div>
           <form action={signOut}>
-            <button className="px-2 py-2.5 text-sm text-muted underline hover:text-foreground">
+            <PlainSubmitButton pendingText="Saindo..." className="text-sm text-muted underline hover:text-foreground">
               Sair
-            </button>
+            </PlainSubmitButton>
           </form>
         </div>
       </header>

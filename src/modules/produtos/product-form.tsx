@@ -1,7 +1,8 @@
 import { FlashOnSubmit } from "@/components/toast";
-import { Field, Input, Button } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import type { Product } from "@/modules/produtos/queries";
 import { brl } from "@/lib/format";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export function ProductForm({
   action,
@@ -49,7 +50,7 @@ export function ProductForm({
           />
         </Field>
       </div>
-      <Button type="submit">{submitLabel}</Button>
+      <SubmitButton pendingText="Salvando...">{submitLabel}</SubmitButton>
     </form>
   );
 }
