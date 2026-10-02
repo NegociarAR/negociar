@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { listQuotes, countQuotesThisMonth } from "@/modules/orcamentos/queries";
 import { QuoteRow } from "@/modules/orcamentos/quote-row";
-import { getEntitlements, checkLimit } from "@/lib/entitlements";
+import { getEntitlements, checkLimit, getSession } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
-import { PageIcon } from "@/components/page-icon";
-import { FileText } from "lucide-react";
 
 export default async function OrcamentosPage({
   searchParams,
@@ -12,6 +10,8 @@ export default async function OrcamentosPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
+  const session = await getSession();
+  const companyId = session?.companyId ?? "";
   const quotes = await listQuotes(q);
   const used = await countQuotesThisMonth();
   const ent = await getEntitlements();
@@ -19,18 +19,15 @@ export default async function OrcamentosPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <PageIcon module="orcamentos" icon={FileText} />
-          <div>
-            <h1 className="text-xl font-semibold">Orçamentos</h1>
-            <p className="text-sm text-muted">
-              {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
-            </p>
-          </div>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Orçamentos</h1>
+          <p className="text-sm text-muted">
+            {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href="/orcamentos/horas" className="py-2 text-sm font-medium text-primary hover:underline">
+        <div className="flex items-center gap-3">
+          <Link href="/orcamentos/horas" className="text-sm font-medium text-primary hover:underline">
             Faturamento por hora
           </Link>
           <Link href="/orcamentos/novo">
@@ -55,8 +52,8 @@ export default async function OrcamentosPage({
         </div>
       ) : (
         <div className="rounded-lg border bg-surface">
-          <table className="block w-full text-sm sm:table">
-            <thead className="hidden sm:table-header-group">
+          <table className="w-full text-sm">
+            <thead>
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
@@ -66,9 +63,9 @@ export default async function OrcamentosPage({
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="block sm:table-row-group">
+            <tbody>
               {quotes.map((qt) => (
-                <QuoteRow key={qt.id} qt={qt} />
+                <QuoteRow key={qt.id} qt={qt} companyId={companyId} />
               ))}
             </tbody>
           </table>

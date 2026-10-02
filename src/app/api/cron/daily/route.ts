@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendDailyReminders } from "@/lib/daily-reminders";
 
 // Rotina diária: inativa clientes sem movimento há 3 meses e bloqueia
 // empresas inadimplentes além da tolerância. Roda via cron da Vercel
@@ -27,5 +28,14 @@ export async function GET(request: NextRequest) {
   const { data, error } = await admin.rpc("run_daily_maintenance");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, ...data });
+  // lembretes por e-mail (item 1 e 2 do roadmap): best-effort — uma
+  // falha de envio não derruba o resto da rotina, que já rodou acima.
+  let reminders = { followupEmails: 0, overdueEmails: 0 };
+  try {
+    reminders = await sendDailyReminders(admin);
+  } catch (e) {
+    console.error("sendDailyReminders falhou:", e);
+  }
+
+  return NextResponse.json({ ok: true, ...data, ...reminders });
 }

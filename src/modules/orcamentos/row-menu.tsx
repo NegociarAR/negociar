@@ -5,19 +5,28 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { cancelQuote } from "./actions";
+import { duplicateQuote } from "./duplicate-actions";
+import { QuickCloseSaleModal } from "./quick-close-sale-modal";
 
 const EDITABLE = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"];
 const CANCELABLE = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"];
 
 export function QuoteRowMenu({
   quoteId,
+  number,
   status,
+  companyId,
+  totalCents,
 }: {
   quoteId: string;
+  number: number;
   status: string;
+  companyId: string;
+  totalCents: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [closeSaleOpen, setCloseSaleOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const toast = useToast();
   const ref = useRef<HTMLDivElement>(null);
@@ -32,7 +41,21 @@ export function QuoteRowMenu({
 
   const canEdit = EDITABLE.includes(status);
   const canCancel = CANCELABLE.includes(status);
-  if (!canEdit && !canCancel) return null;
+  const canCloseSale = status === "approved";
+
+  function duplicate() {
+    setOpen(false);
+    startTransition(() =>
+      duplicateQuote(quoteId).then((res) => {
+        if (res.ok) {
+          toast("Orçamento duplicado como novo rascunho.");
+          router.push(`/orcamentos/${res.id}/editar`);
+        } else {
+          toast(res.error, "error");
+        }
+      }),
+    );
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -41,13 +64,25 @@ export function QuoteRowMenu({
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="flex h-10 w-10 md:h-8 md:w-8 items-center justify-center rounded-md text-muted transition hover:bg-subtle hover:text-foreground"
+        className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition hover:bg-subtle hover:text-foreground"
         aria-label="Ações"
       >
         <MoreHorizontal size={16} />
       </button>
       {open && (
-        <div className="absolute right-0 top-9 z-30 w-40 overflow-hidden rounded-lg border bg-surface p-1 shadow-pop">
+        <div className="absolute right-0 top-9 z-30 w-44 overflow-hidden rounded-lg border bg-surface p-1 shadow-pop">
+          {canCloseSale && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+                setCloseSaleOpen(true);
+              }}
+              className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-primary hover:bg-subtle"
+            >
+              Fechar venda
+            </button>
+          )}
           {canEdit && (
             <button
               onClick={(e) => {
@@ -59,6 +94,16 @@ export function QuoteRowMenu({
               Editar
             </button>
           )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              duplicate();
+            }}
+            disabled={pending}
+            className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-subtle disabled:opacity-50"
+          >
+            {pending ? "Duplicando..." : "Duplicar"}
+          </button>
           {canCancel && (
             <button
               onClick={(e) => {
@@ -78,6 +123,15 @@ export function QuoteRowMenu({
             </button>
           )}
         </div>
+      )}
+      {closeSaleOpen && (
+        <QuickCloseSaleModal
+          quoteId={quoteId}
+          quoteNumber={number}
+          companyId={companyId}
+          grossCents={totalCents}
+          onClose={() => setCloseSaleOpen(false)}
+        />
       )}
     </div>
   );
