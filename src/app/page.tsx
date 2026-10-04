@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 // Ponto de entrada único pós-login.
 // Avalia o perfil e redireciona:
 //   → admin:        /admin
-//   → sem empresa:  /configuracoes
+//   → sem empresa:  aceita convite pendente ou /sem-empresa
 //   → suspenso:     /status
 //   → normal:       /dashboard
 export default async function RootPage() {
@@ -29,8 +29,13 @@ export default async function RootPage() {
     redirect("/status");
   }
 
-  // sem empresa vinculada ainda?
-  if (!session.companyId) redirect("/configuracoes");
+  // sem empresa vinculada: tenta aceitar o convite pendente do próprio e-mail;
+  // sem convite, tela explicativa (fora do layout do app, para não entrar em loop)
+  if (!session.companyId) {
+    const { data: claimed } = await supabase.rpc("claim_my_pending_invite");
+    if (claimed) redirect("/dashboard");
+    redirect("/sem-empresa");
+  }
 
   redirect("/dashboard");
 }

@@ -30,7 +30,7 @@ export default async function AppLayout({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!session.companyId) redirect("/configuracoes");
+  if (!session.companyId) redirect("/");
   if (session.status !== "active") redirect("/status");
 
   // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
