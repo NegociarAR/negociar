@@ -13,7 +13,8 @@ export type IconKey =
   | "pipeline"
   | "clock"
   | "history"
-  | "receipt";
+  | "receipt"
+  | "team";
 
 export type BadgeKey = "followups" | "openQuotes" | "receivables";
 
@@ -89,7 +90,10 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    items: [{ href: "/configuracoes", label: "Configurações", icon: "settings" }],
+    items: [
+      { href: "/equipe", label: "Equipe", icon: "team" },
+      { href: "/configuracoes", label: "Configurações", icon: "settings" },
+    ],
   },
 ];
 

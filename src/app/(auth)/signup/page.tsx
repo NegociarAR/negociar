@@ -6,9 +6,11 @@ import { SubmitButton } from "@/components/ui/submit-button";
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; email?: string }>;
 }) {
-  const { erro } = await searchParams;
+  const { erro, email } = await searchParams;
+  const fromInvite = Boolean(email); // veio de um convite: e-mail já definido, sem empresa própria
+
   return (
     <form action={signUp} className="space-y-4">
       <h2 className="text-base font-semibold">Criar conta</h2>
@@ -17,11 +19,13 @@ export default async function SignupPage({
           {erro}
         </p>
       )}
-      <Field label="Nome da empresa">
-        <Input name="company_name" type="text" required />
-      </Field>
+      {!fromInvite && (
+        <Field label="Nome da empresa">
+          <Input name="company_name" type="text" required />
+        </Field>
+      )}
       <Field label="E-mail">
-        <Input name="email" type="email" required autoComplete="email" />
+        <Input name="email" type="email" required autoComplete="email" defaultValue={email} readOnly={fromInvite} />
       </Field>
       <Field label="Senha">
         <Input
@@ -33,7 +37,7 @@ export default async function SignupPage({
         />
       </Field>
       <SubmitButton pendingText="Criando conta..." className="w-full">
-        Começar grátis
+        {fromInvite ? "Criar conta e entrar na equipe" : "Começar grátis"}
       </SubmitButton>
       <p className="text-center text-sm text-muted">
         Já tem conta?{" "}

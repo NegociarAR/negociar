@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/signup",
   "/recuperar",
   "/orcamento",
+  "/convite",
   "/auth",
   "/status",
   "/api/cron",  // autenticado pelo próprio segredo do cron, não por sessão

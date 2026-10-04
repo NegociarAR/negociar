@@ -6,12 +6,13 @@ import { SubmitButton } from "@/components/ui/submit-button";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; confirme?: string }>;
+  searchParams: Promise<{ erro?: string; confirme?: string; next?: string }>;
 }) {
-  const { erro, confirme } = await searchParams;
+  const { erro, confirme, next } = await searchParams;
   return (
     <form action={signIn} className="space-y-4">
       <h2 className="text-base font-semibold">Entrar</h2>
+      {next && <input type="hidden" name="next" value={next} />}
       {confirme && (
         <p className="rounded-lg border-l-2 border-foreground bg-subtle px-3 py-2 text-sm">
           Conta criada. Confira seu e-mail para confirmar antes de entrar.

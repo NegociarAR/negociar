@@ -15,14 +15,17 @@ async function originUrl() {
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
+  const rawNext = String(formData.get("next") ?? "");
+  // mesma regra anti-open-redirect do callback: só paths internos
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    redirect(`/login?erro=${encodeURIComponent("E-mail ou senha inválidos.")}`);
+    redirect(`/login?erro=${encodeURIComponent("E-mail ou senha inválidos.")}${rawNext ? `&next=${encodeURIComponent(rawNext)}` : ""}`);
   }
-  // Redireciona pra rota decisora — ela avalia admin/normal/status
-  redirect("/");
+  // Redireciona pra rota decisora (avalia admin/normal/status) ou para onde o usuário veio
+  redirect(next);
 }
 
 export async function signUp(formData: FormData) {
