@@ -19,6 +19,7 @@ export interface PendingInvite {
   id: string;
   email: string;
   role: CompanyRole;
+  token: string;
   createdAt: string;
   expiresAt: string;
 }

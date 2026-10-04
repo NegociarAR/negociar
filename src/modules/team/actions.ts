@@ -16,7 +16,7 @@ async function originUrl() {
   return `${proto}://${host}`;
 }
 
-export async function inviteMember(email: string, role: CompanyRole): Promise<Result> {
+export async function inviteMember(email: string, role: CompanyRole): Promise<Result | { ok: true; emailSent: boolean }> {
   const session = await getSession();
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
   const clean = email.trim().toLowerCase();
@@ -28,7 +28,7 @@ export async function inviteMember(email: string, role: CompanyRole): Promise<Re
 
   const { data: company } = await supabase.from("companies").select("name").eq("id", session.companyId).maybeSingle();
   const token = (data as { token: string }).token;
-  await sendEmail({
+  const sent = await sendEmail({
     to: clean,
     subject: `Convite para a equipe de ${company?.name ?? "uma empresa"} no NEGOCIAR`,
     html: `<p>Você foi convidado para fazer parte da equipe de <strong>${company?.name ?? ""}</strong> no NEGOCIAR.</p>
@@ -37,7 +37,7 @@ export async function inviteMember(email: string, role: CompanyRole): Promise<Re
   });
 
   revalidatePath("/equipe");
-  return { ok: true };
+  return { ok: true, emailSent: Boolean(sent.ok) };
 }
 
 export async function revokeInvite(id: string): Promise<Result> {

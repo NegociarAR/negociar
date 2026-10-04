@@ -11,7 +11,7 @@ export async function getTeam(): Promise<{ members: TeamMember[]; invites: Pendi
     supabase.rpc("list_team_members", { p_company: session.companyId }),
     supabase
       .from("company_invites")
-      .select("id, email, role, created_at, expires_at")
+      .select("id, email, role, token, created_at, expires_at")
       .eq("company_id", session.companyId)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
@@ -27,7 +27,7 @@ export async function getTeam(): Promise<{ members: TeamMember[]; invites: Pendi
 
   return {
     members,
-    invites: (invites ?? []).map((i) => ({ id: i.id, email: i.email, role: i.role as CompanyRole, createdAt: i.created_at, expiresAt: i.expires_at })),
+    invites: (invites ?? []).map((i) => ({ id: i.id, email: i.email, role: i.role as CompanyRole, token: i.token, createdAt: i.created_at, expiresAt: i.expires_at })),
     myRole,
   };
 }

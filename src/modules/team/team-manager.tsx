@@ -34,7 +34,11 @@ export function TeamManager({
         setError(res.error);
         return;
       }
-      toast("Convite enviado.");
+      if ("emailSent" in res && !res.emailSent) {
+        toast("Convite criado, mas o e-mail não saiu. Use \"Copiar link\" abaixo e envie por WhatsApp.", "error");
+      } else {
+        toast("Convite enviado.");
+      }
       setEmail("");
       router.refresh();
     });
@@ -115,6 +119,15 @@ export function TeamManager({
             {invites.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                 <span className="min-w-0 truncate text-muted">{i.email} · {ROLE_LABELS[i.role]}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/convite/${i.token}`);
+                    toast("Link copiado.");
+                  }}
+                  className="shrink-0 text-xs text-primary hover:underline"
+                >
+                  Copiar link
+                </button>
                 <button
                   onClick={() =>
                     startTransition(async () => {
