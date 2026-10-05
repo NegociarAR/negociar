@@ -36,6 +36,11 @@ export interface PriceResult {
 
 const round = (n: number) => Math.round(n);
 
+// Entrada inválida (NaN, Infinity) devolveria preço "NaN" com ok:true; valores
+// negativos de custo/imposto/comissão devolveriam preço negativo. Margem
+// negativa é permitida de propósito (venda com prejuízo, queima de estoque).
+const notFinite = (...ns: number[]) => ns.some((n) => !Number.isFinite(n));
+
 export function computePrice(input: PriceInput): PriceResult {
   const {
     costCents,
@@ -46,6 +51,16 @@ export function computePrice(input: PriceInput): PriceResult {
     materialCents,
     laborCents,
   } = input;
+  if (
+    notFinite(costCents, expensesCents, taxPercent, commissionPercent, marginPercent) ||
+    costCents < 0 || expensesCents < 0 || taxPercent < 0 || commissionPercent < 0
+  ) {
+    return {
+      ok: false,
+      reason: "Valores inválidos: informe números não negativos.",
+      priceCents: 0, profitCents: 0, marginPercent: 0, totalCostCents: 0, composition: [],
+    };
+  }
   const totalCost = costCents + expensesCents;
   const rate = (taxPercent + commissionPercent + marginPercent) / 100;
 
@@ -115,6 +130,17 @@ export interface ReverseResult {
 export function computeReverse(input: ReverseInput): ReverseResult {
   const { targetPriceCents, taxPercent, commissionPercent, marginPercent } =
     input;
+
+  if (
+    notFinite(targetPriceCents, taxPercent, commissionPercent, marginPercent) ||
+    targetPriceCents < 0 || taxPercent < 0 || commissionPercent < 0
+  ) {
+    return {
+      ok: false,
+      reason: "Valores inválidos: informe números não negativos.",
+      maxTotalCostCents: 0, profitCents: 0, taxCents: 0, commissionCents: 0,
+    };
+  }
   const rate = (taxPercent + commissionPercent + marginPercent) / 100;
 
   if (rate >= 1) {

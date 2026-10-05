@@ -44,6 +44,12 @@ export function computeSale(input: SaleInput): SaleComputed {
   const { grossCents, discountPercent, discountCents, downPaymentCents } = input;
   const n = Math.max(1, Math.floor(input.installments));
 
+  // valores negativos não fazem sentido: desconto negativo viraria acréscimo
+  // e entrada negativa quebraria a soma das parcelas.
+  if (discountPercent < 0 || discountCents < 0 || downPaymentCents < 0) {
+    return { ok: false, reason: "Desconto e entrada não podem ser negativos.", discountCents: 0, netCents: 0, rows: [] };
+  }
+
   const disc = effectiveDiscount(grossCents, discountPercent, discountCents);
   const net = grossCents - disc;
 
@@ -69,7 +75,9 @@ export function computeSale(input: SaleInput): SaleComputed {
   const base = Math.floor(toSplit / n);
   let remainder = toSplit - base * n; // centavos a distribuir
 
-  for (let i = 1; i <= n; i++) {
+  // nada a parcelar (entrada = líquido, ou venda de R$ 0): não gera parcelas
+  // de R$ 0,00, que poluiriam Recebíveis e disparariam cobranças vazias.
+  for (let i = 1; toSplit > 0 && i <= n; i++) {
     let amount = base;
     if (remainder > 0) {
       amount += 1;
