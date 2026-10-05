@@ -12,6 +12,7 @@ import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
 import { listNotifications } from "@/modules/notifications/notification-queries";
 import type { ModuleKey } from "@/lib/entitlements/types";
+import type { CompanyRole } from "@/modules/team/access";
 
 async function getCompany(companyId: string) {
   const supabase = await createClient();
@@ -21,6 +22,16 @@ async function getCompany(companyId: string) {
     .eq("id", companyId)
     .maybeSingle();
   return data;
+}
+
+async function getMyRole(userId: string): Promise<CompanyRole | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("company_users")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data?.role ?? null) as CompanyRole | null;
 }
 
 export default async function AppLayout({
@@ -35,13 +46,14 @@ export default async function AppLayout({
 
   // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
   // cookies(), e o Next não permite cookies() dentro de unstable_cache).
-  const [ent, company, fu, openQuotes, overdue, notifications] = await Promise.all([
+  const [ent, company, fu, openQuotes, overdue, notifications, myRole] = await Promise.all([
     getEntitlements(),
     getCompany(session.companyId),
     followupCounts(),
     countOpenQuotes(),
     overdueCount(),
     listNotifications(),
+    getMyRole(session.user.id),
   ]);
 
   const moduleKeys: ModuleKey[] = ["clientes", "precifica", "orcamentos", "teams"];
@@ -54,7 +66,9 @@ export default async function AppLayout({
     receivables: overdue,
   };
 
-  const items = NAV_ITEMS.filter((i) => !i.module || hasModule(ent, i.module));
+  const items = NAV_ITEMS.filter(
+    (i) => (!i.module || hasModule(ent, i.module)) && !i.blockedRoles?.includes(myRole as CompanyRole)
+  );
   const quick = QUICK_ACTIONS?.filter((a) => !a.module || hasModule(ent, a.module)) ?? [];
 
   return (
@@ -65,6 +79,7 @@ export default async function AppLayout({
           userEmail={session.user.email ?? ""}
           modules={modules}
           badges={badges}
+          myRole={myRole}
         />
         <main className="flex flex-1 flex-col pb-16 md:pb-0">
           <Topbar notifications={notifications} />

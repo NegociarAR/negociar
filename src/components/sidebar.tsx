@@ -13,21 +13,25 @@ import { signOut } from "@/app/(auth)/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoN } from "@/components/logo";
 import { PlainSubmitButton } from "@/components/ui/submit-button";
+import type { CompanyRole } from "@/modules/team/access";
 
 export function Sidebar({
   companyName,
   userEmail,
   modules,
   badges,
+  myRole,
 }: {
   companyName: string;
   userEmail: string;
   modules: Record<string, boolean>;
   badges: Record<BadgeKey, number>;
+  myRole: CompanyRole | null;
 }) {
   const pathname = usePathname();
 
-  const visible = (item: NavItem) => !item.module || modules[item.module];
+  const visible = (item: NavItem) =>
+    (!item.module || modules[item.module]) && !item.blockedRoles?.includes(myRole as CompanyRole);
 
   return (
     <aside className="hidden w-56 shrink-0 border-r bg-surface md:flex md:flex-col">
