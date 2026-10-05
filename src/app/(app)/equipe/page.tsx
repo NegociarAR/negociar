@@ -1,9 +1,10 @@
 import { getTeam } from "@/modules/team/queries";
 import { TeamManager } from "@/modules/team/team-manager";
+import { canManageTeam } from "@/modules/team/access";
 
 export default async function EquipePage() {
   const { members, invites, myRole } = await getTeam();
-  const canManage = myRole === "owner" || myRole === "admin";
+  const canManage = canManageTeam(myRole);
 
   return (
     <div className="space-y-5">

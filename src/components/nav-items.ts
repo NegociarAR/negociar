@@ -1,4 +1,5 @@
 import type { ModuleKey } from "@/lib/entitlements/types";
+import type { CompanyRole } from "@/modules/team/access";
 
 export type IconKey =
   | "home"
@@ -24,6 +25,7 @@ export interface NavItem {
   icon: IconKey;
   module?: ModuleKey; // se definido, só aparece quando o plano libera
   badge?: BadgeKey; // contador dinâmico (calculado no layout)
+  blockedRoles?: CompanyRole[]; // papéis que não veem este item (ver modules/team/access)
 }
 
 export interface NavSection {
@@ -77,9 +79,10 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: "wallet",
         module: "orcamentos",
         badge: "receivables",
+        blockedRoles: ["vendedor"],
       },
-      { href: "/orcamentos/horas", label: "Faturamento por hora", icon: "clock", module: "orcamentos" },
-      { href: "/notas-fiscais", label: "Notas fiscais", icon: "receipt", module: "orcamentos" },
+      { href: "/orcamentos/horas", label: "Faturamento por hora", icon: "clock", module: "orcamentos", blockedRoles: ["vendedor"] },
+      { href: "/notas-fiscais", label: "Notas fiscais", icon: "receipt", module: "orcamentos", blockedRoles: ["vendedor"] },
     ],
   },
   {
@@ -91,8 +94,8 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     items: [
-      { href: "/equipe", label: "Equipe", icon: "team" },
-      { href: "/configuracoes", label: "Configurações", icon: "settings" },
+      { href: "/equipe", label: "Equipe", icon: "team", blockedRoles: ["financeiro"] },
+      { href: "/configuracoes", label: "Configurações", icon: "settings", blockedRoles: ["vendedor", "financeiro"] },
     ],
   },
 ];

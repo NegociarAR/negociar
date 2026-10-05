@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isRouteBlocked, type CompanyRole } from "@/modules/team/access";
 
 // Rotas públicas (sem sessão). Todo o resto exige login.
 const PUBLIC_PATHS = [
@@ -62,6 +63,25 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // acesso por papel: Vendedor e Financeiro não acessam certas áreas
+  // (Financeiro/Configurações para Vendedor; Configurações/Equipe para
+  // Financeiro). Owner/admin/gestor têm acesso total. Checagem no
+  // middleware — não só no menu — porque esconder um link não impede
+  // digitar a URL direto.
+  if (user && !isPublic) {
+    const { data: membership } = await supabase
+      .from("company_users")
+      .select("role")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    if (isRouteBlocked(membership?.role as CompanyRole | undefined, path)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
