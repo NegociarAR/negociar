@@ -3,10 +3,11 @@ import { BackLink } from "@/components/back-link";
 import { getQuote } from "@/modules/orcamentos/queries";
 import { getHourlyContractData } from "@/modules/orcamentos/hourly-queries";
 import { HourEntryForm } from "@/modules/orcamentos/hour-entry-form";
-import { MonthGroupCard } from "@/modules/orcamentos/month-group";
+import { HoursWorkspace } from "@/modules/orcamentos/hours-workspace";
 import { brl } from "@/lib/format";
 import { monthsSince } from "@/lib/dates";
 
+// Renomeie/salve como: src/app/(app)/orcamentos/[id]/horas/page.tsx (substitui o arquivo atual)
 export default async function HorasPage({
   params,
 }: {
@@ -28,7 +29,7 @@ export default async function HorasPage({
       <div>
         <h1 className="text-xl font-semibold">Horas — {quote.customer_name ?? "Cliente"}</h1>
         <p className="text-sm text-muted">
-          Taxa: {brl(rateCents)}/hora. Lance as horas trabalhadas e gere a fatura no fim de cada mês.
+          Taxa: {brl(rateCents)}/hora. Lance as horas e selecione quais faturar, de qualquer período.
         </p>
       </div>
 
@@ -40,17 +41,14 @@ export default async function HorasPage({
 
       <HourEntryForm quoteId={id} />
 
-      {months.length === 0 ? (
-        <p className="rounded-lg border border-dashed bg-surface p-8 text-center text-sm text-muted">
-          Nenhuma hora lançada ainda.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {months.map((g) => (
-            <MonthGroupCard key={g.period} quoteId={id} group={g} rateCents={rateCents} />
-          ))}
-        </div>
-      )}
+      <HoursWorkspace
+        quoteId={id}
+        months={months}
+        rateCents={rateCents}
+        customerName={quote.customer_name ?? "Cliente"}
+        customerWhatsapp={quote.customer_whatsapp}
+        customerEmail={quote.customer_email}
+      />
     </div>
   );
 }

@@ -5,13 +5,21 @@ export interface HourEntry {
   entry_date: string; // YYYY-MM-DD
   hours: number;
   description: string | null;
+  sale_id: string | null;
+  summaryStatus: "pending" | "approved" | "contested" | null;
 }
 
 export interface MonthGroup {
   period: string; // YYYY-MM
   hours: number;
   entries: HourEntry[];
-  invoiced: boolean;
-  invoiceTotalCents: number | null;
-  invoiceStatus: "pending" | "received" | "overdue" | null;
+}
+
+export interface HourSummary {
+  id: string;
+  token: string;
+  status: "pending" | "approved" | "contested";
+  hours: number;
+  totalCents: number;
+  createdAt: string;
 }

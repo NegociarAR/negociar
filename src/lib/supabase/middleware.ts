@@ -9,11 +9,12 @@ const PUBLIC_PATHS = [
   "/signup",
   "/recuperar",
   "/orcamento",
+  "/horas-resumo",
   "/convite",
   "/auth",
   "/status",
-  "/api/cron",  // autenticado pelo próprio segredo do cron, não por sessão
-  "/negociar",   // landing page pública
+  "/api/cron",
+  "/negociar",
 ];
 
 export async function updateSession(request: NextRequest) {

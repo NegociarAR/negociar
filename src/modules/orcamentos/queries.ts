@@ -67,7 +67,7 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
   const { data: q } = await supabase
     .from("quotes")
     .select(
-      "*, customers(person_type, name, trade_name, legal_name, whatsapp, phone)",
+      "*, customers(person_type, name, trade_name, legal_name, whatsapp, phone, email)",
     )
     .eq("id", id)
     .eq("company_id", session.companyId)
@@ -95,6 +95,7 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
       (c as { whatsapp?: string | null; phone?: string | null })?.whatsapp ??
       (c as { phone?: string | null })?.phone ??
       null,
+    customer_email: (c as { email?: string | null })?.email ?? null,
     subtotal_cents: q.subtotal_cents,
     discount_cents: q.discount_cents,
     total_cents: q.total_cents,

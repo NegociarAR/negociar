@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/entitlements";
+import { sendEmail } from "@/lib/email";
 
 type Result = { ok: true; id?: string } | { ok: false; error: string };
+type TokenResult = { ok: true; token: string } | { ok: false; error: string };
 
 function refresh(quoteId: string) {
   revalidatePath(`/orcamentos/${quoteId}`);
@@ -65,13 +67,18 @@ export async function deleteHourEntry(entryId: string, quoteId: string): Promise
   return { ok: true };
 }
 
-// Soma as horas do período x taxa, gera a fatura (venda) já aprovada.
-export async function generateHourlyInvoice(quoteId: string, period: string, dueDate: string): Promise<Result> {
+// Fatura um conjunto arbitrário de lançamentos (qualquer data/mês),
+// substituindo o antigo faturamento por mês fechado.
+export async function generateHourlyInvoiceBatch(
+  quoteId: string,
+  entryIds: string[],
+  dueDate: string,
+): Promise<Result> {
   await requireModule("orcamentos");
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("generate_hourly_invoice", {
+  const { data, error } = await supabase.rpc("generate_hourly_invoice_batch", {
     p_quote_id: quoteId,
-    p_period: period,
+    p_entry_ids: entryIds,
     p_due_date: dueDate,
   });
   if (error) return { ok: false, error: error.message };
@@ -82,4 +89,41 @@ export async function generateHourlyInvoice(quoteId: string, period: string, due
     await issueServiceInvoiceForSale(saleId); // silencioso: só emite se a empresa configurou e habilitou
   }
   return { ok: true, id: saleId };
+}
+
+// Gera um resumo prévio das horas selecionadas para o cliente validar.
+// Não bloqueia: a fatura pode ser gerada a qualquer momento, independente
+// da resposta — é só um indicador visual (pendente/aprovado/contestado).
+export async function createHourSummary(quoteId: string, entryIds: string[]): Promise<TokenResult> {
+  await requireModule("orcamentos");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_hour_summary", {
+    p_quote_id: quoteId,
+    p_entry_ids: entryIds,
+  });
+  if (error) return { ok: false, error: error.message };
+  refresh(quoteId);
+  return { ok: true, token: (data as { token: string }).token };
+}
+
+export async function sendHourSummaryEmail(quoteId: string, summaryUrl: string): Promise<Result> {
+  const session = await requireModule("orcamentos");
+  const supabase = await createClient();
+  const { data: quote } = await supabase
+    .from("quotes")
+    .select("number, customers(email)")
+    .eq("id", quoteId)
+    .eq("company_id", session.companyId)
+    .maybeSingle();
+
+  const email = (quote as { customers?: { email?: string | null } } | null)?.customers?.email;
+  if (!email) return { ok: false, error: "Cliente sem e-mail cadastrado." };
+
+  const res = await sendEmail({
+    to: email,
+    subject: `Resumo de horas — Orçamento #${quote?.number}`,
+    html: `<p>Olá! Segue o resumo das horas lançadas para sua validação:</p><p><a href="${summaryUrl}">${summaryUrl}</a></p>`,
+  });
+  if (!res.ok) return { ok: false, error: "Falha ao enviar e-mail." };
+  return { ok: true };
 }

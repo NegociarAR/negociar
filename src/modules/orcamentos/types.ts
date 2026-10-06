@@ -51,6 +51,7 @@ export interface QuoteDetail {
   customer_id: string;
   customer_name: string | null;
   customer_whatsapp: string | null;
+  customer_email: string | null;
   subtotal_cents: number;
   discount_cents: number;
   total_cents: number;

@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteHourEntry, generateHourlyInvoice } from "./hourly-actions";
-import { brl } from "@/lib/format";
-import { todayBRT } from "@/lib/period";
+import { deleteHourEntry } from "./hourly-actions";
 import { useToast } from "@/components/toast";
 import type { MonthGroup } from "./hourly-types";
 
-const STATUS_LABEL: Record<string, string> = { pending: "Pendente", received: "Recebida", overdue: "Vencida" };
 const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 function monthLabel(ym: string) {
@@ -16,23 +13,29 @@ function monthLabel(ym: string) {
   return `${MONTH_NAMES[Number(m) - 1]}/${y}`;
 }
 
-// Um mês: total de horas lançadas, e a ação de gerar a fatura (ou o
-// resultado, se já foi gerada).
+const SUMMARY_BADGE: Record<string, string> = {
+  pending: "Resumo enviado — aguardando cliente",
+  approved: "Cliente validou",
+  contested: "Cliente contestou",
+};
+
+// Um mês: lista de lançamentos, com checkbox de seleção para faturar (a
+// seleção é controlada pelo componente pai, HoursWorkspace, pois agora
+// pode cruzar vários meses numa única fatura).
 export function MonthGroupCard({
   quoteId,
   group,
-  rateCents,
+  selected,
+  onToggle,
 }: {
   quoteId: string;
   group: MonthGroup;
-  rateCents: number;
+  selected: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [pending, startTransition] = useTransition();
-  const [generating, setGenerating] = useState(false);
-  const [dueDate, setDueDate] = useState(todayBRT());
-  const [error, setError] = useState<string | null>(null);
 
   function removeEntry(id: string) {
     startTransition(async () => {
@@ -42,81 +45,49 @@ export function MonthGroupCard({
     });
   }
 
-  function generate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      const res = await generateHourlyInvoice(quoteId, group.period, dueDate);
-      if (!res.ok) {
-        setError(res.error);
-        toast(res.error, "error");
-        return;
-      }
-      toast(`Fatura de ${monthLabel(group.period)} gerada e enviada para Recebíveis.`);
-      setGenerating(false);
-      router.refresh();
-    });
-  }
-
-  const estimate = Math.round(group.hours * rateCents);
-
   return (
     <div className="rounded-lg border bg-surface shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <div>
-          <p className="font-medium">{monthLabel(group.period)}</p>
-          <p className="text-sm text-muted">
-            {group.hours.toFixed(2)}h × {brl(rateCents)} = {brl(estimate)}
-          </p>
-        </div>
-        {group.invoiced ? (
-          <span className="rounded-full border px-2.5 py-0.5 text-xs">
-            Faturado — {brl(group.invoiceTotalCents ?? 0)} · {STATUS_LABEL[group.invoiceStatus ?? "pending"]}
-          </span>
-        ) : group.hours > 0 ? (
-          generating ? (
-            <form onSubmit={generate} className="flex flex-wrap items-center gap-2">
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="h-10 md:h-8 rounded-md border bg-surface px-2 text-xs"
-              />
-              <button type="submit" disabled={pending} className="h-10 md:h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-fg disabled:opacity-50">
-                Confirmar
-              </button>
-              <button type="button" onClick={() => setGenerating(false)} aria-label="Cancelar" className="h-10 md:h-8 min-w-10 rounded-md border px-2 text-xs md:min-w-0">
-                x
-              </button>
-            </form>
-          ) : (
-            <button onClick={() => setGenerating(true)} className="h-10 md:h-8 rounded-md border px-3 text-xs font-medium hover:bg-subtle">
-              Gerar fatura do mês
-            </button>
-          )
-        ) : null}
+      <div className="border-b px-4 py-3">
+        <p className="font-medium">{monthLabel(group.period)}</p>
+        <p className="text-sm text-muted">{group.hours.toFixed(2)}h lançadas</p>
       </div>
-      {error && <p className="px-4 pt-2 text-xs text-danger">{error}</p>}
-      {group.entries.length > 0 && (
-        <ul className="divide-y">
-          {group.entries.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-              <span className="min-w-0 break-words">
-                <span className="tabular mr-2 text-muted">
-                  {new Date(e.entry_date + "T00:00:00").toLocaleDateString("pt-BR")}
-                </span>
-                <span className="tabular mr-2 font-medium">{Number(e.hours).toFixed(2)}h</span>
-                {e.description}
+      <ul className="divide-y">
+        {group.entries.map((e) => (
+          <li key={e.id} className="flex items-center gap-3 px-4 py-2 text-sm">
+            {!e.sale_id && (
+              <input
+                type="checkbox"
+                checked={selected.has(e.id)}
+                onChange={() => onToggle(e.id)}
+                className="h-4 w-4 shrink-0"
+              />
+            )}
+            <span className="min-w-0 flex-1 break-words">
+              <span className="tabular mr-2 text-muted">
+                {new Date(e.entry_date + "T00:00:00").toLocaleDateString("pt-BR")}
               </span>
-              {!group.invoiced && (
-                <button onClick={() => removeEntry(e.id)} disabled={pending} className="-my-2 shrink-0 py-2.5 text-xs text-danger disabled:opacity-50">
-                  Excluir
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+              <span className="tabular mr-2 font-medium">{e.hours.toFixed(2)}h</span>
+              {e.description}
+            </span>
+            {e.sale_id ? (
+              <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs">Faturado</span>
+            ) : e.summaryStatus ? (
+              <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted">
+                {SUMMARY_BADGE[e.summaryStatus]}
+              </span>
+            ) : null}
+            {!e.sale_id && (
+              <button
+                onClick={() => removeEntry(e.id)}
+                disabled={pending}
+                className="-my-2 shrink-0 py-2.5 text-xs text-danger disabled:opacity-50"
+              >
+                Excluir
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
