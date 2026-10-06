@@ -20,6 +20,7 @@ export interface Invoice {
   payment_method: string | null;
   overdue_days: number;
   state: InvoiceState;
+  asaas_invoice_url: string | null;
 }
 
 export interface CompanyAccess {
@@ -77,7 +78,7 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
   const [inv, comp, set] = await Promise.all([
     supabase
       .from("billing_invoices")
-      .select("id, company_id, reference_period, description, amount_cents, due_date, status, paid_at, paid_amount_cents, payment_method, companies(name, billing_exempt)")
+      .select("id, company_id, reference_period, description, amount_cents, due_date, status, paid_at, paid_amount_cents, payment_method, asaas_invoice_url, companies(name, billing_exempt)")
       .order("due_date", { ascending: false })
       .limit(2000),
     supabase
@@ -117,6 +118,7 @@ export async function getBillingOverview(): Promise<BillingOverview | null> {
       payment_method: r.payment_method,
       overdue_days: overdue ? diffDays(today, r.due_date) : 0,
       state: overdue ? "overdue" : status === "open" ? "open" : status,
+      asaas_invoice_url: r.asaas_invoice_url,
     };
   });
 

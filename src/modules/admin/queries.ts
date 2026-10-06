@@ -105,8 +105,8 @@ export async function getCompanyDetail(id: string) {
   const supabase = await createClient();
   const { data: company } = await supabase
     .from("companies")
-    .select(
-      "id, name, legal_name, cnpj, email, phone, city, state, status, created_at, billing_exempt",
+        .select(
+      "id, name, legal_name, cnpj, email, phone, city, state, status, created_at, billing_exempt, billing_method",
     )
     .eq("id", id)
     .maybeSingle();

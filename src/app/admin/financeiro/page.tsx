@@ -190,7 +190,7 @@ export default async function AdminFinanceiroPage({
           <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">Nenhum título nesta visão.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-surface">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b text-left text-muted">
                   <th className="px-4 py-3 font-medium">Empresa</th>
@@ -198,6 +198,7 @@ export default async function AdminFinanceiroPage({
                   <th className="px-4 py-3 font-medium">Vencimento</th>
                   <th className="px-4 py-3 font-medium">Valor</th>
                   <th className="px-4 py-3 font-medium">Situação</th>
+                  <th className="px-4 py-3 font-medium">Asaas</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -212,6 +213,18 @@ export default async function AdminFinanceiroPage({
                     <td className="tabular px-4 py-3">{fmtDay(i.due_date)}</td>
                     <td className="tabular px-4 py-3">{brl(i.status === "paid" ? (i.paid_amount_cents ?? i.amount_cents) : i.amount_cents)}</td>
                     <td className="px-4 py-3"><StateBadge i={i} /></td>
+                    <td className="px-4 py-3">
+                      {i.asaas_invoice_url && (
+                        <a
+                          href={i.asaas_invoice_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          Ver cobrança →
+                        </a>
+                      )}
+                    </td>
                     <td className="px-4 py-3"><InvoiceActions id={i.id} status={i.status} amountCents={i.amount_cents} /></td>
                   </tr>
                 ))}
