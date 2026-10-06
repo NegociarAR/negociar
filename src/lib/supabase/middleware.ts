@@ -10,13 +10,13 @@ const PUBLIC_PATHS = [
   "/recuperar",
   "/orcamento",
   "/horas-resumo",
+  "/api/webhooks",
   "/convite",
   "/auth",
   "/status",
   "/api/cron",
   "/negociar",
 ];
-
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 

@@ -3,6 +3,7 @@ import { getCompanyDetail } from "@/modules/admin/queries";
 import { StatusBadge } from "@/modules/admin/status-badge";
 import { AdminActions } from "@/modules/admin/admin-actions";
 import { ExemptToggle } from "@/modules/admin/exempt-toggle";
+import { AsaasToggle } from "@/modules/admin/asaas-toggle";
 import { BackLink } from "@/components/back-link";
 import { createClient } from "@/lib/supabase/server";
 import { PageIcon } from "@/components/page-icon";
@@ -76,11 +77,17 @@ export default async function AdminCompanyPage({
         <div className="rounded-lg border bg-surface p-5">
           <h2 className="mb-4 text-sm font-semibold">Ações</h2>
           <div className="mb-4 border-b pb-4">
-            <ExemptToggle
-              companyId={company.id}
-              exempt={Boolean((company as { billing_exempt?: boolean }).billing_exempt)}
-            />
-          </div>
+  <ExemptToggle
+    companyId={company.id}
+    exempt={Boolean((company as { billing_exempt?: boolean }).billing_exempt)}
+  />
+</div>
+<div className="mb-4 border-b pb-4">
+  <AsaasToggle
+    companyId={company.id}
+    enabled={(company as { billing_method?: string }).billing_method === "asaas"}
+  />
+</div>
           <AdminActions
             companyId={company.id}
             status={company.status}

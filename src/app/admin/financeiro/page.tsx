@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SyncAsaasButton } from "@/modules/admin/sync-asaas-button";
 import { getBillingOverview, type Invoice, type Situation } from "@/modules/admin/billing-queries";
 import { BillingTools } from "@/modules/admin/billing-tools";
 import { InvoiceActions } from "@/modules/admin/invoice-actions";
@@ -164,7 +165,8 @@ export default async function AdminFinanceiroPage({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Títulos</h2>
         </div>
-        <BillingTools month={o.month} companies={o.companies} graceDays={o.graceDays} instructions={o.paymentInstructions} />
+       <BillingTools month={o.month} companies={o.companies} graceDays={o.graceDays} instructions={o.paymentInstructions} />
+<SyncAsaasButton />
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b">
           <div className="flex gap-1 overflow-x-auto text-sm">
