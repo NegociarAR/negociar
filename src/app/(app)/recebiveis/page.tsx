@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getReceivables, receivableTotals } from "@/modules/recebiveis/queries";
 import { ReceiveButton } from "@/modules/recebiveis/receive-button";
 import { WhatsAppChargeButton } from "@/modules/recebiveis/whatsapp-charge-button";
+import { AsaasChargeButton } from "@/modules/recebiveis/asaas-charge-button";
 import { brl } from "@/lib/format";
 import type { Receivable } from "@/modules/recebiveis/queries";
 
@@ -13,7 +14,17 @@ function fmtDate(iso: string) {
   });
 }
 
-function Item({ r, received, showCharge }: { r: Receivable; received?: boolean; showCharge?: boolean }) {
+function Item({
+  r,
+  received,
+  showCharge,
+  asaasEnabled,
+}: {
+  r: Receivable;
+  received?: boolean;
+  showCharge?: boolean;
+  asaasEnabled?: boolean;
+}) {
   return (
     <li className="flex items-center justify-between gap-4 px-4 py-3">
       <div className="min-w-0">
@@ -38,6 +49,9 @@ function Item({ r, received, showCharge }: { r: Receivable; received?: boolean; 
             dueDate={r.due_date}
           />
         )}
+        {showCharge && asaasEnabled && (
+          <AsaasChargeButton installmentId={r.id} invoiceUrl={r.asaas_invoice_url} />
+        )}
         <ReceiveButton id={r.id} received={received} />
       </div>
     </li>
@@ -50,12 +64,14 @@ function Group({
   emphasis,
   received,
   showCharge,
+  asaasEnabled,
 }: {
   title: string;
   items: Receivable[];
   emphasis?: boolean;
   received?: boolean;
   showCharge?: boolean;
+  asaasEnabled?: boolean;
 }) {
   if (items.length === 0) return null;
   const total = items.reduce((s, r) => s + r.amount_cents, 0);
@@ -73,7 +89,7 @@ function Group({
         }`}
       >
         {items.map((r) => (
-          <Item key={r.id} r={r} received={received} showCharge={showCharge} />
+          <Item key={r.id} r={r} received={received} showCharge={showCharge} asaasEnabled={asaasEnabled} />
         ))}
       </ul>
     </section>
@@ -92,7 +108,7 @@ function TotalCard({ label, value, danger }: { label: string; value: string; dan
 }
 
 export default async function RecebiveisPage() {
-  const { overdue, dueSoon, upcoming, received } = await getReceivables();
+  const { overdue, dueSoon, upcoming, received, asaasEnabled } = await getReceivables();
   const totals = await receivableTotals();
 
   const empty =
@@ -108,6 +124,15 @@ export default async function RecebiveisPage() {
         <TotalCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />
       </div>
 
+      {!asaasEnabled && (
+        <Link
+          href="/configuracoes"
+          className="block rounded-lg border border-dashed bg-surface p-3 text-xs text-muted transition hover:bg-subtle"
+        >
+          Quer cobrar seus clientes automaticamente via Pix/cartão? Configure o Asaas em Configurações →
+        </Link>
+      )}
+
       {empty ? (
         <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
           Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas
@@ -115,7 +140,7 @@ export default async function RecebiveisPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <Group title="Vencidas" items={overdue} emphasis showCharge />
+          <Group title="Vencidas" items={overdue} emphasis showCharge asaasEnabled={asaasEnabled} />
           <Group title="Vencem em até 7 dias" items={dueSoon} />
           <Group title="A vencer" items={upcoming} />
           {received.length > 0 && (

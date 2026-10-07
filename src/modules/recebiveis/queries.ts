@@ -12,6 +12,7 @@ export interface Receivable {
   customer_name: string | null;
   customer_whatsapp: string | null;
   quote_number: number | null;
+  asaas_invoice_url: string | null;
 }
 
 function customerName(c: {
@@ -33,16 +34,23 @@ function todayISO() {
 export async function getReceivables() {
   const session = await getSession();
   if (!session?.companyId)
-    return { overdue: [], dueSoon: [], upcoming: [], received: [] };
+    return { overdue: [], dueSoon: [], upcoming: [], received: [], asaasEnabled: false };
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("sale_installments")
-    .select(
-      "id, sale_id, number, due_date, amount_cents, status, received_at, sales(quote_id, customers(person_type, name, trade_name, legal_name, whatsapp, phone), quotes(number))",
-    )
-    .eq("company_id", session.companyId)
-    .order("due_date", { ascending: true });
+  const [{ data }, { data: asaas }] = await Promise.all([
+    supabase
+      .from("sale_installments")
+      .select(
+        "id, sale_id, number, due_date, amount_cents, status, received_at, asaas_invoice_url, sales(quote_id, customers(person_type, name, trade_name, legal_name, whatsapp, phone), quotes(number))",
+      )
+      .eq("company_id", session.companyId)
+      .order("due_date", { ascending: true }),
+    supabase
+      .from("company_asaas_client_settings")
+      .select("enabled")
+      .eq("company_id", session.companyId)
+      .maybeSingle(),
+  ]);
 
   const rows: Receivable[] = (data ?? []).map((r) => {
     const sale = (r as { sales?: unknown }).sales as {
@@ -60,6 +68,7 @@ export async function getReceivables() {
       customer_name: customerName(sale?.customers ?? null),
       customer_whatsapp: sale?.customers?.whatsapp ?? sale?.customers?.phone ?? null,
       quote_number: sale?.quotes?.number ?? null,
+      asaas_invoice_url: r.asaas_invoice_url,
     };
   });
 
@@ -79,6 +88,7 @@ export async function getReceivables() {
       .filter((r) => r.status === "received")
       .sort((a, b) => (b.received_at ?? "").localeCompare(a.received_at ?? ""))
       .slice(0, 20),
+    asaasEnabled: Boolean(asaas?.enabled),
   };
 }
 
