@@ -1,0 +1,14 @@
+{
+  "name": "NEGOCIAR",
+  "short_name": "NEGOCIAR",
+  "description": "Onde atendimento vira relacionamento e relacionamento vira negócio.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "/brand/n-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/brand/n.png", "sizes": "239x239", "type": "image/png" }
+  ]
+}
