@@ -135,7 +135,7 @@ export default async function ClientesPage({
       </div>
 
       {/* stats clicáveis */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         <StatCard label="Todos" value={stats.all} active={!f} href={fHref()} />
         <StatCard label="Em dia" value={stats.active} active={f === "active"} href={fHref("active")} />
         <StatCard label="Sem retorno" value={stats.stale} active={f === "stale"} href={fHref("stale")} />
