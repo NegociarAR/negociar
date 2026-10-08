@@ -10,6 +10,16 @@ function customerName(c: { person_type?: string; name?: string | null; trade_nam
   return (c.person_type === "pf" ? c.name : (c.trade_name ?? c.legal_name)) ?? "Cliente";
 }
 
+function waLink(whatsapp: string | null | undefined, name: string, amountCents: number, dueDate: string): string | null {
+  if (!whatsapp) return null;
+  const phone = whatsapp.replace(/\D/g, "");
+  if (!phone) return null;
+  const amount = (amountCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const dueFmt = new Date(dueDate + "T00:00:00").toLocaleDateString("pt-BR");
+  const msg = `Olá, ${name.split(" ")[0]}! Tudo bem? Passando para lembrar da parcela de ${amount} vencida em ${dueFmt}. Fico à disposição para qualquer dúvida.`;
+  return `https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`;
+}
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://negociaroficial.vercel.app";
 
 // Lembretes diários por e-mail: follow-ups de hoje e parcelas vencidas,
@@ -28,7 +38,7 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
       .eq("due_date", today),
     admin
       .from("sale_installments")
-      .select("company_id, number, due_date, amount_cents, sales(customers(person_type, name, trade_name, legal_name))")
+      .select("company_id, number, due_date, amount_cents, sales(customers(person_type, name, trade_name, legal_name, whatsapp, phone))")
       .eq("status", "pending")
       .lt("due_date", today),
   ]);
@@ -58,12 +68,20 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
     followupsByCompany.set(f.company_id, list);
   }
 
-  const overdueByCompany = new Map<string, { name: string; amountCents: number }[]>();
+  const overdueByCompany = new Map<string, { name: string; amountCents: number; dueDate: string; waLink: string | null }[]>();
   for (const i of installments ?? []) {
     if (!companyEmail.has(i.company_id)) continue;
-    const customers = (i as { sales?: { customers?: unknown } }).sales?.customers as Parameters<typeof customerName>[0];
+    const customers = (i as { sales?: { customers?: unknown } }).sales?.customers as
+      | (Parameters<typeof customerName>[0] & { whatsapp?: string | null; phone?: string | null })
+      | undefined;
+    const name = customerName(customers ?? null);
     const list = overdueByCompany.get(i.company_id) ?? [];
-    list.push({ name: customerName(customers), amountCents: i.amount_cents });
+    list.push({
+      name,
+      amountCents: i.amount_cents,
+      dueDate: i.due_date,
+      waLink: waLink(customers?.whatsapp ?? customers?.phone, name, i.amount_cents, i.due_date),
+    });
     overdueByCompany.set(i.company_id, list);
   }
 
@@ -97,7 +115,11 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
     const totalCents = items.reduce((s, i) => s + i.amountCents, 0);
     const rows = items
       .slice(0, 15)
-      .map((i) => `<li>${esc(i.name)} — ${(i.amountCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</li>`)
+      .map((i) => {
+        const amount = (i.amountCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const cobrar = i.waLink ? ` — <a href="${i.waLink}">cobrar via WhatsApp →</a>` : "";
+        return `<li>${esc(i.name)} — ${amount}${cobrar}</li>`;
+      })
       .join("");
     const res = await sendEmail({
       to: c.email,
