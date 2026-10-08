@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuote, editQuote, type ItemInput } from "./actions";
 import { parseBRLToCents, brl } from "@/lib/format";
+import { parseQty, quoteSubtotalCents, quoteTotalCents } from "./quote-calc";
 import { Field, Input, Button } from "@/components/ui/form";
 
 interface ProductOpt {
@@ -90,11 +91,6 @@ export function QuoteBuilder({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const qty = (v: string) => {
-    const n = parseFloat((v || "").replace(",", "."));
-    return Number.isNaN(n) ? 0 : n;
-  };
-
   function updateItem(key: string, patch: Partial<DraftItem>) {
     setItems((prev) =>
       prev.map((it) => (it.key === key ? { ...it, ...patch } : it)),
@@ -117,16 +113,9 @@ export function QuoteBuilder({
     });
   }
 
-  const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (s, i) => s + Math.round(qty(i.quantity) * parseBRLToCents(i.unitPrice)),
-        0,
-      ),
-    [items],
-  );
+  const subtotal = useMemo(() => quoteSubtotalCents(items), [items]);
   const discountCents = parseBRLToCents(discount);
-  const total = Math.max(0, subtotal - discountCents);
+  const total = useMemo(() => quoteTotalCents(items, discount), [items, discount]);
 
   function save() {
     setError(null);
@@ -144,7 +133,7 @@ export function QuoteBuilder({
       items: items.map<ItemInput>((i) => ({
         product_id: i.product_id,
         description: i.description,
-        quantity: qty(i.quantity),
+        quantity: parseQty(i.quantity),
         unit_price_cents: parseBRLToCents(i.unitPrice),
       })),
       discount_cents: discountCents,
@@ -271,7 +260,7 @@ export function QuoteBuilder({
                 <div className="tabular flex h-10 items-center whitespace-nowrap px-1 text-sm">
                   {brl(
                     Math.round(
-                      qty(it.quantity) * parseBRLToCents(it.unitPrice),
+                      parseQty(it.quantity) * parseBRLToCents(it.unitPrice),
                     ),
                   )}
                 </div>
