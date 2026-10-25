@@ -60,14 +60,16 @@ export function QuoteBuilder({
   products,
   initial,
   prefillItem,
+  prefillCustomerId,
 }: {
   customers: CustomerOpt[];
   products: ProductOpt[];
   initial?: QuoteInitial;
   prefillItem?: { description: string; unitPrice: string };
+  prefillCustomerId?: string;
 }) {
   const router = useRouter();
-  const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
+  const [customerId, setCustomerId] = useState(initial?.customerId ?? prefillCustomerId ?? "");
   const [items, setItems] = useState<DraftItem[]>(
     initial
       ? initial.items.map((i) => ({ key: Math.random().toString(36).slice(2), ...i }))

@@ -7,9 +7,9 @@ import { getEntitlements, checkLimit } from "@/lib/entitlements";
 export default async function NovoOrcamentoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ item?: string; preco?: string }>;
+  searchParams: Promise<{ item?: string; preco?: string; cliente?: string }>;
 }) {
-  const { item, preco } = await searchParams;
+  const { item, preco, cliente } = await searchParams;
   const { customers, products } = await quoteFormOptions();
   const used = await countQuotesThisMonth();
   const ent = await getEntitlements();
@@ -36,7 +36,7 @@ export default async function NovoOrcamentoPage({
           <Link href="/clientes/novo" className="text-foreground underline">Novo cliente</Link>
         </div>
       ) : (
-        <QuoteBuilder customers={customers} products={products} prefillItem={prefillItem} />
+        <QuoteBuilder customers={customers} products={products} prefillItem={prefillItem} prefillCustomerId={cliente} />
       )}
     </div>
   );

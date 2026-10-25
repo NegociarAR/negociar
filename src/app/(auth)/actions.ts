@@ -12,6 +12,16 @@ async function originUrl() {
   return `${proto}://${host}`;
 }
 
+export async function signInWithGoogle() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${await originUrl()}/auth/callback` },
+  });
+  if (error) redirect(`/login?erro=${encodeURIComponent("Erro ao iniciar login com Google.")}`);
+  if (data.url) redirect(data.url);
+}
+
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));

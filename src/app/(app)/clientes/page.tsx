@@ -19,6 +19,7 @@ import { STAGE_TABS, STAGE_LABELS, STAGE_BADGE, type Stage } from "@/modules/cli
 import { PageIcon } from "@/components/page-icon";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CustomerSearch } from "@/modules/clientes/customer-search";
 import { Users } from "lucide-react";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
@@ -148,18 +149,9 @@ export default async function ClientesPage({
 
       {/* busca + ordenação */}
       <div className="flex flex-wrap items-center gap-2">
-        <form className="flex flex-1 gap-2">
-          {f && <input type="hidden" name="f" value={f} />}
-          {stageFilter && <input type="hidden" name="etapa" value={stageFilter} />}
-          <input type="hidden" name="sort" value={activeSort} />
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Buscar por nome, telefone, CNPJ..."
-            className="w-full rounded-lg border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-          <Button type="submit" variant="ghost">Buscar</Button>
-        </form>
+        <div className="flex flex-1 gap-2">
+          <CustomerSearch q={q} f={f} etapa={stageFilter ?? undefined} sort={activeSort} />
+        </div>
         <div className="flex gap-1 text-sm">
           {SORTS.map((sOpt) => {
             const params = new URLSearchParams();
