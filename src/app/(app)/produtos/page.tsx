@@ -3,6 +3,7 @@ import { listProducts, countProducts } from "@/modules/produtos/queries";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/form";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { Package } from "lucide-react";
 
@@ -80,9 +81,7 @@ export default async function ProdutosPage({
       </form>
 
       {products.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          {q || filter !== "all" ? "Nenhum produto encontrado." : "Nenhum produto ainda."}
-        </div>
+        <EmptyState message={q || filter !== "all" ? "Nenhum produto encontrado." : "Nenhum produto ainda."} />
       ) : (
         <ul className="divide-y rounded-lg border bg-surface">
           {products.map((p) => (

@@ -6,6 +6,7 @@ import { AsaasChargeButton } from "@/modules/recebiveis/asaas-charge-button";
 import { brl } from "@/lib/format";
 import type { Receivable } from "@/modules/recebiveis/queries";
 import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { Wallet } from "lucide-react";
 
@@ -129,10 +130,7 @@ export default async function RecebiveisPage() {
       )}
 
       {empty ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas
-          aparecem aqui.
-        </div>
+        <EmptyState message="Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas aparecem aqui." />
       ) : (
         <div className="space-y-6">
           <Group title="Vencidas" items={overdue} emphasis showCharge asaasEnabled={asaasEnabled} />

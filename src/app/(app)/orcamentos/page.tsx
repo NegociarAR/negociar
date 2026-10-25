@@ -3,6 +3,9 @@ import { listQuotes, countQuotesThisMonth } from "@/modules/orcamentos/queries";
 import { QuoteRow } from "@/modules/orcamentos/quote-row";
 import { getEntitlements, checkLimit, getSession } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIcon } from "@/components/page-icon";
+import { FileText } from "lucide-react";
 
 export default async function OrcamentosPage({
   searchParams,
@@ -20,11 +23,14 @@ export default async function OrcamentosPage({
   return (
     <div className="space-y-5">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Orçamentos</h1>
-          <p className="text-sm text-muted">
-            {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
-          </p>
+        <div className="flex items-center gap-3">
+          <PageIcon module="orcamentos" icon={FileText} />
+          <div>
+            <h1 className="text-xl font-semibold">Orçamentos</h1>
+            <p className="text-sm text-muted">
+              {gate.limit === null ? `${used} este mês` : `${used}/${gate.limit} este mês`}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/orcamentos/horas" className="text-sm font-medium text-primary hover:underline">
@@ -47,12 +53,10 @@ export default async function OrcamentosPage({
       </form>
 
       {quotes.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          {q ? "Nenhum orçamento encontrado." : "Nenhum orçamento ainda."}
-        </div>
+        <EmptyState message={q ? "Nenhum orçamento encontrado." : "Nenhum orçamento ainda."} />
       ) : (
-        <div className="rounded-lg border bg-surface">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border bg-surface">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">#</th>

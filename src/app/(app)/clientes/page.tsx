@@ -18,6 +18,7 @@ import { LeadForm } from "@/modules/clientes/lead-form";
 import { STAGE_TABS, STAGE_LABELS, STAGE_BADGE, type Stage } from "@/modules/clientes/stages";
 import { PageIcon } from "@/components/page-icon";
 import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
@@ -182,9 +183,7 @@ export default async function ClientesPage({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          {q || f ? "Nenhum cliente encontrado." : "Nenhum cliente ainda. Cadastre o primeiro."}
-        </div>
+        <EmptyState message={q || f ? "Nenhum cliente encontrado." : "Nenhum cliente ainda. Cadastre o primeiro."} />
       ) : (
         <ul className="divide-y rounded-lg border bg-surface">
           {filtered.map(({ c, status }) => {
