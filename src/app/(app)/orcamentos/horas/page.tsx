@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BackLink } from "@/components/back-link";
 import { getHourlyOverview } from "@/modules/orcamentos/hourly-overview-queries";
+import { EmptyState } from "@/components/ui/empty-state";
 import { brl } from "@/lib/format";
 
 const SITUATION_LABEL: Record<string, { label: string; cls: string }> = {
@@ -52,9 +53,7 @@ export default async function HourlyOverviewPage() {
       </div>
 
       {contracts.length === 0 ? (
-        <p className="rounded-lg border border-dashed bg-surface p-8 text-center text-sm text-muted">
-          Nenhum contrato por hora ativo. Ative um em um orçamento aprovado.
-        </p>
+        <EmptyState message="Nenhum contrato por hora ativo. Ative um em um orçamento aprovado." />
       ) : (
         <div className="space-y-3">
           {contracts.map((c) => {

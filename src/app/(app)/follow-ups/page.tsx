@@ -4,6 +4,7 @@ import { FollowupItemActions, ReopenButton } from "@/modules/followups/item-acti
 import { NewFollowupForm } from "@/modules/followups/new-form";
 import type { Followup } from "@/modules/followups/queries";
 import { PageIcon } from "@/components/page-icon";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Bell } from "lucide-react";
 
 function fmtDate(iso: string) {
@@ -56,7 +57,7 @@ function Group({
       </h2>
       <ul
         className={`divide-y rounded-lg border bg-surface ${
-          emphasis ? "border-l-2 border-l-foreground" : ""
+          emphasis ? "border-l-2 border-l-danger" : ""
         }`}
       >
         {items.map((f) => (
@@ -85,10 +86,7 @@ export default async function FollowupsPage() {
       <NewFollowupForm customers={customers} />
 
       {empty ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          Nenhum follow-up pendente. Ao enviar um orçamento, um lembrete é criado
-          automaticamente.
-        </div>
+        <EmptyState message="Nenhum follow-up pendente. Ao enviar um orçamento, um lembrete é criado automaticamente." />
       ) : (
         <div className="space-y-6">
           <Group title="Atrasados" items={overdue} emphasis />

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BackLink } from "@/components/back-link";
 import { listHistory } from "@/modules/historico/queries";
 import { HistoryList } from "@/modules/historico/history-list";
+import { PageIcon } from "@/components/page-icon";
+import { History } from "lucide-react";
 
 const TABS: { key: string; label: string; types?: string[] }[] = [
   { key: "todos", label: "Todos" },
@@ -32,11 +33,13 @@ export default async function HistoricoPage({
 
   return (
     <div className="space-y-5">
-      <BackLink href="/configuracoes" label="Voltar para configurações" />
-      <div>
-        <h1 className="text-xl font-semibold">Histórico de alterações</h1>
-        <p className="text-sm text-muted">Quem alterou o quê e quando. Os registros não podem ser editados nem apagados.</p>
-      </div>
+      <header className="flex items-center gap-3">
+        <PageIcon module="admin" icon={History} />
+        <div>
+          <h1 className="text-xl font-semibold">Histórico de alterações</h1>
+          <p className="text-sm text-muted">Quem alterou o quê e quando. Os registros não podem ser editados nem apagados.</p>
+        </div>
+      </header>
 
       <div className="flex gap-1 overflow-x-auto border-b text-sm">
         {TABS.map((t) => (

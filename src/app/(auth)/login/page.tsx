@@ -14,12 +14,12 @@ export default async function LoginPage({
       <h2 className="text-base font-semibold">Entrar</h2>
       {next && <input type="hidden" name="next" value={next} />}
       {confirme && (
-        <p className="rounded-lg border-l-2 border-foreground bg-subtle px-3 py-2 text-sm">
+        <p className="rounded-lg border-l-2 border-primary bg-primary/5 px-3 py-2 text-sm">
           Conta criada. Confira seu e-mail para confirmar antes de entrar.
         </p>
       )}
       {erro && (
-        <p className="rounded-lg border-l-2 border-foreground bg-subtle px-3 py-2 text-sm">
+        <p className="rounded-lg border-l-2 border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
           {erro}
         </p>
       )}

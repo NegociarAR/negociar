@@ -7,7 +7,6 @@ import { HoursWorkspace } from "@/modules/orcamentos/hours-workspace";
 import { brl } from "@/lib/format";
 import { monthsSince } from "@/lib/dates";
 
-// Renomeie/salve como: src/app/(app)/orcamentos/[id]/horas/page.tsx (substitui o arquivo atual)
 export default async function HorasPage({
   params,
 }: {
