@@ -5,6 +5,9 @@ import { WhatsAppChargeButton } from "@/modules/recebiveis/whatsapp-charge-butto
 import { AsaasChargeButton } from "@/modules/recebiveis/asaas-charge-button";
 import { brl } from "@/lib/format";
 import type { Receivable } from "@/modules/recebiveis/queries";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageIcon } from "@/components/page-icon";
+import { Wallet } from "lucide-react";
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
@@ -96,17 +99,6 @@ function Group({
   );
 }
 
-function TotalCard({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
-  return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
-      <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 export default async function RecebiveisPage() {
   const { overdue, dueSoon, upcoming, received, asaasEnabled } = await getReceivables();
   const totals = await receivableTotals();
@@ -116,12 +108,15 @@ export default async function RecebiveisPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Recebíveis</h1>
+      <header className="flex items-center gap-3">
+        <PageIcon module="orcamentos" icon={Wallet} />
+        <h1 className="text-xl font-semibold">Recebíveis</h1>
+      </header>
 
-      <div className="grid grid-cols-3 gap-3">
-        <TotalCard label="A receber" value={brl(totals.toReceive)} />
-        <TotalCard label="Vencido" value={brl(totals.overdue)} danger={totals.overdue > 0} />
-        <TotalCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <StatCard label="A receber" value={brl(totals.toReceive)} />
+        <StatCard label="Vencido" value={brl(totals.overdue)} danger={totals.overdue > 0} />
+        <StatCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />
       </div>
 
       {!asaasEnabled && (

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/inter";
+import "@fontsource-variable/sora";
 import "./globals.css";
 import { ToastProvider } from "@/components/toast";
 import { RouteProgress } from "@/components/route-progress";

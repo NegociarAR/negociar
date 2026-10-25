@@ -29,13 +29,15 @@ export function Button({
   className = "",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "ghost" | "destructive";
 }) {
   const base =
     "inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium transition disabled:opacity-50";
   const styles =
     variant === "primary"
       ? "bg-primary text-primary-fg hover:opacity-90"
+      : variant === "destructive"
+      ? "text-danger hover:bg-danger/10"
       : "text-foreground hover:bg-background";
   return <button {...props} className={`${base} ${styles} ${className}`} />;
 }

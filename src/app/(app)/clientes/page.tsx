@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/form";
 import { LeadForm } from "@/modules/clientes/lead-form";
 import { STAGE_TABS, STAGE_LABELS, STAGE_BADGE, type Stage } from "@/modules/clientes/stages";
 import { PageIcon } from "@/components/page-icon";
+import { StatCard } from "@/components/ui/stat-card";
 import { Users } from "lucide-react";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
@@ -139,7 +140,7 @@ export default async function ClientesPage({
         <StatCard label="Todos" value={stats.all} active={!f} href={fHref()} />
         <StatCard label="Em dia" value={stats.active} active={f === "active"} href={fHref("active")} />
         <StatCard label="Sem retorno" value={stats.stale} active={f === "stale"} href={fHref("stale")} />
-        <StatCard label="Esquecidos" value={stats.forgotten} active={f === "forgotten"} href={fHref("forgotten")} />
+        <StatCard label="Esquecidos" value={stats.forgotten} active={f === "forgotten"} href={fHref("forgotten")} danger={stats.forgotten > 0} />
       </div>
 
       <ThresholdSettings yellowDays={t.yellowDays} redDays={t.redDays} />
@@ -238,26 +239,3 @@ export default async function ClientesPage({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  active,
-  href,
-}: {
-  label: string;
-  value: number;
-  active: boolean;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-lg border p-3 text-center transition ${
-        active ? "border-primary bg-primary-soft" : "hover:bg-subtle"
-      }`}
-    >
-      <p className="tabular text-lg font-semibold">{value}</p>
-      <p className="text-xs text-muted">{label}</p>
-    </Link>
-  );
-}

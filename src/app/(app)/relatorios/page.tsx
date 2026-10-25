@@ -12,6 +12,9 @@ import { getLeadFunnel, getLeadLossReasons } from "@/modules/relatorios/lead-que
 import { getEntitlements, hasModule } from "@/lib/entitlements";
 import { STATUS_LABELS } from "@/modules/orcamentos/types";
 import { brl } from "@/lib/format";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageIcon } from "@/components/page-icon";
+import { BarChart2 } from "lucide-react";
 
 const PERIODS: Period[] = ["month", "quarter", "year"];
 
@@ -49,7 +52,10 @@ export default async function RelatoriosPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Relatórios</h1>
+        <div className="flex items-center gap-3">
+          <PageIcon module="orcamentos" icon={BarChart2} />
+          <h1 className="text-xl font-semibold">Relatórios</h1>
+        </div>
         <div className="flex gap-1 text-sm">
           {PERIODS.map((p) => (
             <Link
@@ -68,8 +74,8 @@ export default async function RelatoriosPage({
       {/* 2. FATURAMENTO (topo, cards) */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Faturamento</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <Card
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatCard
             label="Total vendido"
             value={brl(revenue.totalCents)}
             sub={
@@ -79,8 +85,8 @@ export default async function RelatoriosPage({
             }
             danger={revenue.variancePct !== null && revenue.variancePct < 0}
           />
-          <Card label="Vendas" value={String(revenue.count)} />
-          <Card label="Ticket médio" value={brl(revenue.avgTicketCents)} />
+          <StatCard label="Vendas" value={String(revenue.count)} />
+          <StatCard label="Ticket médio" value={brl(revenue.avgTicketCents)} />
         </div>
         {revenue.byMonth.length > 0 && (
           <div className="space-y-2 rounded-lg border bg-surface p-5 shadow-card">
@@ -228,22 +234,12 @@ export default async function RelatoriosPage({
       {/* 4. RECEBÍVEIS */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Recebíveis</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <Card label="A receber" value={brl(receivables.toReceiveCents)} />
-          <Card label="Vencido" value={brl(receivables.overdueCents)} danger={receivables.overdueCents > 0} />
-          <Card label="Recebido no período" value={brl(receivables.receivedCents)} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatCard label="A receber" value={brl(receivables.toReceiveCents)} />
+          <StatCard label="Vencido" value={brl(receivables.overdueCents)} danger={receivables.overdueCents > 0} />
+          <StatCard label="Recebido no período" value={brl(receivables.receivedCents)} />
         </div>
       </section>
-    </div>
-  );
-}
-
-function Card({ label, value, danger, sub }: { label: string; value: string; danger?: boolean; sub?: string }) {
-  return (
-    <div className="rounded-lg border bg-surface p-4 shadow-card">
-      <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-1 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
-      {sub && <p className={`mt-0.5 text-xs ${danger ? "text-danger" : "text-muted"}`}>{sub}</p>}
     </div>
   );
 }
