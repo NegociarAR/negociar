@@ -80,22 +80,22 @@ function Card({
   const style = MODULE_STYLE[module];
   const inner = (
     <>
-      <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${danger ? "bg-danger/10 text-danger" : `${style.bg} ${style.text}`}`}>
-        <Icon size={18} strokeWidth={1.8} />
+      <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg ${danger ? "bg-danger/10 text-danger" : `${style.bg} ${style.text}`}`}>
+        <Icon size={16} strokeWidth={1.8} />
       </div>
-      <p className="text-sm text-muted">{label}</p>
-      <p className={`tabular mt-0.5 text-xl font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
+      <p className="text-xs text-muted">{label}</p>
+      <p className={`tabular mt-0.5 text-lg font-semibold ${danger ? "text-danger" : ""}`}>{value}</p>
       {sub && <p className={`mt-0.5 text-xs font-medium ${danger ? "text-danger" : style.text}`}>{sub}</p>}
     </>
   );
   if (href) {
     return (
-      <Link href={href} className={`rounded-lg border bg-surface p-4 shadow-card transition hover:border-border-strong hover:bg-subtle ${danger ? "border-danger/30" : ""}`}>
+      <Link href={href} className={`rounded-lg border bg-surface p-3 shadow-card transition hover:border-border-strong hover:bg-subtle sm:p-4 ${danger ? "border-danger/30" : ""}`}>
         {inner}
       </Link>
     );
   }
-  return <div className="rounded-lg border bg-surface p-4 shadow-card">{inner}</div>;
+  return <div className="rounded-lg border bg-surface p-3 shadow-card sm:p-4">{inner}</div>;
 }
 
 function fmtShort(iso: string) {
@@ -128,21 +128,28 @@ export default async function DashboardPage() {
 
   const hour = brtHour();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const month = currentPeriod();
+  const [py, pm] = month.split("-");
+  const monthNames = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const periodLabel = `${monthNames[Number(pm) - 1]}. ${py}`;
 
   // qualquer pendência de dinheiro (vencido, mensalidade, fatura de hora) sobe pro topo
   const hasMoneyAlert = rec.overdue > 0 || billing?.alert || (hourly && hourly.totals.pendingInvoiceCount > 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div
-        className="relative overflow-hidden rounded-lg p-6 text-white shadow-brand"
+        className="relative overflow-hidden rounded-lg px-5 py-4 text-white shadow-brand"
         style={{ background: "linear-gradient(100deg, #2e7cf6 0%, #1fae5e 50%, #7c3aed 100%)" }}
       >
         <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute bottom-[-70px] right-20 h-36 w-36 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-3">
-          <LogoN size={28} />
-          <h1 className="text-2xl font-semibold">{greeting}</h1>
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <LogoN size={24} />
+            <h1 className="text-xl font-semibold">{greeting}</h1>
+          </div>
+          <span className="text-xs font-medium text-white/70">{periodLabel}</span>
         </div>
       </div>
 
@@ -245,13 +252,13 @@ export default async function DashboardPage() {
       {mods.orcamentos && (
         <Link
           href="/relatorios"
-          className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-surface p-5 shadow-card transition hover:border-border-strong hover:bg-subtle"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-surface p-4 shadow-card transition hover:border-border-strong hover:bg-subtle"
         >
           <div>
-            <p className="text-sm text-muted">Vendas no mês</p>
-            <p className="tabular mt-1 text-3xl font-semibold">{brl(revenue.currentCents)}</p>
+            <p className="text-xs text-muted">Vendas no mês</p>
+            <p className="tabular mt-0.5 text-2xl font-semibold">{brl(revenue.currentCents)}</p>
             {revenue.variancePct !== null && (
-              <p className={`mt-1 text-sm ${revenue.variancePct >= 0 ? "text-success" : "text-danger"}`}>
+              <p className={`mt-0.5 text-sm ${revenue.variancePct >= 0 ? "text-success" : "text-danger"}`}>
                 {revenue.variancePct >= 0 ? "+" : ""}
                 {revenue.variancePct.toFixed(0)}% vs mês anterior
               </p>
