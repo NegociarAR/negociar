@@ -3,6 +3,7 @@ import { listCompanies, companyCounts, pendingPlanRequests, expiredSubscriptions
 import { PlanRequestActions } from "@/modules/admin/plan-request-actions";
 import { AdminCompanyRow } from "@/modules/admin/admin-company-row";
 import { PageIcon } from "@/components/page-icon";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Building2 } from "lucide-react";
 
 export default async function AdminHomePage({
@@ -90,7 +91,7 @@ export default async function AdminHomePage({
               href={t.key ? `/admin?status=${t.key}` : "/admin"}
               className={`-mb-px border-b-2 px-3 py-2.5 text-sm ${
                 active
-                  ? "border-foreground font-medium text-foreground"
+                  ? "border-primary font-medium text-foreground"
                   : "border-transparent text-muted hover:text-foreground"
               }`}
             >
@@ -101,9 +102,7 @@ export default async function AdminHomePage({
       </div>
 
       {companies.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-surface p-10 text-center text-sm text-muted">
-          Nenhuma empresa neste filtro.
-        </div>
+        <EmptyState message="Nenhuma empresa neste filtro." />
       ) : (
         <div className="overflow-hidden rounded-lg border bg-surface">
           <table className="block w-full text-sm sm:table">

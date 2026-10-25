@@ -5,6 +5,7 @@ import { ExportCsvButton } from "@/modules/admin/export-csv-button";
 import { MonthSelect } from "@/modules/admin/month-select";
 import { brl } from "@/lib/format";
 import { currentPeriod } from "@/lib/period";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { Receipt } from "lucide-react";
 
@@ -71,9 +72,7 @@ export default async function RecebimentosPage({
 
       {/* extrato detalhado */}
       {report.rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">
-          Nenhum recebimento neste período.
-        </p>
+        <EmptyState message="Nenhum recebimento neste período." />
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-surface">
           <table className="w-full min-w-[640px] text-sm">

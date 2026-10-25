@@ -6,6 +6,7 @@ import { InvoiceActions } from "@/modules/admin/invoice-actions";
 import { AccessButton, BlockEligibleButton } from "@/modules/admin/access-actions";
 import { brl } from "@/lib/format";
 import { fmtDay } from "@/lib/dates";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { Wallet } from "lucide-react";
 
@@ -122,7 +123,7 @@ export default async function AdminFinanceiroPage({
           {eligible.length > 0 && <BlockEligibleButton count={eligible.length} />}
         </div>
         {attention.length === 0 ? (
-          <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">Nenhuma empresa com pendência ou bloqueio.</p>
+          <EmptyState message="Nenhuma empresa com pendência ou bloqueio." />
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-surface">
             <table className="w-full min-w-[640px] text-sm">
@@ -187,7 +188,7 @@ export default async function AdminFinanceiroPage({
         </div>
 
         {shown.length === 0 ? (
-          <p className="rounded-lg border border-dashed bg-surface p-6 text-center text-sm text-muted">Nenhum título nesta visão.</p>
+          <EmptyState message="Nenhum título nesta visão." />
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-surface">
             <table className="w-full min-w-[820px] text-sm">
