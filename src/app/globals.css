@@ -118,3 +118,8 @@ a, button, select, input, textarea, [role="button"] {
 /* utilitários de elevação */
 .shadow-card { box-shadow: var(--shadow-sm); }
 .shadow-pop { box-shadow: var(--shadow-md); }
+
+/* conteúdo principal do app: espaço para o bottom-nav + safe area iOS */
+.app-main-scroll {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}

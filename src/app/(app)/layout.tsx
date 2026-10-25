@@ -81,11 +81,11 @@ export default async function AppLayout({
           badges={badges}
           myRole={myRole}
         />
-        <main className="flex flex-1 flex-col pb-16 md:pb-0">
+        <main className="flex flex-1 flex-col app-main-scroll md:pb-0">
           <Topbar notifications={notifications} />
           <ContentContainer>{children}</ContentContainer>
         </main>
-        <BottomNav items={items} quickActions={quick} />
+        <BottomNav items={items} quickActions={quick} badges={badges} />
       </div>
     </CommandPalette>
   );

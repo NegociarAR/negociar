@@ -96,7 +96,7 @@ export function BottomNav({
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch justify-around border-t bg-surface md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch justify-around border-t bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
         {left.map((i) => (
           <Tab key={i.href} item={i} active={isActive(pathname, i.href)} count={i.badge ? badges?.[i.badge] : 0} />
         ))}
@@ -105,7 +105,7 @@ export function BottomNav({
           <button
             onClick={() => setOpen((v) => (v === "create" ? null : "create"))}
             aria-label="Criar"
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-fg shadow-md"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-fg shadow-pop"
           >
             <Plus size={24} strokeWidth={2} />
           </button>

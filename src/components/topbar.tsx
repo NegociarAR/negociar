@@ -6,16 +6,22 @@ import { useOpenSearch } from "./command-palette";
 import { NotificationBell } from "./notification-bell";
 import type { AppNotification } from "@/modules/notifications/notification-queries";
 
-// título da barra por rota (prefixo)
+// título da barra por rota (prefixo — mais específico primeiro)
 const TITLES: { prefix: string; label: string }[] = [
   { prefix: "/dashboard", label: "Início" },
   { prefix: "/clientes", label: "Clientes" },
+  { prefix: "/pipeline", label: "Pipeline" },
   { prefix: "/precificar", label: "Precificar" },
+  { prefix: "/orcamentos/horas", label: "Faturamento por hora" },
   { prefix: "/orcamentos", label: "Orçamentos" },
   { prefix: "/produtos", label: "Produtos" },
   { prefix: "/follow-ups", label: "Follow-ups" },
-  { prefix: "/configuracoes", label: "Configurações" },
+  { prefix: "/recebiveis", label: "Recebíveis" },
+  { prefix: "/notas-fiscais", label: "Notas fiscais" },
+  { prefix: "/relatorios", label: "Relatórios" },
   { prefix: "/historico", label: "Histórico" },
+  { prefix: "/equipe", label: "Equipe" },
+  { prefix: "/configuracoes", label: "Configurações" },
 ];
 
 export function Topbar({
