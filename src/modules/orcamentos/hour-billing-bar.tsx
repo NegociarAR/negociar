@@ -2,15 +2,17 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { pdf } from "@react-pdf/renderer";
 import { brl } from "@/lib/format";
 import { todayBRT } from "@/lib/period";
 import { useToast } from "@/components/toast";
-import { createHourSummary, generateHourlyInvoiceBatch, sendHourSummaryEmail } from "./hourly-actions";
+import { createHourSummary, generateHourlyInvoiceBatch, sendHourSummaryEmail, getHourSummaryPdfData } from "./hourly-actions";
+import { HourSummaryPdf } from "./hour-summary-pdf";
 import type { HourEntry } from "./hourly-types";
 
 // Barra fixa de ação quando há lançamentos selecionados (podem cruzar
 // vários meses): gerar fatura combinada ou enviar resumo prévio ao
-// cliente (e-mail e/ou WhatsApp) para validação, sem bloquear a cobrança.
+// cliente (e-mail, WhatsApp e/ou PDF) para validação, sem bloquear a cobrança.
 export function HourBillingBar({
   quoteId,
   customerName,
@@ -33,6 +35,7 @@ export function HourBillingBar({
   const router = useRouter();
   const toast = useToast();
   const [pending, startTransition] = useTransition();
+  const [pdfPending, setPdfPending] = useState(false);
   const [mode, setMode] = useState<null | "invoice" | "summary">(null);
   const [dueDate, setDueDate] = useState(todayBRT());
   const [summaryUrl, setSummaryUrl] = useState<string | null>(null);
@@ -100,6 +103,44 @@ export function HourBillingBar({
       const res = await sendHourSummaryEmail(quoteId, summaryUrl);
       toast(res.ok ? "E-mail enviado." : res.error, res.ok ? "success" : "error");
     });
+  }
+
+  async function downloadPdf() {
+    setError(null);
+    setPdfPending(true);
+    try {
+      const info = await getHourSummaryPdfData(quoteId);
+      if (!info.ok) {
+        toast(info.error, "error");
+        return;
+      }
+      const logoAbsUrl = `${window.location.origin}/brand/n.png`;
+      const blob = await pdf(
+        <HourSummaryPdf
+          data={{
+            quoteNumber: info.quoteNumber,
+            companyName: info.companyName,
+            logoUrl: info.logoUrl,
+            customerName,
+            rateCents,
+            entries: selectedEntries.map((e) => ({
+              entry_date: e.entry_date,
+              hours: e.hours,
+              description: e.description,
+            })),
+          }}
+          logoAbsUrl={logoAbsUrl}
+        />,
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `resumo-horas-orcamento-${info.quoteNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfPending(false);
+    }
   }
 
   return (
@@ -170,6 +211,9 @@ export function HourBillingBar({
               </button>
               <button onClick={copyLink} className="h-9 rounded-lg border px-4 text-sm font-medium hover:bg-subtle">
                 Copiar link
+              </button>
+              <button onClick={downloadPdf} disabled={pdfPending} className="h-9 rounded-lg border px-4 text-sm font-medium hover:bg-subtle disabled:opacity-50">
+                {pdfPending ? "Gerando PDF..." : "Baixar PDF"}
               </button>
             </div>
           )}

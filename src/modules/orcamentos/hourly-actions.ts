@@ -127,3 +127,19 @@ export async function sendHourSummaryEmail(quoteId: string, summaryUrl: string):
   if (!res.ok) return { ok: false, error: "Falha ao enviar e-mail." };
   return { ok: true };
 }
+
+
+// Dados para montar o PDF do resumo de horas no client (empresa + número
+// do orçamento — o resto já está disponível no HourBillingBar).
+export async function getHourSummaryPdfData(
+  quoteId: string,
+): Promise<{ ok: true; companyName: string; logoUrl: string | null; quoteNumber: number } | { ok: false; error: string }> {
+  const session = await requireModule("orcamentos");
+  const supabase = await createClient();
+  const [{ data: company }, { data: quote }] = await Promise.all([
+    supabase.from("companies").select("name, logo_url").eq("id", session.companyId).maybeSingle(),
+    supabase.from("quotes").select("number").eq("id", quoteId).eq("company_id", session.companyId).maybeSingle(),
+  ]);
+  if (!company || !quote) return { ok: false, error: "Dados não encontrados." };
+  return { ok: true, companyName: company.name, logoUrl: company.logo_url, quoteNumber: quote.number };
+}
