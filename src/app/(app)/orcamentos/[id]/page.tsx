@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { getQuote } from "@/modules/orcamentos/queries";
 import { getSession } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +11,7 @@ import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
 import { monthsSince } from "@/lib/dates";
 import { brl } from "@/lib/format";
 import { HistoryPanel } from "@/modules/historico/history-panel";
+import { BackLink } from "@/components/back-link";
 import { PageIcon } from "@/components/page-icon";
 import { FileText } from "lucide-react";
 
@@ -53,13 +53,7 @@ export default async function OrcamentoDetailPage({
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/orcamentos"
-        className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-foreground"
-      >
-        <ArrowLeft size={15} strokeWidth={1.8} />
-        Voltar para orçamentos
-      </Link>
+      <BackLink href="/orcamentos" label="Voltar para orçamentos" />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">

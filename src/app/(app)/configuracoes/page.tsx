@@ -12,6 +12,8 @@ import { FiscalSettingsForm } from "@/modules/configuracoes/fiscal-settings-form
 import { getAsaasClientSettings } from "@/modules/configuracoes/asaas-client-queries";
 import { AsaasClientSettingsForm } from "@/modules/configuracoes/asaas-client-settings-form";
 import { PlainSubmitButton } from "@/components/ui/submit-button";
+import { PageIcon } from "@/components/page-icon";
+import { Settings } from "lucide-react";
 
 function UsageRow({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
@@ -46,7 +48,10 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Configurações</h1>
+      <header className="flex items-center gap-3">
+        <PageIcon module="admin" icon={Settings} />
+        <h1 className="text-xl font-semibold">Configurações</h1>
+      </header>
 
       {company && <CompanyForm company={company} />}
 
