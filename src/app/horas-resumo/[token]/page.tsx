@@ -44,7 +44,7 @@ export default async function PublicHourSummaryPage({
           <div className="flex items-start justify-between gap-4 border-b bg-subtle px-5 py-5 sm:px-8 sm:py-7">
             <div className="min-w-0">
               <p className="text-sm text-muted">Resumo de horas</p>
-              <h1 className="mt-0.5 text-2xl font-semibold">Orçamento #{quote.number}</h1>
+              <h1 className="mt-0.5 text-2xl font-semibold">Horas do orçamento #{quote.number}</h1>
             </div>
             {company.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
