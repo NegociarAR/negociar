@@ -5,9 +5,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field, Input, Button } from "@/components/ui/form";
+import { PasswordStrengthMeter } from "@/components/password-strength-meter";
 
 export default function NovaSenhaPage() {
   const router = useRouter();
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -15,7 +17,6 @@ export default function NovaSenhaPage() {
     e.preventDefault();
     setError(null);
     const data = new FormData(e.currentTarget);
-    const password = String(data.get("password"));
     const confirm = String(data.get("confirm"));
 
     if (password.length < 8) {
@@ -29,7 +30,7 @@ export default function NovaSenhaPage() {
 
     startTransition(async () => {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({ password: password });
       if (error) {
         setError(error.message);
         return;
@@ -43,7 +44,16 @@ export default function NovaSenhaPage() {
     <form onSubmit={submit} className="space-y-4">
       <h2 className="text-base font-semibold">Criar nova senha</h2>
       <Field label="Nova senha">
-        <Input name="password" type="password" required minLength={8} autoFocus />
+        <Input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          autoFocus
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <PasswordStrengthMeter password={password} />
       </Field>
       <Field label="Confirmar nova senha">
         <Input name="confirm" type="password" required minLength={8} />

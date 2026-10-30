@@ -14,6 +14,7 @@ import { AsaasClientSettingsForm } from "@/modules/configuracoes/asaas-client-se
 import { PlainSubmitButton } from "@/components/ui/submit-button";
 import { PageIcon } from "@/components/page-icon";
 import { Settings } from "lucide-react";
+import { ChangePasswordForm } from "@/modules/configuracoes/change-password-form";
 
 function UsageRow({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
@@ -137,6 +138,8 @@ export default async function ConfiguracoesPage() {
         </div>
         <span className="text-muted">Ver →</span>
       </Link>
+
+      <ChangePasswordForm />
 
       {/* Sair (mobile) */}
       <form action={signOut}>
