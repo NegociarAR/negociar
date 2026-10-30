@@ -37,5 +37,15 @@ export async function GET(request: NextRequest) {
     console.error("sendDailyReminders falhou:", e);
   }
 
-  return NextResponse.json({ ok: true, ...data, ...reminders });
+  // gera parcelas de cobranças recorrentes com vencimento até hoje
+  let recurringGenerated = 0;
+  try {
+    const { data: rData, error: rError } = await admin.rpc("generate_recurring_charges");
+    if (rError) console.error("generate_recurring_charges falhou:", rError.message);
+    else recurringGenerated = rData ?? 0;
+  } catch (e) {
+    console.error("generate_recurring_charges falhou:", e);
+  }
+
+  return NextResponse.json({ ok: true, ...data, ...reminders, recurringGenerated });
 }

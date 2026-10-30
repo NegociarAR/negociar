@@ -9,6 +9,9 @@ import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { Wallet } from "lucide-react";
+import { listRecurringCharges } from "@/modules/recebiveis/recurring-actions";
+import { RecurringSection } from "@/modules/recebiveis/recurring-section";
+import { quoteFormOptions } from "@/modules/orcamentos/queries";
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
@@ -101,8 +104,17 @@ function Group({
 }
 
 export default async function RecebiveisPage() {
-  const { overdue, dueSoon, upcoming, received, asaasEnabled } = await getReceivables();
-  const totals = await receivableTotals();
+  const [
+    { overdue, dueSoon, upcoming, received, asaasEnabled },
+    totals,
+    recurringCharges,
+    { customers },
+  ] = await Promise.all([
+    getReceivables(),
+    receivableTotals(),
+    listRecurringCharges(),
+    quoteFormOptions(),
+  ]);
 
   const empty =
     overdue.length + dueSoon.length + upcoming.length + received.length === 0;
@@ -150,6 +162,10 @@ export default async function RecebiveisPage() {
           )}
         </div>
       )}
+
+      <div className="border-t pt-6">
+        <RecurringSection charges={recurringCharges} customers={customers} />
+      </div>
     </div>
   );
 }
