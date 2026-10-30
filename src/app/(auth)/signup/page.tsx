@@ -1,20 +1,16 @@
-"use client";
-
 import Link from "next/link";
 import { signUp } from "../actions";
 import { Field, Input } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PasswordStrengthMeter } from "@/components/password-strength-meter";
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { SignupPasswordField } from "./password-field";
 
-export default function SignupPage() {
-  const searchParams = useSearchParams();
-  const erro = searchParams.get("erro");
-  const email = searchParams.get("email") ?? undefined;
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string; email?: string }>;
+}) {
+  const { erro, email } = await searchParams;
   const fromInvite = Boolean(email);
-
-  const [password, setPassword] = useState("");
 
   return (
     <form action={signUp} className="space-y-4">
@@ -32,18 +28,7 @@ export default function SignupPage() {
       <Field label="E-mail">
         <Input name="email" type="email" required autoComplete="email" defaultValue={email} readOnly={fromInvite} />
       </Field>
-      <Field label="Senha">
-        <Input
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <PasswordStrengthMeter password={password} />
-      </Field>
+      <SignupPasswordField />
       <SubmitButton pendingText="Criando conta..." className="w-full">
         {fromInvite ? "Criar conta e entrar na equipe" : "Começar grátis"}
       </SubmitButton>
