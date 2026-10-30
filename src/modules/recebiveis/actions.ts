@@ -4,31 +4,82 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/entitlements";
 import { asaasCreateCustomerFor, asaasCreatePaymentFor, asaasBaseUrlFor } from "@/lib/asaas";
+import { sendReceivedToAppFinancasBr, undoReceivedInAppFinancasBr } from "@/lib/appfinancasbr";
+
+async function getAppFinancasBrToken(supabase: Awaited<ReturnType<typeof createClient>>, companyId: string) {
+  const { data } = await supabase
+    .from("company_appfinancasbr_settings")
+    .select("token, enabled")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (!data?.enabled || !data.token) return null;
+  return data.token as string;
+}
 
 export async function markReceived(installmentId: string) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return;
   const supabase = await createClient();
+
+  const { data: inst } = await supabase
+    .from("sale_installments")
+    .select("amount_cents, number, sales(customers(person_type, name, trade_name, legal_name))")
+    .eq("id", installmentId)
+    .eq("company_id", session.companyId)
+    .maybeSingle();
+
   await supabase
     .from("sale_installments")
     .update({ status: "received", received_at: new Date().toISOString() })
     .eq("id", installmentId)
     .eq("company_id", session.companyId);
+
   revalidatePath("/recebiveis");
   revalidatePath("/dashboard");
+
+  // integração AppFinançasBr — best-effort, falha silenciosa
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token && inst) {
+      const sale = (inst as { sales?: unknown }).sales as { customers?: { person_type?: string; name?: string | null; trade_name?: string | null; legal_name?: string | null } | null } | null;
+      const c = sale?.customers;
+      const clientName = c?.person_type === "pf" ? (c.name ?? "Cliente") : (c?.trade_name ?? c?.legal_name ?? "Cliente");
+      const parcelaLabel = inst.number === 0 ? "entrada" : `parcela ${inst.number}`;
+      await sendReceivedToAppFinancasBr(token, {
+        valorCents: inst.amount_cents,
+        data: new Date().toISOString().slice(0, 10),
+        descricao: `${clientName} — ${parcelaLabel}`,
+        referenciaExterna: installmentId,
+      });
+    }
+  } catch (e) {
+    console.error("AppFinançasBr markReceived falhou:", e);
+  }
 }
 
 export async function undoReceived(installmentId: string) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return;
   const supabase = await createClient();
+
   await supabase
     .from("sale_installments")
     .update({ status: "pending", received_at: null })
     .eq("id", installmentId)
     .eq("company_id", session.companyId);
+
   revalidatePath("/recebiveis");
   revalidatePath("/dashboard");
+
+  // integração AppFinançasBr — best-effort, falha silenciosa
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token) {
+      await undoReceivedInAppFinancasBr(token, installmentId);
+    }
+  } catch (e) {
+    console.error("AppFinançasBr undoReceived falhou:", e);
+  }
 }
 
 type ChargeResult = { ok: true; invoiceUrl: string } | { ok: false; error: string };

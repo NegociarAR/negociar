@@ -11,6 +11,8 @@ import { getFiscalSettings } from "@/modules/configuracoes/fiscal-queries";
 import { FiscalSettingsForm } from "@/modules/configuracoes/fiscal-settings-form";
 import { getAsaasClientSettings } from "@/modules/configuracoes/asaas-client-queries";
 import { AsaasClientSettingsForm } from "@/modules/configuracoes/asaas-client-settings-form";
+import { getAppFinancasBrSettings } from "@/modules/configuracoes/appfinancasbr-queries";
+import { AppFinancasBrSettingsForm } from "@/modules/configuracoes/appfinancasbr-settings-form";
 import { PlainSubmitButton } from "@/components/ui/submit-button";
 import { PageIcon } from "@/components/page-icon";
 import { Settings } from "lucide-react";
@@ -46,6 +48,7 @@ export default async function ConfiguracoesPage() {
   const billing = company ? await myBilling(company.id) : null;
   const fiscal = company ? await getFiscalSettings(company.id) : null;
   const asaasClient = company ? await getAsaasClientSettings(company.id) : null;
+  const appFinancasBr = company ? await getAppFinancasBrSettings(company.id) : null;
 
   return (
     <div className="space-y-6">
@@ -127,6 +130,8 @@ export default async function ConfiguracoesPage() {
       {fiscal && <FiscalSettingsForm settings={fiscal} />}
 
       {asaasClient && <AsaasClientSettingsForm settings={asaasClient} />}
+
+      {appFinancasBr && <AppFinancasBrSettingsForm settings={appFinancasBr} />}
 
       <Link
         href="/historico"

@@ -39,42 +39,62 @@ export async function getHourlyOverview(): Promise<HourlyOverview> {
   const today = todayBRT();
   const thisMonth = currentPeriod();
 
-  const [entriesRes, salesRes] = await Promise.all([
-    supabase.from("quote_hour_entries").select("quote_id, entry_date, hours").in("quote_id", ids),
-    supabase
-      .from("sales")
-      .select("quote_id, reference_period, total_cents, sale_installments(status, due_date)")
-      .in("quote_id", ids)
-      .not("reference_period", "is", null),
-  ]);
+  const { data: entries } = await supabase
+    .from("quote_hour_entries")
+    .select("quote_id, entry_date, hours, sale_id")
+    .in("quote_id", ids);
 
-  // horas por (quote_id, período)
-  const hoursByQuotePeriod = new Map<string, Map<string, number>>();
-  for (const e of entriesRes.data ?? []) {
+  // Horas AINDA NÃO faturadas por (quote_id, período) — a fonte da verdade de
+  // "pendente" é o sale_id da própria entrada, não bater período com fatura:
+  // uma fatura pode agrupar horas de vários meses numa única sale.
+  const pendingHoursByQuotePeriod = new Map<string, Map<string, number>>();
+  const saleIdsByQuote = new Map<string, Set<string>>();
+  for (const e of entries ?? []) {
     const period = (e.entry_date as string).slice(0, 7);
-    if (!hoursByQuotePeriod.has(e.quote_id)) hoursByQuotePeriod.set(e.quote_id, new Map());
-    const m = hoursByQuotePeriod.get(e.quote_id)!;
+    if (e.sale_id) {
+      if (!saleIdsByQuote.has(e.quote_id)) saleIdsByQuote.set(e.quote_id, new Set());
+      saleIdsByQuote.get(e.quote_id)!.add(e.sale_id);
+      continue; // já faturada: não entra em pendingHours, independente do período
+    }
+    if (!pendingHoursByQuotePeriod.has(e.quote_id)) pendingHoursByQuotePeriod.set(e.quote_id, new Map());
+    const m = pendingHoursByQuotePeriod.get(e.quote_id)!;
     m.set(period, (m.get(period) ?? 0) + Number(e.hours));
   }
 
-  // faturas por (quote_id, período) + situação da parcela
-  type SaleRow = { quote_id: string; reference_period: string; total_cents: number; sale_installments?: { status: string; due_date: string }[] };
-  const invoicesByQuote = new Map<string, Map<string, { totalCents: number; status: string; dueDate: string }>>();
-  for (const s of (salesRes.data ?? []) as SaleRow[]) {
+  const allSaleIds = Array.from(new Set(Array.from(saleIdsByQuote.values()).flatMap((s) => Array.from(s))));
+  const { data: sales } = allSaleIds.length
+    ? await supabase
+        .from("sales")
+        .select("id, quote_id, reference_period, total_cents, sold_at, sale_installments(status, due_date)")
+        .in("id", allSaleIds)
+    : { data: [] as never[] };
+
+  type SaleRow = {
+    id: string;
+    quote_id: string;
+    reference_period: string | null;
+    total_cents: number;
+    sold_at: string;
+    sale_installments?: { status: string; due_date: string }[];
+  };
+  const salesByQuote = new Map<string, { totalCents: number; status: string; dueDate: string; period: string | null; soldAt: string }[]>();
+  for (const s of (sales ?? []) as SaleRow[]) {
     const inst = s.sale_installments?.[0];
     const status = inst ? (inst.status === "pending" && inst.due_date < today ? "overdue" : inst.status) : "pending";
-    if (!invoicesByQuote.has(s.quote_id)) invoicesByQuote.set(s.quote_id, new Map());
-    invoicesByQuote.get(s.quote_id)!.set(s.reference_period, {
+    if (!salesByQuote.has(s.quote_id)) salesByQuote.set(s.quote_id, []);
+    salesByQuote.get(s.quote_id)!.push({
       totalCents: s.total_cents,
       status,
       dueDate: inst?.due_date ?? "",
+      period: s.reference_period,
+      soldAt: s.sold_at,
     });
   }
 
   const contracts: HourlyContractOverview[] = quotes.map((q) => {
     const rate = q.hourly_rate_cents ?? 0;
-    const hoursMap = hoursByQuotePeriod.get(q.id) ?? new Map();
-    const invMap = invoicesByQuote.get(q.id) ?? new Map();
+    const hoursMap = pendingHoursByQuotePeriod.get(q.id) ?? new Map();
+    const invoices = salesByQuote.get(q.id) ?? [];
 
     const pendingMonths: PendingMonth[] = [];
     let currentMonthHours = 0;
@@ -84,18 +104,15 @@ export async function getHourlyOverview(): Promise<HourlyOverview> {
         continue; // mês em andamento não é "pendência"
       }
       if (period > thisMonth) continue; // lançamento futuro (raro, não conta)
-      if (!invMap.has(period)) {
-        pendingMonths.push({ period, hours, estimatedCents: Math.round(hours * rate) });
-      }
+      pendingMonths.push({ period, hours, estimatedCents: Math.round(hours * rate) });
     }
     pendingMonths.sort((a, b) => a.period.localeCompare(b.period));
 
     // última fatura emitida (mais recente) e sua situação
-    const invoicedPeriods = Array.from(invMap.keys()).sort().reverse();
-    const lastPeriod = invoicedPeriods[0] ?? null;
-    const last = lastPeriod ? invMap.get(lastPeriod)! : null;
-    const overdueInvoicesCount = Array.from(invMap.values()).filter((v) => v.status === "overdue").length;
-    const anyInvoicePending = Array.from(invMap.values()).some((v) => v.status === "pending");
+    const sortedInvoices = [...invoices].sort((a, b) => b.soldAt.localeCompare(a.soldAt));
+    const last = sortedInvoices[0] ?? null;
+    const overdueInvoicesCount = invoices.filter((v) => v.status === "overdue").length;
+    const anyInvoicePending = invoices.some((v) => v.status === "pending");
 
     const situation: HourlyContractOverview["situation"] =
       pendingMonths.length > 0 ? "pending_invoice" : overdueInvoicesCount > 0 ? "overdue" : anyInvoicePending ? "invoice_pending" : "ok";
@@ -107,7 +124,7 @@ export async function getHourlyOverview(): Promise<HourlyOverview> {
       rateCents: rate,
       currentMonthHours,
       pendingMonths,
-      lastInvoicePeriod: lastPeriod,
+      lastInvoicePeriod: last?.period ?? null,
       lastInvoiceCents: last?.totalCents ?? null,
       lastInvoiceStatus: (last?.status as HourlyContractOverview["lastInvoiceStatus"]) ?? null,
       overdueInvoicesCount,
