@@ -54,7 +54,9 @@ export default async function OrcamentoDetailPage({
     : false;
   const hourlySales = quote.is_hourly_contract ? (sales ?? []) : [];
 
-  const canCancel = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status);
+  const canCancel =
+    ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status) ||
+    (quote.status === "approved" && !existingSale);
   const suggestedRateCents = quote.items[0]?.unit_price_cents ?? null;
   const monthsSinceApproval = quote.decided_at ? monthsSince(quote.decided_at) : null;
 
