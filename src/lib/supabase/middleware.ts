@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/orcamento",
   "/horas-resumo",
   "/api/webhooks",
+  "/api/integracoes",
   "/convite",
   "/auth",
   "/status",
