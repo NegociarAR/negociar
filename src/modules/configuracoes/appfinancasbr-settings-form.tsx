@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
-import { saveAppFinancasBrSettings, disableAppFinancasBr } from "./appfinancasbr-actions";
+import { saveAppFinancasBrSettings, disableAppFinancasBr, generateAppFinancasBrInboundToken } from "./appfinancasbr-actions";
 import type { AppFinancasBrSettings } from "./appfinancasbr-queries";
 
 const input = "h-10 w-full rounded-lg border bg-surface px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
@@ -14,6 +14,7 @@ export function AppFinancasBrSettingsForm({ settings }: { settings: AppFinancasB
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [revealedToken, setRevealedToken] = useState<string | null>(null);
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,6 +33,23 @@ export function AppFinancasBrSettingsForm({ settings }: { settings: AppFinancasB
       (e.currentTarget.elements.namedItem("token") as HTMLInputElement).value = "";
       router.refresh();
     });
+  }
+
+  function generateInbound() {
+    startTransition(async () => {
+      const res = await generateAppFinancasBrInboundToken();
+      if (!res.ok) {
+        toast(res.error, "error");
+        return;
+      }
+      setRevealedToken(res.token ?? null);
+      toast("Token gerado. Copie agora — não será exibido novamente.");
+    });
+  }
+
+  function copyInbound(token: string) {
+    navigator.clipboard.writeText(token).catch(() => {});
+    toast("Token copiado.");
   }
 
   function disable() {
@@ -79,6 +97,28 @@ export function AppFinancasBrSettingsForm({ settings }: { settings: AppFinancasB
             placeholder={settings.tokenMasked ?? "Cole seu token"}
             className={input}
           />
+        </div>
+
+        <div className="border-t pt-4">
+          <p className={`${labelCls} mb-2`}>Token de entrada (para o AppFinançasBr chamar o NEGOCIAR)</p>
+          {revealedToken ? (
+            <div className="flex gap-2">
+              <input readOnly value={revealedToken} className={`${input} font-mono text-xs text-muted`} />
+              <button type="button" onClick={() => copyInbound(revealedToken)} className="h-10 shrink-0 rounded-lg border px-3 text-sm font-medium hover:bg-subtle">
+                Copiar
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted">
+                {settings.inboundTokenMasked ?? "Nenhum token gerado"}
+              </span>
+              <button type="button" onClick={generateInbound} disabled={pending} className="h-8 rounded-lg border px-3 text-xs font-medium hover:bg-subtle disabled:opacity-50">
+                {settings.inboundTokenMasked ? "Regenerar" : "Gerar token"}
+              </button>
+            </div>
+          )}
+          <p className="mt-1 text-xs text-muted">Cole este token nas configurações do AppFinançasBr → Integrações → NEGOCIAR.</p>
         </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}
