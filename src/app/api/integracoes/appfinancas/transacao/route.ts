@@ -60,14 +60,12 @@ export async function DELETE(request: Request) {
     return Response.json({ error: "referencia_externa obrigatório." }, { status: 400 });
   }
 
-  console.log("[appfinancas DELETE] atualizando parcela:", referenciaExterna, "company:", settings.company_id);
-  const { data: updated, error } = await adminClient()
+  const { error } = await adminClient()
     .from("sale_installments")
     .update({ status: "pending", received_at: null })
     .eq("id", referenciaExterna)
-    .eq("company_id", settings.company_id)
-    .select("id, status");
-  console.log("[appfinancas DELETE] rows atualizadas:", updated?.length ?? 0, "error:", error?.message ?? "none");
+    .eq("company_id", settings.company_id);
+  if (error) console.error("[appfinancas DELETE]", error);
 
   return Response.json({ ok: true });
 }
