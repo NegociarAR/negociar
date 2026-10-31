@@ -7,6 +7,7 @@ import { QuoteStatusBadge } from "@/modules/orcamentos/status-badge";
 import { QuoteActions } from "@/modules/orcamentos/quote-actions";
 import { CloseSaleForm } from "@/modules/vendas/close-sale-form";
 import { CancelQuoteButton } from "@/modules/orcamentos/cancel-button";
+import { CancelSaleButton } from "@/modules/vendas/cancel-sale-button";
 import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
 import { monthsSince } from "@/lib/dates";
 import { brl } from "@/lib/format";
@@ -41,10 +42,14 @@ export default async function OrcamentoDetailPage({
   // vendas deste orçamento — normal tem no máximo 1; contrato por hora pode ter várias (uma por mês)
   const { data: sales } = await supabase
     .from("sales")
-    .select("id, net_cents, reference_period")
+    .select("id, net_cents, reference_period, sale_installments(status), service_invoices(status)")
     .eq("quote_id", quote.id)
     .order("reference_period", { ascending: false });
   const existingSale = quote.is_hourly_contract ? null : (sales ?? [])[0] ?? null;
+  const canCancelSale = existingSale
+    ? !(existingSale.sale_installments as { status: string }[]).some((i) => i.status === "received") &&
+      !(existingSale.service_invoices as { status: string }[]).some((i) => i.status !== "error")
+    : false;
   const hourlySales = quote.is_hourly_contract ? (sales ?? []) : [];
 
   const canCancel = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status);
@@ -217,13 +222,22 @@ export default async function OrcamentoDetailPage({
         )
       ) : existingSale ? (
         <div className="rounded-lg border border-l-2 border-l-primary bg-primary-soft p-4 text-sm">
-          <span className="font-medium">Venda registrada</span> ·{" "}
-          <span className="tabular">
-            {new Intl.NumberFormat("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            }).format(existingSale.net_cents / 100)}
-          </span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              <span className="font-medium">Venda registrada</span> ·{" "}
+              <span className="tabular">
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(existingSale.net_cents / 100)}
+              </span>
+            </span>
+            {canCancelSale ? (
+              <CancelSaleButton saleId={existingSale.id} />
+            ) : (
+              <span className="text-xs text-muted">Não é possível cancelar: já tem recebimento ou nota fiscal.</span>
+            )}
+          </div>
         </div>
       ) : quote.status === "approved" ? (
         <div className="space-y-3">

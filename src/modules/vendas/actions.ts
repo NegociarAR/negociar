@@ -67,3 +67,25 @@ export async function closeSale(input: CloseSaleInput) {
 
   return { ok: true, saleId };
 }
+
+export async function cancelSale(saleId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session?.companyId) return { ok: false, error: "Sem sessão." };
+  const supabase = await createClient();
+
+  const { data: sale } = await supabase
+    .from("sales")
+    .select("id, quote_id")
+    .eq("id", saleId)
+    .eq("company_id", session.companyId)
+    .maybeSingle();
+  if (!sale) return { ok: false, error: "Venda não encontrada." };
+
+  const { error } = await supabase.rpc("cancel_sale", { p_sale_id: saleId });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/orcamentos/${sale.quote_id}`);
+  revalidatePath("/recebiveis");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
