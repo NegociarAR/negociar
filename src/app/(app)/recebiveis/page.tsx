@@ -12,6 +12,17 @@ import { Wallet } from "lucide-react";
 import { listRecurringCharges } from "@/modules/recebiveis/recurring-actions";
 import { RecurringSection } from "@/modules/recebiveis/recurring-section";
 import { quoteFormOptions } from "@/modules/orcamentos/queries";
+import { FilterBar } from "@/modules/recebiveis/filter-bar";
+
+function monthLabel(ym: string) {
+  const [y, m] = ym.split("-");
+  const names = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  return `${names[Number(m) - 1]}/${y.slice(2)}`;
+}
+
+function isValidPeriod(s?: string) {
+  return Boolean(s && /^\d{4}-\d{2}$/.test(s));
+}
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
@@ -103,21 +114,29 @@ function Group({
   );
 }
 
-export default async function RecebiveisPage() {
+export default async function RecebiveisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string; cliente?: string }>;
+}) {
+  const { mes: mesParam, cliente } = await searchParams;
+  const mes = isValidPeriod(mesParam) ? mesParam! : new Date().toISOString().slice(0, 7);
+  const customerId = cliente || undefined;
+
   const [
     { overdue, dueSoon, upcoming, received, asaasEnabled },
     totals,
     recurringCharges,
     { customers },
   ] = await Promise.all([
-    getReceivables(),
-    receivableTotals(),
+    getReceivables({ period: mes, customerId }),
+    receivableTotals({ period: mes, customerId }),
     listRecurringCharges(),
     quoteFormOptions(),
   ]);
 
-  const empty =
-    overdue.length + dueSoon.length + upcoming.length + received.length === 0;
+  const hasFilter = Boolean(customerId) || mes !== new Date().toISOString().slice(0, 7);
+  const empty = overdue.length + dueSoon.length + upcoming.length + received.length === 0;
 
   return (
     <div className="space-y-6">
@@ -126,10 +145,16 @@ export default async function RecebiveisPage() {
         <h1 className="text-xl font-semibold">Recebíveis</h1>
       </header>
 
+      <FilterBar
+        mes={mes}
+        clienteId={customerId}
+        customers={customers.map((c) => ({ id: c.id, name: c.label ?? c.id }))}
+      />
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="A receber" value={brl(totals.toReceive)} />
         <StatCard label="Vencido" value={brl(totals.overdue)} danger={totals.overdue > 0} />
-        <StatCard label="Recebido no mês" value={brl(totals.receivedThisMonth)} />
+        <StatCard label={`Recebido em ${monthLabel(mes)}`} value={brl(totals.receivedInPeriod)} />
       </div>
 
       {!asaasEnabled && (
@@ -142,7 +167,7 @@ export default async function RecebiveisPage() {
       )}
 
       {empty ? (
-        <EmptyState message="Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas aparecem aqui." />
+        <EmptyState message={hasFilter ? "Nenhuma parcela neste período/cliente. Ajuste o filtro acima ou limpe para ver tudo." : "Nenhuma parcela ainda. Ao fechar uma venda parcelada, as parcelas aparecem aqui."} />
       ) : (
         <div className="space-y-6">
           <Group title="Vencidas" items={overdue} emphasis showCharge asaasEnabled={asaasEnabled} />
