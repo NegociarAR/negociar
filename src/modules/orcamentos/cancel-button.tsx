@@ -5,11 +5,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelQuote } from "./actions";
 
-export function CancelQuoteButton({ quoteId }: { quoteId: string }) {
+export function CancelQuoteButton({ quoteId, blockedReason }: { quoteId: string; blockedReason?: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const toast = useToast();
+
+  if (blockedReason) {
+    return (
+      <span className="text-xs text-muted">{blockedReason}</span>
+    );
+  }
 
   if (confirming) {
     return (

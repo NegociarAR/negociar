@@ -54,9 +54,10 @@ export default async function OrcamentoDetailPage({
     : false;
   const hourlySales = quote.is_hourly_contract ? (sales ?? []) : [];
 
-  const canCancel =
-    ["draft", "sent", "viewed", "negotiation", "negotiation_requested"].includes(quote.status) ||
-    (quote.status === "approved" && !existingSale);
+  const canCancel = ["draft", "sent", "viewed", "negotiation", "negotiation_requested", "approved"].includes(quote.status);
+  const cancelBlockedReason = quote.status === "approved" && existingSale
+    ? "Cancele a venda gerada antes de cancelar o orçamento."
+    : undefined;
   const suggestedRateCents = quote.items[0]?.unit_price_cents ?? null;
   const monthsSinceApproval = quote.decided_at ? monthsSince(quote.decided_at) : null;
 
@@ -88,7 +89,7 @@ export default async function OrcamentoDetailPage({
               Editar
             </Link>
           ) : null}
-          {canCancel && <CancelQuoteButton quoteId={id} />}
+          {canCancel && <CancelQuoteButton quoteId={id} blockedReason={cancelBlockedReason} />}
         </div>
       </header>
 
