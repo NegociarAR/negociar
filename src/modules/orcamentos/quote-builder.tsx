@@ -4,6 +4,7 @@ import { flash } from "@/components/toast";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuote, editQuote, type ItemInput } from "./actions";
+import { createTemplateFromDraft } from "./template-actions";
 import { parseBRLToCents, brl } from "@/lib/format";
 import { parseQty, quoteSubtotalCents, quoteTotalCents } from "./quote-calc";
 import { Field, Input, Button } from "@/components/ui/form";
@@ -26,6 +27,14 @@ interface DraftItem {
   description: string;
   quantity: string;
   unitPrice: string; // texto "0,00"
+}
+
+export interface PrefillTemplate {
+  discount: string;
+  payment: string;
+  delivery: string;
+  notes: string;
+  items: { product_id: string | null; description: string; quantity: string; unitPrice: string }[];
 }
 
 function newItem(): DraftItem {
@@ -61,37 +70,36 @@ export function QuoteBuilder({
   initial,
   prefillItem,
   prefillCustomerId,
+  prefillTemplate,
 }: {
   customers: CustomerOpt[];
   products: ProductOpt[];
   initial?: QuoteInitial;
   prefillItem?: { description: string; unitPrice: string };
   prefillCustomerId?: string;
+  prefillTemplate?: PrefillTemplate;
 }) {
   const router = useRouter();
   const [customerId, setCustomerId] = useState(initial?.customerId ?? prefillCustomerId ?? "");
   const [items, setItems] = useState<DraftItem[]>(
     initial
       ? initial.items.map((i) => ({ key: Math.random().toString(36).slice(2), ...i }))
-      : prefillItem
-        ? [
-            {
-              key: Math.random().toString(36).slice(2),
-              product_id: null,
-              description: prefillItem.description,
-              quantity: "1",
-              unitPrice: prefillItem.unitPrice,
-            },
-          ]
-        : [newItem()],
+      : prefillTemplate
+        ? prefillTemplate.items.map((i) => ({ key: Math.random().toString(36).slice(2), ...i }))
+        : prefillItem
+          ? [{ key: Math.random().toString(36).slice(2), product_id: null, description: prefillItem.description, quantity: "1", unitPrice: prefillItem.unitPrice }]
+          : [newItem()],
   );
-  const [discount, setDiscount] = useState(initial?.discount ?? "");
+  const [discount, setDiscount] = useState(initial?.discount ?? prefillTemplate?.discount ?? "");
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
-  const [payment, setPayment] = useState(initial?.payment ?? "");
-  const [delivery, setDelivery] = useState(initial?.delivery ?? "");
-  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [payment, setPayment] = useState(initial?.payment ?? prefillTemplate?.payment ?? "");
+  const [delivery, setDelivery] = useState(initial?.delivery ?? prefillTemplate?.delivery ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? prefillTemplate?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templatePending, startTemplateTransition] = useTransition();
 
   function updateItem(key: string, patch: Partial<DraftItem>) {
     setItems((prev) =>
@@ -159,6 +167,32 @@ export function QuoteBuilder({
           router.push(`/orcamentos/${res.id}`);
         }
         else setError(res.error ?? "Erro ao salvar.");
+      }
+    });
+  }
+
+  function saveAsTemplate() {
+    if (!templateName.trim()) return;
+    startTemplateTransition(async () => {
+      const res = await createTemplateFromDraft({
+        name: templateName.trim(),
+        discountCents: discountCents,
+        paymentTerms: payment || null,
+        deliveryTerms: delivery || null,
+        notes: notes || null,
+        items: items.map((i) => ({
+          product_id: i.product_id,
+          description: i.description,
+          quantity: parseQty(i.quantity),
+          unit_price_cents: parseBRLToCents(i.unitPrice),
+        })),
+      });
+      if (res.ok) {
+        flash("Template salvo.");
+        setSavingTemplate(false);
+        setTemplateName("");
+      } else {
+        flash(res.error, "error");
       }
     });
   }
@@ -334,15 +368,47 @@ export function QuoteBuilder({
             <span className="tabular">{brl(total)}</span>
           </div>
         </div>
-        <Button type="button" onClick={save} disabled={pending} className="w-full sm:w-auto">
-          {pending
-            ? "Salvando..."
-            : initial
-              ? initial.isRevision
-                ? "Salvar como nova versão"
-                : "Salvar alterações"
-              : "Salvar orçamento"}
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          {!initial && (
+            savingTemplate ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Nome do template"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") saveAsTemplate(); if (e.key === "Escape") { setSavingTemplate(false); setTemplateName(""); } }}
+                  className="rounded border bg-subtle px-2 py-1 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={saveAsTemplate}
+                  disabled={templatePending || !templateName.trim()}
+                  className="text-sm text-primary underline disabled:opacity-50"
+                >
+                  {templatePending ? "Salvando…" : "Confirmar"}
+                </button>
+                <button type="button" onClick={() => { setSavingTemplate(false); setTemplateName(""); }} className="text-sm text-muted underline">
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setSavingTemplate(true)} className="text-xs text-muted underline hover:text-foreground">
+                Salvar itens como template
+              </button>
+            )
+          )}
+          <Button type="button" onClick={save} disabled={pending} className="w-full sm:w-auto">
+            {pending
+              ? "Salvando..."
+              : initial
+                ? initial.isRevision
+                  ? "Salvar como nova versão"
+                  : "Salvar alterações"
+                : "Salvar orçamento"}
+          </Button>
+        </div>
       </div>
     </div>
   );
