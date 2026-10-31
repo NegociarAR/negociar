@@ -15,6 +15,8 @@ import { HistoryPanel } from "@/modules/historico/history-panel";
 import { BackLink } from "@/components/back-link";
 import { PageIcon } from "@/components/page-icon";
 import { FileText } from "lucide-react";
+import { getRecurringChargeByQuote } from "@/modules/recebiveis/recurring-actions";
+import { QuoteRecurringForm } from "@/modules/recebiveis/quote-recurring-form";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
@@ -56,6 +58,10 @@ export default async function OrcamentoDetailPage({
   const suggestedRateCents = quote.items[0]?.unit_price_cents ?? null;
   const monthsSinceApproval = quote.decided_at ? monthsSince(quote.decided_at) : null;
 
+  const recurringCharge = quote.status === "approved" && !quote.is_hourly_contract && !existingSale
+    ? await getRecurringChargeByQuote(quote.id)
+    : null;
+
   return (
     <div className="space-y-6">
       <BackLink href="/orcamentos" label="Voltar para orçamentos" />
@@ -72,14 +78,14 @@ export default async function OrcamentoDetailPage({
           <QuoteStatusBadge status={quote.status} />
         </div>
         <div className="flex items-center gap-4">
-          {!["approved", "rejected", "superseded"].includes(quote.status) && (
+          {!["approved", "rejected", "superseded"].includes(quote.status) || (quote.status === "approved" && !existingSale) ? (
             <Link
               href={`/orcamentos/${id}/editar`}
               className="py-2 text-sm text-primary hover:underline"
             >
               Editar
             </Link>
-          )}
+          ) : null}
           {canCancel && <CancelQuoteButton quoteId={id} />}
         </div>
       </header>
@@ -252,6 +258,14 @@ export default async function OrcamentoDetailPage({
             active={false}
             rateCents={null}
             suggestedRateCents={suggestedRateCents}
+          />
+          <p className="text-center text-xs text-muted">— ou —</p>
+          <QuoteRecurringForm
+            quoteId={quote.id}
+            customerId={quote.customer_id}
+            description={quote.items[0]?.description ?? "Serviço recorrente"}
+            amountCents={quote.total_cents}
+            existingCharge={recurringCharge}
           />
         </div>
       ) : (

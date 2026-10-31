@@ -64,6 +64,7 @@ export interface CreateRecurringChargeInput {
   amountCents: number;
   dayOfMonth: number;
   startDate?: string; // ISO date, opcional; default: próximo dayOfMonth a partir de hoje
+  quoteId?: string;
 }
 
 function nextDueDateFor(dayOfMonth: number, startDate?: string): string {
@@ -97,6 +98,7 @@ export async function createRecurringCharge(input: CreateRecurringChargeInput) {
     amount_cents: input.amountCents,
     day_of_month: input.dayOfMonth,
     next_due_date: nextDueDate,
+    quote_id: input.quoteId ?? null,
   });
 
   if (error) return { ok: false, error: error.message };
@@ -168,4 +170,33 @@ export async function deleteRecurringCharge(id: string) {
   if (error) return { ok: false, error: error.message };
   revalidatePath("/recebiveis");
   return { ok: true };
+}
+
+export async function getRecurringChargeByQuote(quoteId: string): Promise<RecurringCharge | null> {
+  const session = await requireModule("orcamentos");
+  if (!session?.companyId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recurring_charges")
+    .select("*, customers(person_type, name, trade_name, legal_name)")
+    .eq("company_id", session.companyId)
+    .eq("quote_id", quoteId)
+    .maybeSingle();
+
+  if (!data) return null;
+  const c = (data as { customers?: unknown }).customers as Parameters<typeof customerName>[0] | null;
+  return {
+    id: data.id,
+    customer_id: data.customer_id,
+    customer_name: customerName(c),
+    description: data.description,
+    amount_cents: data.amount_cents,
+    period: data.period as "monthly",
+    day_of_month: data.day_of_month,
+    next_due_date: data.next_due_date,
+    active: data.active,
+    last_generated_sale_id: data.last_generated_sale_id,
+    created_at: data.created_at,
+  };
 }
