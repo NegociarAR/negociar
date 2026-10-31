@@ -3,6 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/entitlements";
+import {
+  syncFixedChargeToAppFinancasBr,
+  deleteFixedChargeInAppFinancasBr,
+} from "@/lib/appfinancasbr";
+
+async function getAppFinancasBrToken(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("company_appfinancasbr_settings")
+    .select("token, enabled")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  return data?.enabled && data.token ? data.token : null;
+}
 
 export interface RecurringCharge {
   id: string;
@@ -91,19 +107,37 @@ export async function createRecurringCharge(input: CreateRecurringChargeInput) {
   const supabase = await createClient();
   const nextDueDate = nextDueDateFor(input.dayOfMonth, input.startDate);
 
-  const { error } = await supabase.from("recurring_charges").insert({
-    company_id: session.companyId,
-    customer_id: input.customerId,
-    description: input.description,
-    amount_cents: input.amountCents,
-    day_of_month: input.dayOfMonth,
-    next_due_date: nextDueDate,
-    quote_id: input.quoteId ?? null,
-  });
+  const { data: nova, error } = await supabase
+    .from("recurring_charges")
+    .insert({
+      company_id: session.companyId,
+      customer_id: input.customerId,
+      description: input.description,
+      amount_cents: input.amountCents,
+      day_of_month: input.dayOfMonth,
+      next_due_date: nextDueDate,
+      quote_id: input.quoteId ?? null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/recebiveis");
+
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token && nova) {
+      await syncFixedChargeToAppFinancasBr(token, {
+        nome: input.description,
+        valorCents: input.amountCents,
+        diaReferencia: input.dayOfMonth,
+        referenciaExterna: nova.id,
+        ativo: true,
+      });
+    }
+  } catch {}
+
   return { ok: true };
 }
 
@@ -112,6 +146,14 @@ export async function pauseRecurringCharge(id: string) {
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   const supabase = await createClient();
+
+  const { data: charge } = await supabase
+    .from("recurring_charges")
+    .select("description, amount_cents, day_of_month")
+    .eq("id", id)
+    .eq("company_id", session.companyId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("recurring_charges")
     .update({ active: false })
@@ -120,6 +162,20 @@ export async function pauseRecurringCharge(id: string) {
 
   if (error) return { ok: false, error: error.message };
   revalidatePath("/recebiveis");
+
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token && charge) {
+      await syncFixedChargeToAppFinancasBr(token, {
+        nome: charge.description,
+        valorCents: charge.amount_cents,
+        diaReferencia: charge.day_of_month,
+        referenciaExterna: id,
+        ativo: false,
+      });
+    }
+  } catch {}
+
   return { ok: true };
 }
 
@@ -128,6 +184,14 @@ export async function resumeRecurringCharge(id: string) {
   if (!session?.companyId) return { ok: false, error: "Sem sessão." };
 
   const supabase = await createClient();
+
+  const { data: charge } = await supabase
+    .from("recurring_charges")
+    .select("description, amount_cents, day_of_month")
+    .eq("id", id)
+    .eq("company_id", session.companyId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("recurring_charges")
     .update({ active: true })
@@ -136,6 +200,20 @@ export async function resumeRecurringCharge(id: string) {
 
   if (error) return { ok: false, error: error.message };
   revalidatePath("/recebiveis");
+
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token && charge) {
+      await syncFixedChargeToAppFinancasBr(token, {
+        nome: charge.description,
+        valorCents: charge.amount_cents,
+        diaReferencia: charge.day_of_month,
+        referenciaExterna: id,
+        ativo: true,
+      });
+    }
+  } catch {}
+
   return { ok: true };
 }
 
@@ -169,6 +247,12 @@ export async function deleteRecurringCharge(id: string) {
 
   if (error) return { ok: false, error: error.message };
   revalidatePath("/recebiveis");
+
+  try {
+    const token = await getAppFinancasBrToken(supabase, session.companyId);
+    if (token) await deleteFixedChargeInAppFinancasBr(token, id);
+  } catch {}
+
   return { ok: true };
 }
 

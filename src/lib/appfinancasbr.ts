@@ -35,3 +35,38 @@ export async function undoReceivedInAppFinancasBr(
   );
   if (!res.ok) throw new Error(`AppFinançasBr: ${res.status}`);
 }
+
+export async function syncFixedChargeToAppFinancasBr(
+  token: string,
+  data: {
+    nome: string;
+    valorCents: number;
+    diaReferencia: number;
+    referenciaExterna: string;
+    ativo: boolean;
+  },
+) {
+  const res = await fetch(`${BASE_URL}/api/integracoes/negociar/lancamento-fixo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      nome: data.nome,
+      valor_padrao: data.valorCents / 100,
+      dia_referencia: data.diaReferencia,
+      referencia_externa: data.referenciaExterna,
+      ativo: data.ativo,
+    }),
+  });
+  if (!res.ok) throw new Error(`AppFinançasBr: ${res.status}`);
+}
+
+export async function deleteFixedChargeInAppFinancasBr(
+  token: string,
+  referenciaExterna: string,
+) {
+  const res = await fetch(
+    `${BASE_URL}/api/integracoes/negociar/lancamento-fixo?referencia_externa=${referenciaExterna}`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) throw new Error(`AppFinançasBr: ${res.status}`);
+}
