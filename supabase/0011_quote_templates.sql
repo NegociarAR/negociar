@@ -32,11 +32,11 @@ alter table public.quote_template_items enable row level security;
 create policy "company members can manage their quote templates"
   on public.quote_templates
   for all
-  using  (company_id = any(public.my_company_ids()))
-  with check (company_id = any(public.my_company_ids()));
+  using  (company_id in (select public.my_company_ids()))
+  with check (company_id in (select public.my_company_ids()));
 
 create policy "company members can manage their quote template items"
   on public.quote_template_items
   for all
-  using  (company_id = any(public.my_company_ids()))
-  with check (company_id = any(public.my_company_ids()));
+  using  (company_id in (select public.my_company_ids()))
+  with check (company_id in (select public.my_company_ids()));
