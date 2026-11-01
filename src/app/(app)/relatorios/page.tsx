@@ -9,6 +9,7 @@ import {
   type Period,
 } from "@/modules/relatorios/queries";
 import { getLeadFunnel, getLeadLossReasons } from "@/modules/relatorios/lead-queries";
+import { getCashFlowProjection } from "@/modules/relatorios/cashflow-queries";
 import { getEntitlements, hasModule } from "@/lib/entitlements";
 import { STATUS_LABELS } from "@/modules/orcamentos/types";
 import { brl } from "@/lib/format";
@@ -35,15 +36,23 @@ export default async function RelatoriosPage({
   const { periodo } = await searchParams;
   const period: Period = periodo && ["month", "quarter", "year"].includes(periodo) ? periodo : "month";
 
-  const showLeads = hasModule(await getEntitlements(), "clientes");
-  const [funnel, revenue, reasons, receivables, leads, lossReasons] = await Promise.all([
+  const ents = await getEntitlements();
+  const showLeads = hasModule(ents, "clientes");
+  const showCashflow = hasModule(ents, "orcamentos");
+  const [funnel, revenue, reasons, receivables, leads, lossReasons, cashflow] = await Promise.all([
     getFunnel(period),
     getRevenue(period),
     getReasons(period),
     getReceivablesSummary(period),
     showLeads ? getLeadFunnel(period) : Promise.resolve(null),
     showLeads ? getLeadLossReasons(period) : Promise.resolve([]),
+    showCashflow ? getCashFlowProjection() : Promise.resolve([]),
   ]);
+
+  // cashflow stats
+  const confirmed30 = cashflow.slice(0, 4).reduce((s, w) => s + w.confirmedCents, 0);
+  const projectedTotal = cashflow.reduce((s, w) => s + w.projectedCents, 0);
+  const maxCashflow = Math.max(1, ...cashflow.map((w) => w.confirmedCents + w.projectedCents));
 
   const maxFunnel = Math.max(1, ...Object.values(funnel.byStatus));
   const maxMonth = Math.max(1, ...revenue.byMonth.map((m) => m.cents));
@@ -230,6 +239,56 @@ export default async function RelatoriosPage({
           )}
         </div>
       </section>
+
+      {/* 5. PROJEÇÃO DE CAIXA */}
+      {showCashflow && cashflow.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Projeção de caixa (90 dias)</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard label="Confirmado (30 dias)" value={brl(confirmed30)} />
+            <StatCard label="Projetado (recorrências)" value={brl(projectedTotal)} />
+          </div>
+          <div className="space-y-2 rounded-lg border bg-surface p-5 shadow-card">
+            <div className="mb-3 flex items-center gap-4 text-xs text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-success" />
+                Confirmado (parcelas)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/40" />
+                Projetado (recorrências)
+              </span>
+            </div>
+            {cashflow.map((w) => {
+              const total = w.confirmedCents + w.projectedCents;
+              const confirmedPct = (w.confirmedCents / maxCashflow) * 100;
+              const projectedPct = (w.projectedCents / maxCashflow) * 100;
+              const [d, m] = w.weekStart.split("-").slice(1).concat(w.weekStart.split("-")[2]);
+              const label = `${w.weekStart.slice(8)}/${w.weekStart.slice(5, 7)}`;
+              return (
+                <div key={w.weekStart} className="flex items-center gap-3 text-sm">
+                  <span className="w-12 shrink-0 text-xs text-muted">{label}</span>
+                  <div className="relative h-3 flex-1 overflow-hidden rounded-full bg-subtle">
+                    <div
+                      className="absolute left-0 top-0 h-full rounded-full bg-success"
+                      style={{ width: `${confirmedPct}%` }}
+                    />
+                    <div
+                      className="absolute top-0 h-full rounded-full bg-primary/40"
+                      style={{ left: `${confirmedPct}%`, width: `${projectedPct}%` }}
+                    />
+                  </div>
+                  <span className="tabular w-24 shrink-0 text-right text-xs">
+                    {total > 0 ? brl(total) : <span className="text-muted">—</span>}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* 4. RECEBÍVEIS */}
       <section className="space-y-3">
