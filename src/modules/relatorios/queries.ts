@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/entitlements";
+import { getTeam } from "@/modules/team/queries";
 
 export type Period = "month" | "quarter" | "year";
 
@@ -197,4 +198,80 @@ export async function getReceivablesSummary(
   const receivedCents = received?.reduce((s, r) => s + r.amount_cents, 0) ?? 0;
 
   return { toReceiveCents, overdueCents, receivedCents };
+}
+
+// ---------- 5. PERFORMANCE POR VENDEDOR ----------
+export interface SalespersonRow {
+  salespersonId: string | null; // null = sem vendedor atribuído
+  email: string;
+  quotesCount: number;
+  sentCount: number;
+  wonCount: number;
+  conversion: number; // %
+  revenueCents: number;
+}
+
+const REACHED_CLIENT = ["sent", "viewed", "negotiation_requested", "approved", "rejected"];
+
+export async function getSalesBySalesperson(period: Period): Promise<SalespersonRow[]> {
+  const session = await getSession();
+  if (!session?.companyId) return [];
+
+  const supabase = await createClient();
+  const start = periodStart(period);
+
+  const [{ data: quotes }, { data: sales }, { members }] = await Promise.all([
+    supabase
+      .from("quotes")
+      .select("salesperson_id, status")
+      .eq("company_id", session.companyId)
+      .is("deleted_at", null)
+      .gte("created_at", start),
+    supabase
+      .from("sales")
+      .select("net_cents, total_cents, quotes!inner(salesperson_id)")
+      .eq("company_id", session.companyId)
+      .gte("sold_at", start),
+    getTeam(),
+  ]);
+
+  const emailMap = new Map(members.map((m) => [m.userId, m.email]));
+  const NULL_KEY = "__null__";
+
+  const map = new Map<
+    string,
+    { quotesCount: number; sentCount: number; wonCount: number; revenueCents: number }
+  >();
+
+  function bucket(id: string | null) {
+    const k = id ?? NULL_KEY;
+    if (!map.has(k)) map.set(k, { quotesCount: 0, sentCount: 0, wonCount: 0, revenueCents: 0 });
+    return map.get(k)!;
+  }
+
+  for (const q of quotes ?? []) {
+    const b = bucket((q as { salesperson_id?: string | null }).salesperson_id ?? null);
+    b.quotesCount += 1;
+    if (REACHED_CLIENT.includes(q.status)) b.sentCount += 1;
+    if (q.status === "approved") b.wonCount += 1;
+  }
+
+  for (const s of sales ?? []) {
+    const spId = ((s as { quotes?: { salesperson_id?: string | null } }).quotes?.salesperson_id) ?? null;
+    const b = bucket(spId);
+    const val = (s.net_cents ?? (s as { total_cents?: number }).total_cents ?? 0);
+    b.revenueCents += val;
+  }
+
+  return Array.from(map.entries())
+    .map(([k, v]) => {
+      const id = k === NULL_KEY ? null : k;
+      return {
+        salespersonId: id,
+        email: id ? (emailMap.get(id) ?? id.slice(0, 8) + "…") : "Sem vendedor atribuído",
+        ...v,
+        conversion: v.sentCount > 0 ? (v.wonCount / v.sentCount) * 100 : 0,
+      };
+    })
+    .sort((a, b) => b.revenueCents - a.revenueCents);
 }

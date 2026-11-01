@@ -17,6 +17,9 @@ import { PageIcon } from "@/components/page-icon";
 import { FileText } from "lucide-react";
 import { getRecurringChargeByQuote } from "@/modules/recebiveis/recurring-actions";
 import { QuoteRecurringForm } from "@/modules/recebiveis/quote-recurring-form";
+import { QuoteSalespersonField } from "@/modules/orcamentos/salesperson-field";
+import { getTeam } from "@/modules/team/queries";
+import { canManageTeam } from "@/modules/team/access";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
@@ -65,6 +68,9 @@ export default async function OrcamentoDetailPage({
     ? await getRecurringChargeByQuote(quote.id)
     : null;
 
+  const { members } = await getTeam();
+  const canEditSalesperson = canManageTeam(session?.role as never);
+
   return (
     <div className="space-y-6">
       <BackLink href="/orcamentos" label="Voltar para orçamentos" />
@@ -80,6 +86,12 @@ export default async function OrcamentoDetailPage({
           </h1>
           <QuoteStatusBadge status={quote.status} />
         </div>
+        <QuoteSalespersonField
+          quoteId={id}
+          salespersonId={quote.salesperson_id}
+          members={members.map((m) => ({ userId: m.userId, email: m.email }))}
+          canEdit={canEditSalesperson}
+        />
         <div className="flex items-center gap-4">
           {!["approved", "rejected", "superseded"].includes(quote.status) || (quote.status === "approved" && !existingSale) ? (
             <Link

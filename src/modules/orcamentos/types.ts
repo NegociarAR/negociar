@@ -66,5 +66,6 @@ export interface QuoteDetail {
   decided_at: string | null;
   public_token: string;
   created_at: string;
+  salesperson_id: string | null;
   items: QuoteItem[];
 }

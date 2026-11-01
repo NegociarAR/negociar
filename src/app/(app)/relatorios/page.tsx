@@ -4,6 +4,7 @@ import {
   getRevenue,
   getReasons,
   getReceivablesSummary,
+  getSalesBySalesperson,
   periodStart,
   PERIOD_LABELS,
   type Period,
@@ -39,7 +40,7 @@ export default async function RelatoriosPage({
   const ents = await getEntitlements();
   const showLeads = hasModule(ents, "clientes");
   const showCashflow = hasModule(ents, "orcamentos");
-  const [funnel, revenue, reasons, receivables, leads, lossReasons, cashflow] = await Promise.all([
+  const [funnel, revenue, reasons, receivables, leads, lossReasons, cashflow, salespersons] = await Promise.all([
     getFunnel(period),
     getRevenue(period),
     getReasons(period),
@@ -47,6 +48,7 @@ export default async function RelatoriosPage({
     showLeads ? getLeadFunnel(period) : Promise.resolve(null),
     showLeads ? getLeadLossReasons(period) : Promise.resolve([]),
     showCashflow ? getCashFlowProjection() : Promise.resolve([]),
+    showCashflow ? getSalesBySalesperson(period) : Promise.resolve([]),
   ]);
 
   // cashflow stats
@@ -286,6 +288,43 @@ export default async function RelatoriosPage({
                 </div>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {/* 6. PERFORMANCE POR VENDEDOR */}
+      {showCashflow && salespersons.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold">Performance por vendedor</h2>
+          <div className="overflow-x-auto rounded-lg border bg-surface shadow-card">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-xs text-muted">
+                  <th className="px-4 py-3 text-left font-medium">Vendedor</th>
+                  <th className="px-4 py-3 text-right font-medium">Orçamentos</th>
+                  <th className="px-4 py-3 text-right font-medium">Enviados</th>
+                  <th className="px-4 py-3 text-right font-medium">Aprovados</th>
+                  <th className="px-4 py-3 text-right font-medium">Conversão</th>
+                  <th className="px-4 py-3 text-right font-medium">Receita</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {salespersons.map((sp) => (
+                  <tr key={sp.salespersonId ?? "__null__"} className="hover:bg-subtle">
+                    <td className="max-w-[180px] truncate px-4 py-3 font-medium">
+                      {sp.email}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular">{sp.quotesCount}</td>
+                    <td className="px-4 py-3 text-right tabular">{sp.sentCount}</td>
+                    <td className="px-4 py-3 text-right tabular">{sp.wonCount}</td>
+                    <td className="px-4 py-3 text-right tabular">
+                      {sp.sentCount > 0 ? `${sp.conversion.toFixed(0)}%` : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular">{brl(sp.revenueCents)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}

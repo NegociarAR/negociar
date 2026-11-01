@@ -69,8 +69,15 @@ export async function createQuote(input: CreateQuoteInput) {
   });
   if (error) return { ok: false, error: error.message };
 
+  const quoteId = (data as { id: string }).id;
+  await supabase
+    .from("quotes")
+    .update({ salesperson_id: session.user.id })
+    .eq("id", quoteId)
+    .eq("company_id", session.companyId);
+
   revalidatePath("/orcamentos");
-  return { ok: true, id: (data as { id: string }).id };
+  return { ok: true, id: quoteId };
 }
 
 export async function deleteQuote(id: string) {
@@ -224,6 +231,23 @@ export async function editQuote(
 }
 
 // Cancela um orçamento (encerra sem apagar — vira histórico).
+export async function updateQuoteSalesperson(quoteId: string, userId: string | null) {
+  const session = await requireModule("orcamentos");
+  if (!session?.companyId) return { ok: false, error: "Sem sessão." };
+  if (!["owner", "admin", "gestor"].includes(session.role ?? "")) {
+    return { ok: false, error: "Sem permissão para atribuir vendedor." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ salesperson_id: userId })
+    .eq("id", quoteId)
+    .eq("company_id", session.companyId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/orcamentos/${quoteId}`);
+  return { ok: true };
+}
+
 export async function cancelQuote(id: string) {
   const session = await requireModule("orcamentos");
   if (!session?.companyId) return { ok: false };
