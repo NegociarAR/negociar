@@ -67,7 +67,7 @@ export default async function RelatoriosPage({
           <PageIcon module="orcamentos" icon={BarChart2} />
           <h1 className="text-xl font-semibold">Relatórios</h1>
         </div>
-        <div className="flex gap-1 text-sm">
+        <div className="flex flex-wrap gap-1 text-sm">
           {PERIODS.map((p) => (
             <Link
               key={p}
@@ -297,7 +297,7 @@ export default async function RelatoriosPage({
         <section className="space-y-3">
           <h2 className="text-sm font-semibold">Performance por vendedor</h2>
           <div className="overflow-x-auto rounded-lg border bg-surface shadow-card">
-            <table className="w-full text-sm">
+            <table className="min-w-[500px] w-full text-sm">
               <thead>
                 <tr className="border-b text-xs text-muted">
                   <th className="px-4 py-3 text-left font-medium">Vendedor</th>

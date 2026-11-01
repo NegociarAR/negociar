@@ -58,7 +58,7 @@ export function LeadForm() {
         className="my-auto w-full max-w-md space-y-4 rounded-lg border bg-surface p-5 shadow-pop"
       >
         <h2 className="text-sm font-semibold">Novo lead</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-[auto_1fr] gap-3 min-w-0 sm:grid-cols-3">
           <Field label="Tipo">
             <select name="type" className="h-10 md:h-9 w-full rounded-lg border bg-surface px-2 text-sm">
               <option value="pf">Pessoa</option>

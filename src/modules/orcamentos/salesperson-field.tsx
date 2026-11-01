@@ -54,7 +54,7 @@ export function QuoteSalespersonField({
             }),
           );
         }}
-        className="rounded border bg-surface px-2 py-1 text-sm disabled:opacity-50"
+        className="min-w-[140px] rounded border bg-surface px-2 py-1 text-sm disabled:opacity-50"
       >
         <option value="">— Sem vendedor —</option>
         {members.map((m) => (
