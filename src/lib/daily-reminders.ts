@@ -139,3 +139,57 @@ export async function sendDailyReminders(admin: SupabaseClient): Promise<{ follo
 
   return { followupEmails, overdueEmails };
 }
+
+// Lembra clientes por e-mail 3 dias antes do vencimento,
+// apenas para empresas com client_due_reminder_enabled = true.
+export async function sendClientDueReminders(admin: SupabaseClient): Promise<{ clientReminderEmails: number }> {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + 3);
+  const target = targetDate.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+  const { data: settings } = await admin
+    .from("company_notification_settings")
+    .select("company_id")
+    .eq("client_due_reminder_enabled", true);
+
+  if (!settings || settings.length === 0) return { clientReminderEmails: 0 };
+  const enabledCompanies = settings.map((s) => s.company_id);
+
+  const { data: installments } = await admin
+    .from("sale_installments")
+    .select(
+      "id, company_id, number, due_date, amount_cents, client_due_reminder_sent_at, sales(customers(person_type, name, trade_name, legal_name, email))",
+    )
+    .eq("status", "pending")
+    .eq("due_date", target)
+    .is("client_due_reminder_sent_at", null)
+    .in("company_id", enabledCompanies);
+
+  let clientReminderEmails = 0;
+  for (const inst of installments ?? []) {
+    const customers = (inst as { sales?: { customers?: unknown } }).sales?.customers as
+      | (Parameters<typeof customerName>[0] & { email?: string | null })
+      | undefined;
+    if (!customers?.email) continue;
+    const name = customerName(customers);
+    const amount = (inst.amount_cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const dueFmt = new Date(inst.due_date + "T00:00:00").toLocaleDateString("pt-BR");
+    const res = await sendEmail({
+      to: customers.email,
+      subject: `Lembrete de vencimento — ${amount} em ${dueFmt}`,
+      html: `<p>Olá, ${esc(name.split(" ")[0])}!</p>
+             <p>Passando para lembrar que você tem uma parcela de <strong>${esc(amount)}</strong> com vencimento em <strong>${esc(dueFmt)}</strong>.</p>
+             <p>Qualquer dúvida, entre em contato.</p>`,
+    });
+    if (res.ok) {
+      clientReminderEmails += 1;
+      await admin
+        .from("sale_installments")
+        .update({ client_due_reminder_sent_at: today })
+        .eq("id", inst.id);
+    }
+  }
+
+  return { clientReminderEmails };
+}

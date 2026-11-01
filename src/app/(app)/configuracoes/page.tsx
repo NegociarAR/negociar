@@ -13,6 +13,8 @@ import { getAsaasClientSettings } from "@/modules/configuracoes/asaas-client-que
 import { AsaasClientSettingsForm } from "@/modules/configuracoes/asaas-client-settings-form";
 import { getAppFinancasBrSettings } from "@/modules/configuracoes/appfinancasbr-queries";
 import { AppFinancasBrSettingsForm } from "@/modules/configuracoes/appfinancasbr-settings-form";
+import { getNotificationSettings } from "@/modules/configuracoes/notification-settings-actions";
+import { NotificationSettingsForm } from "@/modules/configuracoes/notification-settings-form";
 import { PlainSubmitButton } from "@/components/ui/submit-button";
 import { PageIcon } from "@/components/page-icon";
 import { Settings } from "lucide-react";
@@ -49,6 +51,7 @@ export default async function ConfiguracoesPage() {
   const fiscal = company ? await getFiscalSettings(company.id) : null;
   const asaasClient = company ? await getAsaasClientSettings(company.id) : null;
   const appFinancasBr = company ? await getAppFinancasBrSettings(company.id) : null;
+  const notificationSettings = company ? await getNotificationSettings() : null;
 
   return (
     <div className="space-y-6">
@@ -132,6 +135,8 @@ export default async function ConfiguracoesPage() {
       {asaasClient && <AsaasClientSettingsForm settings={asaasClient} />}
 
       {appFinancasBr && <AppFinancasBrSettingsForm settings={appFinancasBr} />}
+
+      {notificationSettings && <NotificationSettingsForm settings={notificationSettings} />}
 
       <Link
         href="/historico"

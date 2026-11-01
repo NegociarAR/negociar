@@ -10,6 +10,8 @@ const TYPE_HREF: Record<string, string> = {
   followup_due: "/follow-ups",
   installment_overdue: "/recebiveis",
   quote_viewed: "/orcamentos",
+  quote_stalled: "/orcamentos",
+  quote_expiring: "/orcamentos",
 };
 
 function timeAgo(iso: string): string {

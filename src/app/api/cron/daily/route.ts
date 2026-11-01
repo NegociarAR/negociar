@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendDailyReminders } from "@/lib/daily-reminders";
+import { sendDailyReminders, sendClientDueReminders } from "@/lib/daily-reminders";
 
 // Rotina diária: inativa clientes sem movimento há 3 meses e bloqueia
 // empresas inadimplentes além da tolerância. Roda via cron da Vercel
@@ -37,6 +37,13 @@ export async function GET(request: NextRequest) {
     console.error("sendDailyReminders falhou:", e);
   }
 
+  let clientReminders = { clientReminderEmails: 0 };
+  try {
+    clientReminders = await sendClientDueReminders(admin);
+  } catch (e) {
+    console.error("sendClientDueReminders falhou:", e);
+  }
+
   // gera parcelas de cobranças recorrentes com vencimento até hoje
   let recurringGenerated = 0;
   try {
@@ -47,5 +54,15 @@ export async function GET(request: NextRequest) {
     console.error("generate_recurring_charges falhou:", e);
   }
 
-  return NextResponse.json({ ok: true, ...data, ...reminders, recurringGenerated });
+  // follow-ups de orçamentos parados e expirando
+  let quoteFollowups = { stalled: 0, expiring: 0 };
+  try {
+    const { data: qfData, error: qfError } = await admin.rpc("check_quote_followups");
+    if (qfError) console.error("check_quote_followups falhou:", qfError.message);
+    else quoteFollowups = qfData ?? quoteFollowups;
+  } catch (e) {
+    console.error("check_quote_followups falhou:", e);
+  }
+
+  return NextResponse.json({ ok: true, ...data, ...reminders, ...clientReminders, recurringGenerated, ...quoteFollowups });
 }
