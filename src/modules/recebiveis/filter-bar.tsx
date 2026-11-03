@@ -35,7 +35,7 @@ export function FilterBar({
       <select
         value={clienteId ?? ""}
         onChange={(e) => navigate(mes, e.target.value || undefined)}
-        className={`${inputCls} pr-6`}
+        className={`${inputCls} min-w-0 flex-1 pr-6`}
       >
         <option value="">Todos os clientes</option>
         {customers.map((c) => (

@@ -62,7 +62,7 @@ export default async function RelatoriosPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <PageIcon module="orcamentos" icon={BarChart2} />
           <h1 className="text-xl font-semibold">Relatórios</h1>
@@ -116,7 +116,7 @@ export default async function RelatoriosPage({
 
       {/* 1. FUNIL */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-1">
           <h2 className="text-sm font-semibold">Funil de conversão</h2>
           <span className="text-sm text-muted">
             Conversão: <strong className="text-foreground">{funnel.conversion.toFixed(0)}%</strong>{" "}
@@ -143,7 +143,7 @@ export default async function RelatoriosPage({
       {/* LEADS -> CLIENTES */}
       {leads && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-1">
             <h2 className="text-sm font-semibold">Leads e conversão</h2>
             <span className="text-sm text-muted">
               Conversão: <strong className="text-foreground">{leads.rate.toFixed(0)}%</strong> ({leads.converted} de {leads.leads})

@@ -22,7 +22,7 @@ export default async function OrcamentosPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <PageIcon module="orcamentos" icon={FileText} />
           <div>
@@ -33,11 +33,11 @@ export default async function OrcamentosPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/orcamentos/horas" className="text-sm font-medium text-primary hover:underline">
+          <Link href="/orcamentos/horas" className="hidden text-sm font-medium text-primary hover:underline sm:inline">
             Faturamento por hora
           </Link>
           <Link href="/orcamentos/novo">
-            <Button>+ Novo orçamento</Button>
+            <Button>+ Novo</Button>
           </Link>
         </div>
       </header>

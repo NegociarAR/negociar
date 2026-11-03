@@ -88,21 +88,21 @@ export default async function ClientesPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <PageIcon module="clientes" icon={Users} />
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-semibold">Clientes</h1>
             <p className="text-sm text-muted">
               {gate.limit === null ? `${used} contatos` : `${used}/${gate.limit} contatos`}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <ImportCustomers />
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden sm:contents"><ImportCustomers /></span>
           <LeadForm />
-          <Link href="/pipeline" className="text-sm font-medium text-primary hover:underline">Pipeline →</Link>
-          <Link href="/clientes/novo">
+          <Link href="/pipeline" className="hidden text-sm font-medium text-primary hover:underline sm:inline">Pipeline →</Link>
+          <Link href="/clientes/novo" className="hidden sm:inline-flex">
             <Button>+ Novo cliente</Button>
           </Link>
         </div>
