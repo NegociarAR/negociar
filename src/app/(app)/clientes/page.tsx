@@ -152,7 +152,7 @@ export default async function ClientesPage({
         <div className="flex flex-1 gap-2">
           <CustomerSearch q={q} f={f} etapa={stageFilter ?? undefined} sort={activeSort} />
         </div>
-        <div className="flex gap-1 text-sm">
+        <div className="flex flex-wrap gap-1 text-sm">
           {SORTS.map((sOpt) => {
             const params = new URLSearchParams();
             if (q) params.set("q", q);
@@ -188,21 +188,21 @@ export default async function ClientesPage({
               >
                 <div className="flex items-center justify-between gap-3">
                   <Link href={`/clientes/${c.id}`} className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-medium">{name}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="min-w-0 max-w-full truncate font-medium">{name}</span>
                       <RelBadge status={status} />
                       {stageOf(c) !== "customer" && (
-                        <span className={`rounded-full border px-2 py-0.5 text-xs ${STAGE_BADGE[stageOf(c)]}`}>
+                        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${STAGE_BADGE[stageOf(c)]}`}>
                           {STAGE_LABELS[stageOf(c)]}
                         </span>
                       )}
                       {c.status === "inactive" && (
-                        <span className="rounded-full border px-2 py-0.5 text-xs text-muted">
+                        <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted">
                           Inativo
                         </span>
                       )}
                       {c.status === "blocked" && (
-                        <span className="rounded-full border border-danger/40 bg-danger/10 px-2 py-0.5 text-xs text-danger">
+                        <span className="shrink-0 rounded-full border border-danger/40 bg-danger/10 px-2 py-0.5 text-xs text-danger">
                           Bloqueado
                         </span>
                       )}

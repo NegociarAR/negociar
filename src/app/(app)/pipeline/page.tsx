@@ -11,15 +11,18 @@ export default async function PipelinePage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <PageIcon module="clientes" icon={Kanban} />
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-semibold">Pipeline</h1>
-            <p className="text-sm text-muted">Arraste um card para mudar de estágio, ou use o menu ⋯.</p>
+            <p className="text-sm text-muted">
+              <span className="hidden sm:inline">Arraste um card para mudar de estágio, ou use o menu ⋯.</span>
+              <span className="sm:hidden">Use o menu ⋯ para mudar de estágio.</span>
+            </p>
           </div>
         </div>
-        <Link href="/clientes" className="text-sm font-medium text-primary hover:underline">
+        <Link href="/clientes" className="shrink-0 text-sm font-medium text-primary hover:underline">
           Ver lista →
         </Link>
       </header>
