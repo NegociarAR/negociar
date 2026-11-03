@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SortSelect } from "@/modules/clientes/sort-select";
 import {
   listCustomersSorted,
   countCustomers,
@@ -152,7 +153,10 @@ export default async function ClientesPage({
         <div className="flex flex-1 gap-2">
           <CustomerSearch q={q} f={f} etapa={stageFilter ?? undefined} sort={activeSort} />
         </div>
-        <div className="flex flex-wrap gap-1 text-sm">
+        {/* mobile: select */}
+        <SortSelect activeSort={activeSort} q={q} f={f} stageFilter={stageFilter ?? undefined} />
+        {/* desktop: links */}
+        <div className="hidden gap-1 text-sm sm:flex">
           {SORTS.map((sOpt) => {
             const params = new URLSearchParams();
             if (q) params.set("q", q);

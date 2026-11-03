@@ -52,7 +52,7 @@ export function PipelineBoardView({ board }: { board: Board }) {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-4 overflow-x-auto pb-4 [scroll-snap-type:x_mandatory]">
       {COLUMNS.map((col) => {
         const cards = board[col.key];
         const totalValue = cards.reduce((s, c) => s + (c.estimatedValueCents ?? 0), 0);
@@ -71,7 +71,7 @@ export function PipelineBoardView({ board }: { board: Board }) {
               const card = cards.find((c) => c.id === id) ?? Object.values(board).flat().find((c) => c.id === id);
               if (card) move(card, col.key);
             }}
-            className={`w-72 shrink-0 rounded-lg border-t-2 shadow-card transition ${col.accent} ${col.bg} ${
+            className={`w-72 shrink-0 rounded-lg border-t-2 shadow-card transition [scroll-snap-align:start] ${col.accent} ${col.bg} ${
               overColumn === col.key ? "ring-2 ring-primary/40" : ""
             }`}
           >
