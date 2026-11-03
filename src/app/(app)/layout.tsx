@@ -81,7 +81,7 @@ export default async function AppLayout({
           badges={badges}
           myRole={myRole}
         />
-        <main className="flex flex-1 flex-col app-main-scroll md:pb-0">
+        <main className="flex min-w-0 flex-1 flex-col app-main-scroll md:pb-0">
           <Topbar notifications={notifications} />
           <ContentContainer>{children}</ContentContainer>
         </main>
