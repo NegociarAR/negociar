@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import {
   NAV_SECTIONS,
   type NavItem,
@@ -32,6 +32,8 @@ export function Sidebar({
 
   const visible = (item: NavItem) =>
     (!item.module || modules[item.module]) && !item.blockedRoles?.includes(myRole as CompanyRole);
+
+  const blockedRoles_settings = (["vendedor", "financeiro"] as CompanyRole[]).includes(myRole as CompanyRole);
 
   return (
     <aside className="hidden w-56 shrink-0 border-r bg-surface md:flex md:h-dvh md:flex-col md:sticky md:top-0">
@@ -92,6 +94,19 @@ export function Sidebar({
 
       <div className="border-t p-2">
         <p className="truncate px-2.5 py-1 text-xs text-muted">{userEmail}</p>
+        {!blockedRoles_settings && (
+          <Link
+            href="/configuracoes"
+            className={`flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition ${
+              pathname === "/configuracoes" || pathname.startsWith("/configuracoes/")
+                ? "bg-primary-soft font-medium text-primary"
+                : "text-muted hover:bg-subtle hover:text-foreground"
+            }`}
+          >
+            <Settings size={16} strokeWidth={pathname === "/configuracoes" || pathname.startsWith("/configuracoes/") ? 2.2 : 1.8} />
+            Configurações
+          </Link>
+        )}
         <ThemeToggle />
         <form action={signOut}>
           <PlainSubmitButton
