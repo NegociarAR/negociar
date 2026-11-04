@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getQuote } from "@/modules/orcamentos/queries";
+import { getQuote, getQuoteViewedAt } from "@/modules/orcamentos/queries";
 import { getSession } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
 import { QuoteStatusBadge } from "@/modules/orcamentos/status-badge";
@@ -68,7 +68,10 @@ export default async function OrcamentoDetailPage({
     ? await getRecurringChargeByQuote(quote.id)
     : null;
 
-  const { members } = await getTeam();
+  const [{ members }, viewedAt] = await Promise.all([
+    getTeam(),
+    getQuoteViewedAt(id),
+  ]);
   const canEditSalesperson = canManageTeam(session?.role as never);
 
   return (
@@ -85,6 +88,11 @@ export default async function OrcamentoDetailPage({
             )}
           </h1>
           <QuoteStatusBadge status={quote.status} />
+          {viewedAt && (
+            <span className="text-xs text-muted">
+              Visualizado pelo cliente em {fmtDate(viewedAt)}
+            </span>
+          )}
         </div>
         <QuoteSalespersonField
           quoteId={id}

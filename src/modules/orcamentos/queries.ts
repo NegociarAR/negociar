@@ -151,6 +151,22 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
   };
 }
 
+export async function getQuoteViewedAt(quoteId: string): Promise<string | null> {
+  const session = await getSession();
+  if (!session?.companyId) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("quote_status_history")
+    .select("changed_at")
+    .eq("quote_id", quoteId)
+    .eq("company_id", session.companyId)
+    .eq("status", "viewed")
+    .order("changed_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.changed_at ?? null;
+}
+
 // contagem de orçamentos criados no mês corrente (gate de limite)
 export async function countQuotesThisMonth(): Promise<number> {
   const session = await getSession();
