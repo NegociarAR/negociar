@@ -33,6 +33,7 @@ export interface QuoteListRow {
   created_at: string;
   valid_until: string | null;
   customer_name: string | null;
+  customer_id: string | null;
 }
 
 export interface QuoteItem {

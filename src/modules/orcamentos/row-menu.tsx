@@ -7,10 +7,16 @@ import { MoreHorizontal } from "lucide-react";
 import { cancelQuote, updateQuoteStatus } from "./actions";
 import { duplicateQuote } from "./duplicate-actions";
 import { QuickCloseSaleModal } from "./quick-close-sale-modal";
+import { suggestFollowupForQuote } from "@/modules/followups/actions";
 
 const EDITABLE = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"];
 const CANCELABLE = ["draft", "sent", "viewed", "negotiation", "negotiation_requested"];
 const CAN_DECIDE = ["sent", "viewed", "negotiation", "negotiation_requested"];
+
+const STALE_DAYS = 5;
+function isStale(createdAt: string) {
+  return (Date.now() - new Date(createdAt).getTime()) > STALE_DAYS * 86400_000;
+}
 
 export function QuoteRowMenu({
   quoteId,
@@ -18,12 +24,18 @@ export function QuoteRowMenu({
   status,
   companyId,
   totalCents,
+  customerId,
+  createdAt,
+  hasFollowup,
 }: {
   quoteId: string;
   number: number;
   status: string;
   companyId: string;
   totalCents: number;
+  customerId?: string | null;
+  createdAt?: string;
+  hasFollowup?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -45,6 +57,12 @@ export function QuoteRowMenu({
   const canCancel = CANCELABLE.includes(status);
   const canCloseSale = status === "approved";
   const canDecide = CAN_DECIDE.includes(status);
+  const showFollowupCta =
+    CAN_DECIDE.includes(status) &&
+    !hasFollowup &&
+    createdAt !== undefined &&
+    isStale(createdAt) &&
+    Boolean(customerId);
 
   function duplicate() {
     setOpen(false);
@@ -130,6 +148,33 @@ export function QuoteRowMenu({
                 </button>
               </div>
             </div>
+          )}
+          {showFollowupCta && !confirmReject && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  startTransition(() =>
+                    suggestFollowupForQuote({
+                      companyId,
+                      customerId: customerId!,
+                      quoteId,
+                      quoteNumber: number,
+                      days: 3,
+                    }).then(() => {
+                      toast("Follow-up criado.", "success");
+                      router.refresh();
+                    }),
+                  );
+                }}
+                disabled={pending}
+                className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-subtle disabled:opacity-50"
+              >
+                Criar follow-up
+              </button>
+              <div className="my-1 border-t" />
+            </>
           )}
           {canCloseSale && (
             <button

@@ -35,7 +35,7 @@ export async function listQuotes(search?: string, group?: QuoteStatusGroup) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, number, status, version, total_cents, created_at, valid_until, customers(person_type, name, trade_name, legal_name)",
+      "id, number, status, version, total_cents, created_at, valid_until, customer_id, customers(person_type, name, trade_name, legal_name)",
     )
     .eq("company_id", session.companyId)
     .is("deleted_at", null)
@@ -58,6 +58,7 @@ export async function listQuotes(search?: string, group?: QuoteStatusGroup) {
       total_cents: q.total_cents,
       created_at: q.created_at,
       valid_until: (q as { valid_until?: string | null }).valid_until ?? null,
+      customer_id: (q as { customer_id?: string | null }).customer_id ?? null,
       customer_name: displayName(c),
     } as QuoteListRow;
   });
@@ -149,6 +150,19 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
     salesperson_id: (q as { salesperson_id?: string | null }).salesperson_id ?? null,
     items: (items ?? []) as QuoteItem[],
   };
+}
+
+export async function getPendingFollowupQuoteIds(): Promise<Set<string>> {
+  const session = await getSession();
+  if (!session?.companyId) return new Set();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("followups")
+    .select("quote_id")
+    .eq("company_id", session.companyId)
+    .eq("status", "pending")
+    .not("quote_id", "is", null);
+  return new Set((data ?? []).map((r) => r.quote_id as string));
 }
 
 export async function getQuoteViewedAt(quoteId: string): Promise<string | null> {

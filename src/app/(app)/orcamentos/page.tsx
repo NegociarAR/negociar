@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listQuotes, countQuotesThisMonth, countQuotesByGroup } from "@/modules/orcamentos/queries";
+import { listQuotes, countQuotesThisMonth, countQuotesByGroup, getPendingFollowupQuoteIds } from "@/modules/orcamentos/queries";
 import type { QuoteStatusGroup } from "@/modules/orcamentos/queries";
 import { QuoteRow } from "@/modules/orcamentos/quote-row";
 import { getEntitlements, checkLimit, getSession } from "@/lib/entitlements";
@@ -30,11 +30,12 @@ export default async function OrcamentosPage({
 
   const session = await getSession();
   const companyId = session?.companyId ?? "";
-  const [quotes, used, ent, groupCounts] = await Promise.all([
+  const [quotes, used, ent, groupCounts, pendingFollowupIds] = await Promise.all([
     listQuotes(q, group),
     countQuotesThisMonth(),
     getEntitlements(),
     countQuotesByGroup(),
+    getPendingFollowupQuoteIds(),
   ]);
   const gate = checkLimit(ent, "quotes_per_month", used);
 
@@ -123,7 +124,12 @@ export default async function OrcamentosPage({
             </thead>
             <tbody>
               {quotes.map((qt) => (
-                <QuoteRow key={qt.id} qt={qt} companyId={companyId} />
+                <QuoteRow
+                  key={qt.id}
+                  qt={qt}
+                  companyId={companyId}
+                  hasFollowup={pendingFollowupIds.has(qt.id)}
+                />
               ))}
             </tbody>
           </table>

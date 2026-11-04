@@ -27,7 +27,7 @@ function ValidityCell({ validUntil, status }: { validUntil: string | null; statu
   );
 }
 
-export function QuoteRow({ qt, companyId }: { qt: QuoteListRow; companyId: string }) {
+export function QuoteRow({ qt, companyId, hasFollowup }: { qt: QuoteListRow; companyId: string; hasFollowup?: boolean }) {
   const router = useRouter();
   return (
     <tr
@@ -48,7 +48,16 @@ export function QuoteRow({ qt, companyId }: { qt: QuoteListRow; companyId: strin
         <QuoteStatusBadge status={qt.status} />
       </td>
       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-        <QuoteRowMenu quoteId={qt.id} number={qt.number} status={qt.status} companyId={companyId} totalCents={qt.total_cents} />
+        <QuoteRowMenu
+          quoteId={qt.id}
+          number={qt.number}
+          status={qt.status}
+          companyId={companyId}
+          totalCents={qt.total_cents}
+          customerId={qt.customer_id}
+          createdAt={qt.created_at}
+          hasFollowup={hasFollowup}
+        />
       </td>
     </tr>
   );
