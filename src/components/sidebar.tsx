@@ -34,7 +34,7 @@ export function Sidebar({
     (!item.module || modules[item.module]) && !item.blockedRoles?.includes(myRole as CompanyRole);
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r bg-surface md:flex md:flex-col">
+    <aside className="hidden w-56 shrink-0 border-r bg-surface md:flex md:h-dvh md:flex-col md:sticky md:top-0">
       <div className="flex h-14 items-center gap-2.5 border-b px-4">
         <LogoN size={22} />
         <span className="truncate text-[13px] font-semibold">{companyName}</span>
