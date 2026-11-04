@@ -6,12 +6,25 @@ import { QuoteRowMenu } from "./row-menu";
 import { brl } from "@/lib/format";
 import type { QuoteListRow } from "./types";
 
+const OPEN_STATUSES = ["sent", "viewed", "negotiation", "negotiation_requested"];
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
   });
+}
+
+function ValidityCell({ validUntil, status }: { validUntil: string | null; status: string }) {
+  if (!validUntil) return <span className="text-muted">—</span>;
+  const expired = new Date(validUntil) < new Date() && OPEN_STATUSES.includes(status);
+  return (
+    <span className={expired ? "font-medium text-danger" : "text-muted"}>
+      {fmtDate(validUntil)}
+      {expired && " ⚠"}
+    </span>
+  );
 }
 
 export function QuoteRow({ qt, companyId }: { qt: QuoteListRow; companyId: string }) {
@@ -27,6 +40,9 @@ export function QuoteRow({ qt, companyId }: { qt: QuoteListRow; companyId: strin
       </td>
       <td className="px-4 py-3">{qt.customer_name ?? "—"}</td>
       <td className="tabular px-4 py-3 text-muted">{fmtDate(qt.created_at)}</td>
+      <td className="tabular px-4 py-3">
+        <ValidityCell validUntil={qt.valid_until} status={qt.status} />
+      </td>
       <td className="tabular px-4 py-3">{brl(qt.total_cents)}</td>
       <td className="px-4 py-3">
         <QuoteStatusBadge status={qt.status} />

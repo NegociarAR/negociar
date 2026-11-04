@@ -31,6 +31,7 @@ export interface QuoteListRow {
   version: number;
   total_cents: number;
   created_at: string;
+  valid_until: string | null;
   customer_name: string | null;
 }
 

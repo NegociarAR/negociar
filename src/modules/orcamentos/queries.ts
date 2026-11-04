@@ -17,7 +17,17 @@ function displayName(c: {
   return c.trade_name ?? c.legal_name ?? null;
 }
 
-export async function listQuotes(search?: string) {
+export type QuoteStatusGroup = "todos" | "abertos" | "aprovados" | "recusados" | "rascunhos";
+
+const GROUP_STATUSES: Record<QuoteStatusGroup, string[] | null> = {
+  todos: null,
+  abertos: ["sent", "viewed", "negotiation", "negotiation_requested"],
+  aprovados: ["approved"],
+  recusados: ["rejected", "canceled"],
+  rascunhos: ["draft"],
+};
+
+export async function listQuotes(search?: string, group?: QuoteStatusGroup) {
   const session = await getSession();
   if (!session?.companyId) return [] as QuoteListRow[];
   const supabase = await createClient();
@@ -25,12 +35,15 @@ export async function listQuotes(search?: string) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, number, status, version, total_cents, created_at, customers(person_type, name, trade_name, legal_name)",
+      "id, number, status, version, total_cents, created_at, valid_until, customers(person_type, name, trade_name, legal_name)",
     )
     .eq("company_id", session.companyId)
     .is("deleted_at", null)
     .neq("status", "superseded")
     .order("created_at", { ascending: false });
+
+  const statuses = group ? GROUP_STATUSES[group] : null;
+  if (statuses) query = query.in("status", statuses);
 
   const { data } = await query;
   let rows = (data ?? []).map((q) => {
@@ -44,6 +57,7 @@ export async function listQuotes(search?: string) {
       version: q.version ?? 1,
       total_cents: q.total_cents,
       created_at: q.created_at,
+      valid_until: (q as { valid_until?: string | null }).valid_until ?? null,
       customer_name: displayName(c),
     } as QuoteListRow;
   });
@@ -57,6 +71,28 @@ export async function listQuotes(search?: string) {
     );
   }
   return rows;
+}
+
+export async function countQuotesByGroup(): Promise<Record<QuoteStatusGroup, number>> {
+  const session = await getSession();
+  if (!session?.companyId) return { todos: 0, abertos: 0, aprovados: 0, recusados: 0, rascunhos: 0 };
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("quotes")
+    .select("status")
+    .eq("company_id", session.companyId)
+    .is("deleted_at", null)
+    .neq("status", "superseded");
+
+  const counts: Record<QuoteStatusGroup, number> = { todos: 0, abertos: 0, aprovados: 0, recusados: 0, rascunhos: 0 };
+  for (const row of data ?? []) {
+    counts.todos++;
+    if (["sent", "viewed", "negotiation", "negotiation_requested"].includes(row.status)) counts.abertos++;
+    else if (row.status === "approved") counts.aprovados++;
+    else if (["rejected", "canceled"].includes(row.status)) counts.recusados++;
+    else if (row.status === "draft") counts.rascunhos++;
+  }
+  return counts;
 }
 
 export async function getQuote(id: string): Promise<QuoteDetail | null> {

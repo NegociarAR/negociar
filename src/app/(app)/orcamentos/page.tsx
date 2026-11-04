@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { listQuotes, countQuotesThisMonth } from "@/modules/orcamentos/queries";
+import { listQuotes, countQuotesThisMonth, countQuotesByGroup } from "@/modules/orcamentos/queries";
+import type { QuoteStatusGroup } from "@/modules/orcamentos/queries";
 import { QuoteRow } from "@/modules/orcamentos/quote-row";
 import { getEntitlements, checkLimit, getSession } from "@/lib/entitlements";
 import { Button } from "@/components/ui/form";
@@ -7,17 +8,34 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
 import { FileText } from "lucide-react";
 
+const TABS: { key: QuoteStatusGroup; label: string }[] = [
+  { key: "todos", label: "Todos" },
+  { key: "abertos", label: "Em aberto" },
+  { key: "aprovados", label: "Aprovados" },
+  { key: "recusados", label: "Recusados" },
+  { key: "rascunhos", label: "Rascunhos" },
+];
+
 export default async function OrcamentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, status } = await searchParams;
+  const group: QuoteStatusGroup =
+    (status as QuoteStatusGroup | undefined) &&
+    ["todos", "abertos", "aprovados", "recusados", "rascunhos"].includes(status!)
+      ? (status as QuoteStatusGroup)
+      : "todos";
+
   const session = await getSession();
   const companyId = session?.companyId ?? "";
-  const quotes = await listQuotes(q);
-  const used = await countQuotesThisMonth();
-  const ent = await getEntitlements();
+  const [quotes, used, ent, groupCounts] = await Promise.all([
+    listQuotes(q, group),
+    countQuotesThisMonth(),
+    getEntitlements(),
+    countQuotesByGroup(),
+  ]);
   const gate = checkLimit(ent, "quotes_per_month", used);
 
   return (
@@ -42,7 +60,39 @@ export default async function OrcamentosPage({
         </div>
       </header>
 
+      {/* tabs de status */}
+      <div className="relative">
+        <div className="overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-1 px-0.5">
+            {TABS.map((tab) => {
+              const active = tab.key === group;
+              const count = groupCounts[tab.key];
+              const href = `?${new URLSearchParams({ ...(q ? { q } : {}), ...(tab.key !== "todos" ? { status: tab.key } : {}) }).toString()}`;
+              return (
+                <Link
+                  key={tab.key}
+                  href={href}
+                  className={`flex shrink-0 items-center gap-1.5 border-b-2 pb-2 pt-1 text-sm transition ${
+                    active
+                      ? "border-primary font-medium text-primary"
+                      : "border-transparent text-muted hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                  {count > 0 && (
+                    <span className={`rounded-full px-1.5 text-[11px] tabular ${active ? "bg-primary text-primary-fg" : "bg-subtle text-muted"}`}>
+                      {count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <form className="flex gap-2">
+        {group !== "todos" && <input type="hidden" name="status" value={group} />}
         <input
           name="q"
           defaultValue={q ?? ""}
@@ -55,16 +105,17 @@ export default async function OrcamentosPage({
       {quotes.length === 0 ? (
         <EmptyState
           message={q ? "Nenhum orçamento encontrado." : "Nenhum orçamento ainda."}
-          action={!q ? { label: "Criar orçamento", href: "/orcamentos/novo" } : undefined}
+          action={!q && group === "todos" ? { label: "Criar orçamento", href: "/orcamentos/novo" } : undefined}
         />
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-surface">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted">
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Data</th>
+                <th className="px-4 py-3 font-medium">Validade</th>
                 <th className="px-4 py-3 font-medium">Total</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3"></th>
