@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { brl } from "./format";
+import { brl, calcMargin } from "./format";
 
 // toLocaleString usa espaço não separável entre "R$" e o valor — normaliza para comparar
 const fmt = (c: number) => brl(c).replace(/\s/g, " ");
@@ -18,5 +18,29 @@ describe("brl — centavos para real", () => {
 
   it("valores negativos", () => {
     expect(fmt(-1050)).toBe("-R$ 10,50");
+  });
+});
+
+describe("calcMargin", () => {
+  it("retorna null quando preço é null", () => {
+    expect(calcMargin(1000, null)).toBeNull();
+  });
+
+  it("retorna null quando preço é zero", () => {
+    expect(calcMargin(0, 0)).toBeNull();
+  });
+
+  it("calcula margem positiva (preço > custo)", () => {
+    // custo 60, preço 100 → margem 40%
+    expect(calcMargin(6000, 10000)).toBeCloseTo(0.4);
+  });
+
+  it("calcula margem negativa (preço < custo)", () => {
+    // custo 120, preço 100 → margem -20%
+    expect(calcMargin(12000, 10000)).toBeCloseTo(-0.2);
+  });
+
+  it("margem zero quando custo == preço", () => {
+    expect(calcMargin(5000, 5000)).toBeCloseTo(0);
   });
 });

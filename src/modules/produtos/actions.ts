@@ -18,6 +18,7 @@ function parseForm(formData: FormData) {
     sku: str("sku"),
     unit: str("unit"),
     cost_cents: parseBRLToCents(String(formData.get("cost") ?? "")),
+    category_id: str("category_id"),
   };
 }
 

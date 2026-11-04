@@ -3,17 +3,20 @@ import { Field, Input } from "@/components/ui/form";
 import type { Product } from "@/modules/produtos/queries";
 import { brl } from "@/lib/format";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { CategorySelect } from "@/modules/produtos/category-select";
 
 export function ProductForm({
   action,
   initial,
   submitLabel,
   erro,
+  categories,
 }: {
   action: (formData: FormData) => void;
   initial?: Partial<Product>;
   submitLabel: string;
   erro?: string;
+  categories?: { id: string; name: string }[];
 }) {
   return (
     <form action={action} className="space-y-5">
@@ -49,6 +52,13 @@ export function ProductForm({
             }
           />
         </Field>
+        {categories !== undefined && (
+          <div className="sm:col-span-2">
+            <Field label="Categoria">
+              <CategorySelect categories={categories} defaultValue={initial?.category_id} />
+            </Field>
+          </div>
+        )}
       </div>
       <SubmitButton pendingText="Salvando...">{submitLabel}</SubmitButton>
     </form>

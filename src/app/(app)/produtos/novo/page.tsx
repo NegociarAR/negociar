@@ -4,6 +4,7 @@ import { createProduct } from "@/modules/produtos/actions";
 import { ProductForm } from "@/modules/produtos/product-form";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
 import { countProducts } from "@/modules/produtos/queries";
+import { listCategories } from "@/modules/produtos/category-actions";
 
 export default async function NovoProdutoPage({
   searchParams,
@@ -11,7 +12,7 @@ export default async function NovoProdutoPage({
   searchParams: Promise<{ erro?: string }>;
 }) {
   const { erro } = await searchParams;
-  const ent = await getEntitlements();
+  const [ent, categories] = await Promise.all([getEntitlements(), listCategories()]);
   const gate = checkLimit(ent, "products", await countProducts());
 
   return (
@@ -26,7 +27,7 @@ export default async function NovoProdutoPage({
           </Link>
         </div>
       ) : (
-        <ProductForm action={createProduct} submitLabel="Salvar produto" erro={erro} />
+        <ProductForm action={createProduct} submitLabel="Salvar produto" erro={erro} categories={categories} />
       )}
     </div>
   );

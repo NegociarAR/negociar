@@ -6,6 +6,13 @@ export function brl(cents: number): string {
 }
 
 // "1.234,56" ou "1234.56" ou "1234,56" -> 123456 (centavos)
+// Margem sobre o preço de venda: (price - cost) / price
+// Retorna null se preço não definido ou cost == 0 e price == 0
+export function calcMargin(costCents: number, priceCents: number | null): number | null {
+  if (priceCents == null || priceCents === 0) return null;
+  return (priceCents - costCents) / priceCents;
+}
+
 export function parseBRLToCents(input: string): number {
   const raw = (input ?? "").trim();
   if (!raw) return 0;

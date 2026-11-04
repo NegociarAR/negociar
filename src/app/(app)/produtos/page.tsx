@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { listProducts, countProducts } from "@/modules/produtos/queries";
+import { listCategories } from "@/modules/produtos/category-actions";
 import { getEntitlements, checkLimit } from "@/lib/entitlements";
-import { brl } from "@/lib/format";
+import { brl, calcMargin } from "@/lib/format";
 import { Button } from "@/components/ui/form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageIcon } from "@/components/page-icon";
@@ -10,18 +11,28 @@ import { Package } from "lucide-react";
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; limite?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; limite?: string; status?: string; categoria?: string }>;
 }) {
-  const { q, limite, status } = await searchParams;
-  const { products: all } = await listProducts(q);
+  const { q, limite, status, categoria } = await searchParams;
+  const [{ products: all }, categories] = await Promise.all([listProducts(q), listCategories()]);
   const isActive = (p: unknown) => (p as { is_active?: boolean }).is_active !== false;
   const filter = status === "active" || status === "inactive" ? status : "all";
+  const byStatus = filter === "all" ? all : all.filter((p) => (filter === "active") === isActive(p));
+  const products = categoria ? byStatus.filter((p) => p.category_id === categoria) : byStatus;
   const counts = { all: all.length, active: all.filter(isActive).length, inactive: all.filter((p) => !isActive(p)).length };
-  const products = filter === "all" ? all : all.filter((p) => (filter === "active") === isActive(p));
   const tabHref = (k: string) => {
     const sp = new URLSearchParams();
     if (q) sp.set("q", q);
     if (k !== "all") sp.set("status", k);
+    if (categoria) sp.set("categoria", categoria);
+    const qs = sp.toString();
+    return `/produtos${qs ? `?${qs}` : ""}`;
+  };
+  const catHref = (catId: string | null) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (filter !== "all") sp.set("status", filter);
+    if (catId) sp.set("categoria", catId);
     const qs = sp.toString();
     return `/produtos${qs ? `?${qs}` : ""}`;
   };
@@ -69,16 +80,31 @@ export default async function ProdutosPage({
         ))}
       </div>
 
-      <form className="flex gap-2">
-        {filter !== "all" && <input type="hidden" name="status" value={filter} />}
-        <input
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Buscar por nome ou SKU..."
-          className="w-full rounded-lg border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-        <Button type="submit" variant="ghost">Buscar</Button>
-      </form>
+      <div className="flex flex-wrap gap-2">
+        <form className="flex flex-1 gap-2">
+          {filter !== "all" && <input type="hidden" name="status" value={filter} />}
+          {categoria && <input type="hidden" name="categoria" value={categoria} />}
+          <input
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Buscar por nome ou SKU..."
+            className="w-full rounded-lg border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+          <Button type="submit" variant="ghost">Buscar</Button>
+        </form>
+        {categories.length > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <Link href={catHref(null)} className={`rounded-full border px-3 py-1 text-xs ${!categoria ? "border-primary bg-primary-soft text-primary font-medium" : "text-muted hover:text-foreground"}`}>
+              Todas
+            </Link>
+            {categories.map((c) => (
+              <Link key={c.id} href={catHref(c.id)} className={`rounded-full border px-3 py-1 text-xs whitespace-nowrap ${categoria === c.id ? "border-primary bg-primary-soft text-primary font-medium" : "text-muted hover:text-foreground"}`}>
+                {c.name}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       {products.length === 0 ? (
         <EmptyState
@@ -92,11 +118,21 @@ export default async function ProdutosPage({
               <div className="min-w-0 flex-1 basis-48 break-words">
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
                   {p.name}
+                  {p.category_name && (
+                    <span className="rounded-full border px-2 py-0.5 text-xs font-normal text-muted">{p.category_name}</span>
+                  )}
                   {!isActive(p) && <span className="rounded-full border px-2 py-0.5 text-xs font-normal text-muted">Inativo</span>}
                 </p>
                 <p className="text-sm text-muted">
                   {p.sku ? `${p.sku} · ` : ""}Custo {brl(p.cost_cents)}
                   {p.current_price_cents != null && ` · Preço ${brl(p.current_price_cents)}`}
+                  {(() => {
+                    const m = calcMargin(p.cost_cents, p.current_price_cents);
+                    if (m === null) return null;
+                    const pct = Math.round(m * 100);
+                    const color = m < 0 ? "text-danger" : m >= 0.2 ? "text-success" : "";
+                    return <span className={color}>{` · Margem ${pct}%`}</span>;
+                  })()}
                 </p>
               </div>
               <div className="flex items-center gap-4 text-sm md:gap-3">

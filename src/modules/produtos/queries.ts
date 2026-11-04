@@ -5,6 +5,7 @@ export interface Product {
   id: string;
   company_id: string;
   category_id: string | null;
+  category_name: string | null;
   name: string;
   sku: string | null;
   unit: string | null;
@@ -20,7 +21,7 @@ export async function listProducts(search?: string) {
   const supabase = await createClient();
   let query = supabase
     .from("products")
-    .select("*", { count: "exact" })
+    .select("*, product_categories(name)", { count: "exact" })
     .eq("company_id", session.companyId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
@@ -31,7 +32,11 @@ export async function listProducts(search?: string) {
   }
 
   const { data, count } = await query;
-  return { products: (data ?? []) as Product[], total: count ?? 0 };
+  const products = (data ?? []).map((row: Record<string, unknown>) => ({
+    ...row,
+    category_name: (row.product_categories as { name: string } | null)?.name ?? null,
+  })) as Product[];
+  return { products, total: count ?? 0 };
 }
 
 export async function countProducts(): Promise<number> {

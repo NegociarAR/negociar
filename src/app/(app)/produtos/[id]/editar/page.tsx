@@ -1,6 +1,7 @@
 import { BackLink } from "@/components/back-link";
 import { notFound } from "next/navigation";
 import { getProduct, getPriceHistory } from "@/modules/produtos/queries";
+import { listCategories } from "@/modules/produtos/category-actions";
 import { updateProduct } from "@/modules/produtos/actions";
 import { ProductForm } from "@/modules/produtos/product-form";
 import { brl } from "@/lib/format";
@@ -22,9 +23,8 @@ export default async function EditarProdutoPage({
 }) {
   const { id } = await params;
   const { erro } = await searchParams;
-  const product = await getProduct(id);
+  const [product, history, categories] = await Promise.all([getProduct(id), getPriceHistory(id), listCategories()]);
   if (!product) notFound();
-  const history = await getPriceHistory(id);
 
   const action = updateProduct.bind(null, id);
 
@@ -41,7 +41,7 @@ export default async function EditarProdutoPage({
           active={(product as { is_active?: boolean }).is_active !== false}
         />
       </div>
-      <ProductForm action={action} initial={product} submitLabel="Salvar alterações" erro={erro} />
+      <ProductForm action={action} initial={product} submitLabel="Salvar alterações" erro={erro} categories={categories} />
 
       <HistoryPanel entityIds={[id]} />
 
