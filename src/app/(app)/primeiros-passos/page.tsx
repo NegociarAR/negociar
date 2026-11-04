@@ -40,7 +40,7 @@ export default async function PrimeirosPassosPage() {
         </div>
       )}
 
-      <OnboardingCard progress={progress} />
+      <OnboardingCard progress={progress} hideDismiss />
     </div>
   );
 }
