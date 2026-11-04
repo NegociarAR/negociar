@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { listServiceInvoices } from "@/modules/financeiro/invoice-queries";
+import { listServiceInvoices, listSalesWithoutInvoice } from "@/modules/financeiro/invoice-queries";
 import { InvoiceStatusBadge, RefreshStatusButton } from "@/modules/financeiro/invoice-row-actions";
+import { IssueInvoiceButton } from "@/modules/financeiro/issue-invoice-button";
 import { brl } from "@/lib/format";
 import { fmtDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -8,7 +9,10 @@ import { PageIcon } from "@/components/page-icon";
 import { Receipt } from "lucide-react";
 
 export default async function NotasFiscaisPage() {
-  const invoices = await listServiceInvoices();
+  const [invoices, salesWithoutInvoice] = await Promise.all([
+    listServiceInvoices(),
+    listSalesWithoutInvoice(),
+  ]);
 
   return (
     <div className="space-y-5">
@@ -22,6 +26,36 @@ export default async function NotasFiscaisPage() {
           </p>
         </div>
       </header>
+
+      {salesWithoutInvoice.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold">Vendas sem nota emitida</h2>
+          <div className="overflow-x-auto rounded-lg border bg-surface shadow-card">
+            <table className="w-full min-w-[600px] text-sm">
+              <thead>
+                <tr className="border-b text-left text-muted">
+                  <th className="px-4 py-3 font-medium">Cliente</th>
+                  <th className="px-4 py-3 font-medium">Data</th>
+                  <th className="px-4 py-3 font-medium">Valor</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {salesWithoutInvoice.map((sale) => (
+                  <tr key={sale.id} className="border-b last:border-0">
+                    <td className="px-4 py-3">{sale.customerName}</td>
+                    <td className="tabular px-4 py-3 text-muted">{fmtDay(sale.createdAt.slice(0, 10))}</td>
+                    <td className="tabular px-4 py-3">{brl(sale.amountCents)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <IssueInvoiceButton saleId={sale.id} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {invoices.length === 0 ? (
         <EmptyState message="Nenhuma nota fiscal ainda." />
