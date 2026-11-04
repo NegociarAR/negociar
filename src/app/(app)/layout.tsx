@@ -13,6 +13,7 @@ import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
 import { listNotifications } from "@/modules/notifications/notification-queries";
 import { checkGate } from "@/modules/onboarding/gate";
+import { getOnboardingProgress } from "@/modules/onboarding/queries";
 import type { ModuleKey } from "@/lib/entitlements/types";
 import type { CompanyRole } from "@/modules/team/access";
 
@@ -60,7 +61,7 @@ export default async function AppLayout({
 
   // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
   // cookies(), e o Next não permite cookies() dentro de unstable_cache).
-  const [ent, company, fu, openQuotes, overdue, notifications, myRole] = await Promise.all([
+  const [ent, company, fu, openQuotes, overdue, notifications, myRole, onboarding] = await Promise.all([
     getEntitlements(),
     getCompany(session.companyId),
     followupCounts(),
@@ -68,6 +69,7 @@ export default async function AppLayout({
     overdueCount(),
     listNotifications(),
     getMyRole(session.user.id),
+    getOnboardingProgress(),
   ]);
 
   const moduleKeys: ModuleKey[] = ["clientes", "precifica", "orcamentos", "teams"];
@@ -80,8 +82,12 @@ export default async function AppLayout({
     receivables: overdue,
   };
 
+  const onboardingDone = onboarding !== null && onboarding.completedCount >= onboarding.totalCount;
   const items = NAV_ITEMS.filter(
-    (i) => (!i.module || hasModule(ent, i.module)) && !i.blockedRoles?.includes(myRole as CompanyRole)
+    (i) =>
+      (!i.module || hasModule(ent, i.module)) &&
+      !i.blockedRoles?.includes(myRole as CompanyRole) &&
+      !(i.href === "/primeiros-passos" && onboardingDone)
   );
   const quick = QUICK_ACTIONS?.filter((a) => !a.module || hasModule(ent, a.module)) ?? [];
 
