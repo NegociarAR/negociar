@@ -117,7 +117,9 @@ export default async function ClientesPage({
       )}
 
       {/* etapas comerciais */}
-      <div className="flex gap-1 overflow-x-auto border-b text-sm">
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
+      <div className="flex gap-1 overflow-x-auto border-b text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {STAGE_TABS.map((t) => {
           const p = new URLSearchParams();
           if (q) p.set("q", q);
@@ -136,6 +138,7 @@ export default async function ClientesPage({
             </Link>
           );
         })}
+      </div>
       </div>
 
       {/* stats clicáveis */}
@@ -179,7 +182,10 @@ export default async function ClientesPage({
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState message={q || f ? "Nenhum cliente encontrado." : "Nenhum cliente ainda. Cadastre o primeiro."} />
+        <EmptyState
+          message={q || f ? "Nenhum cliente encontrado." : "Nenhum cliente ainda. Cadastre o primeiro."}
+          action={!q && !f ? { label: "Cadastrar cliente", href: "/clientes/novo" } : undefined}
+        />
       ) : (
         <ul className="divide-y rounded-lg border bg-surface">
           {filtered.map(({ c, status }) => {

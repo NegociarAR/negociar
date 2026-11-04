@@ -1,4 +1,6 @@
 import { getSession, getEntitlements, hasModule } from "@/lib/entitlements";
+import { getOnboardingProgress } from "@/modules/onboarding/queries";
+import { OnboardingCard } from "@/modules/onboarding/onboarding-card";
 import { createClient } from "@/lib/supabase/server";
 import { brl } from "@/lib/format";
 import { currentPeriod, brtHour } from "@/lib/period";
@@ -112,6 +114,10 @@ export default async function DashboardPage() {
   };
   const companyId = session?.companyId ?? null;
 
+  const onboarding = await getOnboardingProgress();
+  const showOnboarding =
+    onboarding !== null && !onboarding.dismissed && onboarding.completedCount < onboarding.totalCount;
+
   const [m, att, rec, billing, hourly, goals, trend, revenue, topCustomers] = await Promise.all([
     companyId
       ? metrics(companyId, mods)
@@ -152,6 +158,9 @@ export default async function DashboardPage() {
           <span className="text-xs font-medium text-white/70">{periodLabel}</span>
         </div>
       </div>
+
+      {/* onboarding — aparece logo após a saudação, apenas p/ empresas novas */}
+      {showOnboarding && <OnboardingCard progress={onboarding} />}
 
       {/* dinheiro parado vem antes de tudo */}
       {hasMoneyAlert && (

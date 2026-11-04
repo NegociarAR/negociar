@@ -53,7 +53,10 @@ export default async function OrcamentosPage({
       </form>
 
       {quotes.length === 0 ? (
-        <EmptyState message={q ? "Nenhum orçamento encontrado." : "Nenhum orçamento ainda."} />
+        <EmptyState
+          message={q ? "Nenhum orçamento encontrado." : "Nenhum orçamento ainda."}
+          action={!q ? { label: "Criar orçamento", href: "/orcamentos/novo" } : undefined}
+        />
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-surface">
           <table className="w-full min-w-[560px] text-sm">

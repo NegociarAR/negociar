@@ -81,7 +81,10 @@ export default async function ProdutosPage({
       </form>
 
       {products.length === 0 ? (
-        <EmptyState message={q || filter !== "all" ? "Nenhum produto encontrado." : "Nenhum produto ainda."} />
+        <EmptyState
+          message={q || filter !== "all" ? "Nenhum produto encontrado." : "Nenhum produto ainda."}
+          action={!q && filter === "all" ? { label: "Cadastrar produto", href: "/produtos/novo" } : undefined}
+        />
       ) : (
         <ul className="divide-y rounded-lg border bg-surface">
           {products.map((p) => (

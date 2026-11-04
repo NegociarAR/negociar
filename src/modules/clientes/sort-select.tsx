@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import type { CustomerSort } from "./queries";
 
 const SORTS: { key: CustomerSort; label: string }[] = [
-  { key: "recent", label: "Contato recente" },
-  { key: "forgotten", label: "Mais esquecidos" },
+  { key: "recent", label: "Recente" },
+  { key: "forgotten", label: "Esquecidos" },
   { key: "priority", label: "Prioridade" },
   { key: "name", label: "Nome A–Z" },
 ];
@@ -36,7 +36,7 @@ export function SortSelect({
     <select
       value={activeSort}
       onChange={onChange}
-      className="sm:hidden rounded-lg border bg-surface px-3 py-1.5 text-sm text-foreground"
+      className="sm:hidden shrink-0 rounded-lg border bg-surface px-2 py-1.5 text-sm text-foreground"
     >
       {SORTS.map((s) => (
         <option key={s.key} value={s.key}>

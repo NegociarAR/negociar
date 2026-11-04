@@ -15,7 +15,8 @@ export type IconKey =
   | "clock"
   | "history"
   | "receipt"
-  | "team";
+  | "team"
+  | "checklist";
 
 export type BadgeKey = "followups" | "openQuotes" | "receivables";
 
@@ -96,6 +97,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/equipe", label: "Equipe", icon: "team", blockedRoles: ["financeiro"] },
       { href: "/configuracoes", label: "Configurações", icon: "settings", blockedRoles: ["vendedor", "financeiro"] },
+      { href: "/primeiros-passos", label: "Primeiros passos", icon: "checklist" },
     ],
   },
 ];
