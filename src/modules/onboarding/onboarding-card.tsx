@@ -69,7 +69,13 @@ function buildItems(p: OnboardingProgress): CheckItem[] {
   return items;
 }
 
-export function OnboardingCard({ progress }: { progress: OnboardingProgress }) {
+export function OnboardingCard({
+  progress,
+  hideDismiss,
+}: {
+  progress: OnboardingProgress;
+  hideDismiss?: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const items = buildItems(progress);
   const pct = Math.round((progress.completedCount / progress.totalCount) * 100);
@@ -83,13 +89,15 @@ export function OnboardingCard({ progress }: { progress: OnboardingProgress }) {
             {progress.completedCount} de {progress.totalCount} concluídos
           </p>
         </div>
-        <button
-          onClick={() => startTransition(() => dismissOnboarding())}
-          disabled={pending}
-          className="shrink-0 text-xs text-muted hover:text-foreground disabled:opacity-50"
-        >
-          Dispensar
-        </button>
+        {!hideDismiss && (
+          <button
+            onClick={() => startTransition(() => dismissOnboarding())}
+            disabled={pending}
+            className="shrink-0 text-xs text-muted hover:text-foreground disabled:opacity-50"
+          >
+            Dispensar
+          </button>
+        )}
       </div>
 
       {/* barra de progresso */}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { Topbar } from "@/components/topbar";
@@ -11,8 +12,12 @@ import { followupCounts } from "@/modules/followups/queries";
 import { countOpenQuotes } from "@/modules/orcamentos/queries";
 import { overdueCount } from "@/modules/recebiveis/queries";
 import { listNotifications } from "@/modules/notifications/notification-queries";
+import { checkGate } from "@/modules/onboarding/gate";
 import type { ModuleKey } from "@/lib/entitlements/types";
 import type { CompanyRole } from "@/modules/team/access";
+
+// Rotas isentas da trava de onboarding — onde o usuário completa os passos.
+const GATE_EXEMPT = ["/primeiros-passos", "/configuracoes", "/clientes/novo"];
 
 async function getCompany(companyId: string) {
   const supabase = await createClient();
@@ -43,6 +48,15 @@ export default async function AppLayout({
   if (!session) redirect("/login");
   if (!session.companyId) redirect("/");
   if (session.status !== "active") redirect("/status");
+
+  // Gate de onboarding: exige telefone da empresa + 1 cliente antes de liberar o app.
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "/";
+  const isExempt = GATE_EXEMPT.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  if (!isExempt) {
+    const gatePassed = await checkGate(session.companyId);
+    if (!gatePassed) redirect("/primeiros-passos");
+  }
 
   // Queries em paralelo (não usar unstable_cache aqui: createClient() lê
   // cookies(), e o Next não permite cookies() dentro de unstable_cache).
