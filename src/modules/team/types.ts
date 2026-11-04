@@ -8,6 +8,14 @@ export const ROLE_LABELS: Record<CompanyRole, string> = {
   gestor: "Gestor",
 };
 
+export const ROLE_STYLES: Record<CompanyRole, string> = {
+  owner:      "border-primary/30 bg-primary-soft text-primary",
+  admin:      "border-primary/30 bg-primary-soft text-primary",
+  gestor:     "border-warning/30 bg-warning/10 text-warning",
+  financeiro: "border-success/30 bg-success/10 text-success",
+  vendedor:   "border-border bg-subtle text-muted",
+};
+
 export interface TeamMember {
   userId: string;
   email: string;

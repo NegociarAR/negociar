@@ -4,10 +4,18 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
 import { inviteMember, revokeInvite, removeMember, changeRole } from "./actions";
-import { ROLE_LABELS, type CompanyRole, type TeamMember, type PendingInvite } from "./types";
+import { ROLE_LABELS, ROLE_STYLES, type CompanyRole, type TeamMember, type PendingInvite } from "./types";
 
 const ROLES: CompanyRole[] = ["admin", "vendedor", "financeiro", "gestor"];
 const input = "h-10 rounded-lg border bg-surface px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+function RoleBadge({ role }: { role: CompanyRole }) {
+  return (
+    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLES[role]}`}>
+      {ROLE_LABELS[role]}
+    </span>
+  );
+}
 
 export function TeamManager({
   members,
@@ -24,6 +32,7 @@ export function TeamManager({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<CompanyRole>("vendedor");
   const [error, setError] = useState<string | null>(null);
+  const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
 
   function submitInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -72,9 +81,13 @@ export function TeamManager({
         <ul className="divide-y rounded-lg border bg-surface shadow-card">
           {members.map((m) => (
             <li key={m.userId} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-              <span className="min-w-0 truncate">{m.email}{m.isSelf && <span className="text-muted"> (você)</span>}</span>
+              <span className="min-w-0 truncate">
+                {m.email}
+                {m.isSelf && <span className="text-muted"> (você)</span>}
+              </span>
               {canManage && m.role !== "owner" ? (
                 <div className="flex shrink-0 items-center gap-2">
+                  <RoleBadge role={m.role} />
                   <select
                     defaultValue={m.role}
                     onChange={(e) =>
@@ -90,22 +103,40 @@ export function TeamManager({
                       <option key={r} value={r}>{ROLE_LABELS[r]}</option>
                     ))}
                   </select>
-                  <button
-                    onClick={() => {
-                      if (!confirm(`Remover ${m.email} da equipe?`)) return;
-                      startTransition(async () => {
-                        const res = await removeMember(m.userId);
-                        toast(res.ok ? "Membro removido." : res.error, res.ok ? "success" : "error");
-                        router.refresh();
-                      });
-                    }}
-                    className="text-xs text-danger hover:underline"
-                  >
-                    Remover
-                  </button>
+                  {confirmingUserId === m.userId ? (
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setConfirmingUserId(null);
+                          startTransition(async () => {
+                            const res = await removeMember(m.userId);
+                            toast(res.ok ? "Membro removido." : res.error, res.ok ? "success" : "error");
+                            router.refresh();
+                          });
+                        }}
+                        disabled={pending}
+                        className="rounded-md bg-danger px-2 py-1 text-xs font-medium text-white disabled:opacity-50"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        onClick={() => setConfirmingUserId(null)}
+                        className="rounded-md border px-2 py-1 text-xs hover:bg-subtle"
+                      >
+                        Cancelar
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingUserId(m.userId)}
+                      className="text-xs text-danger hover:underline"
+                    >
+                      Remover
+                    </button>
+                  )}
                 </div>
               ) : (
-                <span className="shrink-0 text-xs text-muted">{ROLE_LABELS[m.role]}</span>
+                <RoleBadge role={m.role} />
               )}
             </li>
           ))}
@@ -118,7 +149,10 @@ export function TeamManager({
           <ul className="divide-y rounded-lg border bg-surface shadow-card">
             {invites.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                <span className="min-w-0 truncate text-muted">{i.email} · {ROLE_LABELS[i.role]}</span>
+                <span className="min-w-0 flex items-center gap-2 truncate text-muted">
+                  {i.email}
+                  <RoleBadge role={i.role} />
+                </span>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/convite/${i.token}`);
