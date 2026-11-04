@@ -11,14 +11,15 @@ export async function listHistory(opts: {
   entityTypes?: string[];
   limit?: number;
   offset?: number;
-}): Promise<{ rows: AuditRow[]; hasMore: boolean }> {
+}): Promise<{ rows: AuditRow[]; hasMore: boolean; total: number }> {
   const session = await getSession();
-  if (!session?.companyId) return { rows: [], hasMore: false };
+  if (!session?.companyId) return { rows: [], hasMore: false, total: 0 };
   const limit = opts.limit ?? 30;
   const offset = opts.offset ?? 0;
 
   const supabase = await createClient();
-  let q = supabase
+
+  let rowsQ = supabase
     .from("audit_log")
     .select(COLS)
     .eq("company_id", session.companyId)
@@ -26,10 +27,21 @@ export async function listHistory(opts: {
     .order("id", { ascending: false })
     .range(offset, offset + limit); // limit+1 linhas: sabe se há mais
 
-  if (opts.entityIds?.length) q = q.in("entity_id", opts.entityIds);
-  if (opts.entityTypes?.length) q = q.in("entity_type", opts.entityTypes);
+  let countQ = supabase
+    .from("audit_log")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", session.companyId);
 
-  const { data } = await q;
+  if (opts.entityIds?.length) {
+    rowsQ = rowsQ.in("entity_id", opts.entityIds);
+    countQ = countQ.in("entity_id", opts.entityIds);
+  }
+  if (opts.entityTypes?.length) {
+    rowsQ = rowsQ.in("entity_type", opts.entityTypes);
+    countQ = countQ.in("entity_type", opts.entityTypes);
+  }
+
+  const [{ data }, { count }] = await Promise.all([rowsQ, countQ]);
   const all = (data ?? []) as AuditRow[];
-  return { rows: all.slice(0, limit), hasMore: all.length > limit };
+  return { rows: all.slice(0, limit), hasMore: all.length > limit, total: count ?? 0 };
 }

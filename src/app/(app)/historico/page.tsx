@@ -23,7 +23,7 @@ export default async function HistoricoPage({
   const { tipo, pagina } = await searchParams;
   const tab = TABS.find((t) => t.key === tipo) ?? TABS[0];
   const page = Math.max(1, Number(pagina) || 1);
-  const { rows, hasMore } = await listHistory({
+  const { rows, hasMore, total } = await listHistory({
     entityTypes: tab.types,
     limit: PAGE,
     offset: (page - 1) * PAGE,
@@ -59,8 +59,13 @@ export default async function HistoricoPage({
         <HistoryList rows={rows} />
       </div>
 
-      <div className="flex justify-between text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         {page > 1 ? <Link href={href(tab.key, page - 1)} className="py-2.5 text-muted hover:text-foreground">← Mais recentes</Link> : <span />}
+        {total > 0 && (
+          <span className="py-2.5 text-muted tabular-nums">
+            {(page - 1) * PAGE + 1}–{(page - 1) * PAGE + rows.length} de {total}
+          </span>
+        )}
         {hasMore && <Link href={href(tab.key, page + 1)} className="py-2.5 text-muted hover:text-foreground">Mais antigos →</Link>}
       </div>
     </div>
