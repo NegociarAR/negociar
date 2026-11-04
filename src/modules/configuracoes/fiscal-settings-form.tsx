@@ -89,8 +89,8 @@ export function FiscalSettingsForm({ settings }: { settings: FiscalSettings }) {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border bg-surface p-5 shadow-card">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold">Nota fiscal de serviço (NFS-e)</h2>
             <p className="mt-1 text-xs text-muted">
               A partir de 2026 a emissão de NFS-e no padrão nacional é obrigatória para prestadores de

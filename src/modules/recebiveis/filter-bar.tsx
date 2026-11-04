@@ -25,17 +25,17 @@ export function FilterBar({
   const inputCls = "h-9 rounded-lg border bg-surface px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <input
         type="month"
         value={mes}
         onChange={(e) => navigate(e.target.value, clienteId)}
-        className={inputCls}
+        className={`${inputCls} w-full sm:w-auto sm:shrink-0`}
       />
       <select
         value={clienteId ?? ""}
         onChange={(e) => navigate(mes, e.target.value || undefined)}
-        className={`${inputCls} min-w-0 flex-1 pr-6`}
+        className={`${inputCls} w-full min-w-0 pr-6 sm:flex-1`}
       >
         <option value="">Todos os clientes</option>
         {customers.map((c) => (

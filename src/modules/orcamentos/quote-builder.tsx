@@ -244,7 +244,7 @@ export function QuoteBuilder({
               <select
                 value={it.product_id ?? ""}
                 onChange={(e) => pickProduct(it.key, e.target.value)}
-                className="rounded-lg border bg-surface px-3 py-2 text-sm"
+                className="w-full min-w-0 rounded-lg border bg-surface px-3 py-2 text-sm"
               >
                 <option value="">Item avulso (sem produto)</option>
                 {products.map((p) => (
