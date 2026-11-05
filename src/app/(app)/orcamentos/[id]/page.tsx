@@ -26,6 +26,14 @@ function fmtDate(iso?: string | null) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+function fmtDateTime(iso?: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 export default async function OrcamentoDetailPage({
   params,
 }: {
@@ -117,7 +125,7 @@ export default async function OrcamentoDetailPage({
         <div className="rounded-lg border border-l-2 border-l-success bg-subtle p-4 text-sm">
           <p className="font-medium">Aprovado por {quote.approved_by_name}</p>
           {quote.decided_at && (
-            <p className="mt-0.5 text-muted">em {fmtDate(quote.decided_at)}</p>
+            <p className="mt-0.5 text-muted">em {fmtDateTime(quote.decided_at)}</p>
           )}
         </div>
       )}
