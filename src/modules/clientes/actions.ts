@@ -89,6 +89,7 @@ export async function createCustomer(formData: FormData) {
   });
 
   revalidatePath("/clientes");
+  revalidatePath("/", "layout");
   redirect(`/clientes/${data.id}`);
 }
 

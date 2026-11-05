@@ -43,6 +43,7 @@ export async function createProduct(formData: FormData) {
   if (error) redirect(`/produtos/novo?erro=${encodeURIComponent(friendlyDbError(error))}`);
 
   revalidatePath("/produtos");
+  revalidatePath("/", "layout");
   redirect(`/produtos`);
 }
 

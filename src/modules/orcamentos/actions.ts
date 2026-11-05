@@ -77,6 +77,7 @@ export async function createQuote(input: CreateQuoteInput) {
     .eq("company_id", session.companyId);
 
   revalidatePath("/orcamentos");
+  revalidatePath("/", "layout");
   return { ok: true, id: quoteId };
 }
 
