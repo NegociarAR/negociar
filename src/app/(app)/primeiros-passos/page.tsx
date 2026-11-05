@@ -1,6 +1,7 @@
 import { getOnboardingProgress } from "@/modules/onboarding/queries";
 import { OnboardingCard } from "@/modules/onboarding/onboarding-card";
 import { reopenOnboarding } from "@/modules/onboarding/actions";
+import { RefreshOnDone } from "@/modules/onboarding/refresh-on-done";
 import { PageIcon } from "@/components/page-icon";
 import { CheckCircle2 } from "lucide-react";
 
@@ -13,6 +14,7 @@ export default async function PrimeirosPassosPage() {
 
   return (
     <div className="space-y-5">
+      {allDone && <RefreshOnDone />}
       <header className="flex items-center gap-3">
         <PageIcon module="admin" icon={CheckCircle2} />
         <div>
