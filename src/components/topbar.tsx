@@ -1,10 +1,19 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { useOpenSearch } from "./command-palette";
 import { NotificationBell } from "./notification-bell";
 import type { AppNotification } from "@/modules/notifications/notification-queries";
+
+function useIsMac() {
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent));
+  }, []);
+  return isMac;
+}
 
 // título da barra por rota (prefixo — mais específico primeiro)
 const TITLES: { prefix: string; label: string }[] = [
@@ -34,6 +43,7 @@ export function Topbar({
   const label = match?.label ?? "NEGOCIAR";
 
   const openSearch = useOpenSearch();
+  const isMac = useIsMac();
 
   return (
     <header className="sticky top-0 z-10 flex h-12 items-center justify-between border-b bg-surface/80 px-5 backdrop-blur-sm">
@@ -45,7 +55,7 @@ export function Topbar({
         >
           <Search size={13} />
           <span className="hidden sm:inline">Buscar</span>
-          <kbd className="hidden rounded border bg-subtle px-1 text-[10px] sm:inline">⌘K</kbd>
+          <kbd className="hidden rounded border bg-subtle px-1 text-[10px] sm:inline">{isMac ? "⌘K" : "Ctrl+K"}</kbd>
         </button>
         {notifications && <NotificationBell items={notifications.items} unreadCount={notifications.unreadCount} />}
       </div>

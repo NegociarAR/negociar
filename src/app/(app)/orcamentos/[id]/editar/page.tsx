@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BackLink } from "@/components/back-link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { notFound, redirect } from "next/navigation";
 import { getQuote, quoteFormOptions } from "@/modules/orcamentos/queries";
 import { QuoteBuilder, type QuoteInitial } from "@/modules/orcamentos/quote-builder";
@@ -43,7 +43,7 @@ export default async function EditarOrcamentoPage({
 
   return (
     <div className="space-y-5">
-      <BackLink href={`/orcamentos/${id}`} label={`Voltar para #${quote.number}`} />
+      <Breadcrumbs crumbs={[{ label: "Orçamentos", href: "/orcamentos" }, { label: `#${quote.number}`, href: `/orcamentos/${id}` }, { label: "Editar" }]} />
       <h1 className="text-xl font-semibold">Editar orçamento #{quote.number}</h1>
 
       {isRevision && (

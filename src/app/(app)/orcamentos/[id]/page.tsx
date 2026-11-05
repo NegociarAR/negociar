@@ -12,7 +12,7 @@ import { HourlyToggle } from "@/modules/orcamentos/hourly-toggle";
 import { monthsSince } from "@/lib/dates";
 import { brl } from "@/lib/format";
 import { HistoryPanel } from "@/modules/historico/history-panel";
-import { BackLink } from "@/components/back-link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageIcon } from "@/components/page-icon";
 import { FileText } from "lucide-react";
 import { getRecurringChargeByQuote } from "@/modules/recebiveis/recurring-actions";
@@ -84,7 +84,7 @@ export default async function OrcamentoDetailPage({
 
   return (
     <div className="space-y-6">
-      <BackLink href="/orcamentos" label="Voltar para orçamentos" />
+      <Breadcrumbs crumbs={[{ label: "Orçamentos", href: "/orcamentos" }, { label: `#${quote.number}` }]} />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">

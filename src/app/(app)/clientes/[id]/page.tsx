@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BackLink } from "@/components/back-link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import {
   getCustomer,
   getCustomerActivities,
@@ -62,7 +62,7 @@ export default async function ClienteDetailPage({
 
   return (
     <div className="space-y-6">
-      <BackLink href="/clientes" label="Voltar para clientes" />
+      <Breadcrumbs crumbs={[{ label: "Clientes", href: "/clientes" }, { label: name }]} />
 
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">

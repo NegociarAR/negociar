@@ -1,4 +1,4 @@
-import { BackLink } from "@/components/back-link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { notFound } from "next/navigation";
 import { getProduct, getPriceHistory } from "@/modules/produtos/queries";
 import { listCategories } from "@/modules/produtos/category-actions";
@@ -30,7 +30,7 @@ export default async function EditarProdutoPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <BackLink href="/produtos" label="Voltar para produtos" />
+      <Breadcrumbs crumbs={[{ label: "Produtos", href: "/produtos" }, { label: product.name }]} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <PageIcon module="precifica" icon={Package} />

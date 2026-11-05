@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { BackLink } from "@/components/back-link";
 import { notFound } from "next/navigation";
 import { getCustomer } from "@/modules/clientes/queries";
+import { customerDisplayName } from "@/modules/clientes/types";
 import { updateCustomer } from "@/modules/clientes/actions";
 import { CustomerForm } from "@/modules/clientes/customer-form";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default async function EditarClientePage({
   params,
@@ -18,10 +18,11 @@ export default async function EditarClientePage({
   if (!customer) notFound();
 
   const action = updateCustomer.bind(null, id);
+  const name = customerDisplayName(customer);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <BackLink href={`/clientes/${id}`} label="Voltar" />
+      <Breadcrumbs crumbs={[{ label: "Clientes", href: "/clientes" }, { label: name, href: `/clientes/${id}` }, { label: "Editar" }]} />
       <h1 className="text-xl font-semibold">Editar cliente</h1>
       <CustomerForm
         action={action}
