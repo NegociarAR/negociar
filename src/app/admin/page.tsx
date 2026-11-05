@@ -9,11 +9,11 @@ import { Building2 } from "lucide-react";
 export default async function AdminHomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, q } = await searchParams;
   const [companies, counts, requests, expired] = await Promise.all([
-    listCompanies(status),
+    listCompanies(status, q),
     companyCounts(),
     pendingPlanRequests(),
     expiredSubscriptions(),
@@ -100,6 +100,24 @@ export default async function AdminHomePage({
           );
         })}
       </div>
+
+      <form method="get" className="flex gap-2">
+        {status && <input type="hidden" name="status" value={status} />}
+        <input
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder="Buscar por nome ou CNPJ..."
+          className="h-9 flex-1 rounded-lg border bg-surface px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+        <button type="submit" className="h-9 rounded-lg border bg-surface px-3 text-sm hover:bg-subtle">
+          Buscar
+        </button>
+        {q && (
+          <Link href={status ? `/admin?status=${status}` : "/admin"} className="h-9 rounded-lg border px-3 text-sm flex items-center hover:bg-subtle text-muted">
+            Limpar
+          </Link>
+        )}
+      </form>
 
       {companies.length === 0 ? (
         <EmptyState message="Nenhuma empresa neste filtro." />

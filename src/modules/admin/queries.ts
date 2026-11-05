@@ -21,7 +21,7 @@ export async function requireAdmin() {
   return session;
 }
 
-export async function listCompanies(filter?: string) {
+export async function listCompanies(filter?: string, search?: string) {
   const admin = await requireAdmin();
   if (!admin) return [];
 
@@ -35,6 +35,11 @@ export async function listCompanies(filter?: string) {
 
   if (filter === "pending" || filter === "active" || filter === "suspended") {
     query = query.eq("status", filter);
+  }
+
+  if (search?.trim()) {
+    const s = `%${search.trim()}%`;
+    query = query.or(`name.ilike.${s},cnpj.ilike.${s}`);
   }
 
   const { data } = await query;
@@ -146,6 +151,68 @@ export async function companyCounts() {
     active: a.count ?? 0,
     suspended: s.count ?? 0,
   };
+}
+
+export interface CompanyUsage {
+  customers: number;
+  products: number;
+  quotesThisMonth: number;
+  limits: { customers: number | null; products: number | null; quotes_per_month: number | null };
+}
+
+export async function getCompanyUsage(companyId: string): Promise<CompanyUsage | null> {
+  const admin = await requireAdmin();
+  if (!admin) return null;
+
+  const supabase = await createClient();
+  const period = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+
+  const [customersRes, productsRes, usageRes, subRes] = await Promise.all([
+    supabase.from("customers").select("id", { count: "exact", head: true }).eq("company_id", companyId).is("deleted_at", null),
+    supabase.from("products").select("id", { count: "exact", head: true }).eq("company_id", companyId).is("deleted_at", null),
+    supabase.from("usage_counters").select("count").eq("company_id", companyId).eq("metric", "quotes_created").eq("period", period).maybeSingle(),
+    supabase.from("subscriptions").select("plans(limits)").eq("company_id", companyId).in("status", ["active", "trialing"]).limit(1).maybeSingle(),
+  ]);
+
+  const planLimits = ((subRes.data as { plans?: { limits?: Record<string, number | null> } } | null)?.plans?.limits ?? {}) as Record<string, number | null>;
+
+  return {
+    customers: customersRes.count ?? 0,
+    products: productsRes.count ?? 0,
+    quotesThisMonth: usageRes.data?.count ?? 0,
+    limits: {
+      customers: planLimits.customers ?? null,
+      products: planLimits.products ?? null,
+      quotes_per_month: planLimits.quotes_per_month ?? null,
+    },
+  };
+}
+
+export interface MonthCount { month: string; count: number }
+
+export async function getQuotesPerMonth(companyId: string, months = 6): Promise<MonthCount[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("usage_counters")
+    .select("period, count")
+    .eq("company_id", companyId)
+    .eq("metric", "quotes_created")
+    .order("period", { ascending: true })
+    .limit(months);
+
+  // preenche meses sem registro com 0
+  const result: MonthCount[] = [];
+  const now = new Date();
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.toISOString().slice(0, 7);
+    const found = (data ?? []).find((r) => r.period === key);
+    result.push({ month: key, count: found?.count ?? 0 });
+  }
+  return result;
 }
 
 // Solicitações de plano pendentes (para o painel admin).

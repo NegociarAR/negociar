@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getCompanyDetail } from "@/modules/admin/queries";
+import { getCompanyDetail, getCompanyUsage, getQuotesPerMonth } from "@/modules/admin/queries";
 import { StatusBadge } from "@/modules/admin/status-badge";
 import { AdminActions } from "@/modules/admin/admin-actions";
 import { ExemptToggle } from "@/modules/admin/exempt-toggle";
@@ -18,13 +18,77 @@ function fmtDate(iso?: string | null) {
   });
 }
 
+function Sparkline({ data }: { data: { month: string; count: number }[] }) {
+  const max = Math.max(...data.map((d) => d.count), 1);
+  const W = 120, H = 32, barW = Math.floor(W / data.length) - 2;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="shrink-0">
+      {data.map((d, i) => {
+        const h = Math.max(2, Math.round((d.count / max) * H));
+        const x = i * (barW + 2);
+        const isLast = i === data.length - 1;
+        return (
+          <rect
+            key={d.month}
+            x={x} y={H - h} width={barW} height={h}
+            rx={1}
+            fill={isLast ? "var(--color-primary, #6366f1)" : "currentColor"}
+            opacity={isLast ? 1 : 0.3}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+function StatCard({
+  label,
+  used,
+  limit,
+  sparkData,
+}: {
+  label: string;
+  used: number;
+  limit: number | null;
+  sparkData?: { month: string; count: number }[];
+}) {
+  const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : null;
+  const danger = pct !== null && pct >= 90;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border bg-surface p-4">
+      <div className="min-w-0 space-y-1">
+        <p className="text-xs text-muted">{label}</p>
+        <p className={`text-lg font-semibold tabular-nums ${danger ? "text-danger" : ""}`}>
+          {used}
+          {limit !== null && (
+            <span className="text-sm font-normal text-muted"> / {limit}</span>
+          )}
+        </p>
+        {pct !== null && (
+          <div className="h-1 w-full overflow-hidden rounded-full bg-subtle">
+            <div
+              className={`h-full rounded-full transition-all ${danger ? "bg-danger" : "bg-primary"}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        )}
+      </div>
+      {sparkData && <Sparkline data={sparkData} />}
+    </div>
+  );
+}
+
 export default async function AdminCompanyPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const detail = await getCompanyDetail(id);
+  const [detail, usage, sparkData] = await Promise.all([
+    getCompanyDetail(id),
+    getCompanyUsage(id),
+    getQuotesPerMonth(id, 6),
+  ]);
   if (!detail) notFound();
   const { company, sub } = detail;
 
@@ -57,6 +121,22 @@ export default async function AdminCompanyPage({
         </div>
         <StatusBadge status={company.status} />
       </header>
+
+      {usage && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold">Uso</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <StatCard label="Clientes" used={usage.customers} limit={usage.limits.customers} />
+            <StatCard label="Produtos" used={usage.products} limit={usage.limits.products} />
+            <StatCard
+              label="Orçamentos este mês"
+              used={usage.quotesThisMonth}
+              limit={usage.limits.quotes_per_month}
+              sparkData={sparkData}
+            />
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-3 rounded-lg border bg-surface p-5">
