@@ -3,20 +3,25 @@
 import { useState, useTransition } from "react";
 import { respondPublicQuote } from "./actions";
 
-type Panel = null | "reject" | "negotiate";
+type Panel = null | "approve" | "reject" | "negotiate";
 
 export function PublicDecision({ token }: { token: string }) {
   const [pending, startTransition] = useTransition();
   const [panel, setPanel] = useState<Panel>(null);
   const [reason, setReason] = useState("");
-  const [result, setResult] = useState<"approved" | "rejected" | "negotiate" | null>(null);
+  const [signerName, setSignerName] = useState("");
+  const [result, setResult] = useState<{ action: "approved" | "rejected" | "negotiate"; signer?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function approve() {
+  function submitApprove() {
+    if (signerName.trim().length === 0) {
+      setError("Por favor, informe o nome de quem está aprovando.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      const res = await respondPublicQuote(token, "approved");
-      if (res.ok) setResult("approved");
+      const res = await respondPublicQuote(token, "approved", undefined, signerName.trim());
+      if (res.ok) setResult({ action: "approved", signer: signerName.trim() });
       else setError("Não foi possível registrar. Tente novamente.");
     });
   }
@@ -29,16 +34,16 @@ export function PublicDecision({ token }: { token: string }) {
     setError(null);
     startTransition(async () => {
       const res = await respondPublicQuote(token, action, reason.trim());
-      if (res.ok) setResult(action);
+      if (res.ok) setResult({ action });
       else setError("Não foi possível registrar. Tente novamente.");
     });
   }
 
   if (result) {
     const msg =
-      result === "approved"
-        ? "Orçamento aprovado. Obrigado! Entraremos em contato."
-        : result === "negotiate"
+      result.action === "approved"
+        ? `Aprovado por ${result.signer}. Obrigado! Entraremos em contato.`
+        : result.action === "negotiate"
           ? "Recebemos seu pedido de negociação. Em breve retornaremos com uma proposta revisada."
           : "Orçamento recusado. Agradecemos o retorno.";
     return (
@@ -48,8 +53,40 @@ export function PublicDecision({ token }: { token: string }) {
     );
   }
 
+  // painel de aprovação (captura nome do assinante)
+  if (panel === "approve") {
+    return (
+      <div className="mt-6 space-y-3">
+        <p className="text-sm font-medium">Nome completo de quem está aprovando:</p>
+        <input
+          value={signerName}
+          onChange={(e) => setSignerName(e.target.value)}
+          autoFocus
+          placeholder="Ex.: João da Silva"
+          className="w-full rounded-lg border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+        {error && <p className="text-xs text-danger">{error}</p>}
+        <div className="flex gap-2">
+          <button
+            onClick={submitApprove}
+            disabled={pending}
+            className="h-11 flex-1 rounded-lg bg-primary text-sm font-medium text-primary-fg disabled:opacity-50"
+          >
+            {pending ? "Enviando..." : "Confirmar aprovação"}
+          </button>
+          <button
+            onClick={() => { setPanel(null); setSignerName(""); setError(null); }}
+            className="h-11 rounded-lg border px-4 text-sm"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // painel de motivo (recusar ou negociar)
-  if (panel) {
+  if (panel === "reject" || panel === "negotiate") {
     const isReject = panel === "reject";
     return (
       <div className="mt-6 space-y-3">
@@ -94,11 +131,11 @@ export function PublicDecision({ token }: { token: string }) {
   return (
     <div className="mt-6 space-y-2">
       <button
-        onClick={approve}
+        onClick={() => setPanel("approve")}
         disabled={pending}
         className="h-11 w-full rounded-lg bg-primary text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "..." : "Aprovar orçamento"}
+        Aprovar orçamento
       </button>
       <div className="flex gap-2">
         <button

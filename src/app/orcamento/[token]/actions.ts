@@ -21,12 +21,14 @@ export async function respondPublicQuote(
   token: string,
   action: "approved" | "rejected" | "negotiate",
   reason?: string,
+  signerName?: string,
 ) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("respond_public_quote", {
     p_token: token,
     p_action: action,
     p_reason: reason ?? null,
+    p_signer_name: signerName ?? null,
   });
   return { ok: !error, error: error?.message };
 }

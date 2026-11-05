@@ -145,6 +145,7 @@ export async function getQuote(id: string): Promise<QuoteDetail | null> {
     is_hourly_contract: q.is_hourly_contract ?? false,
     hourly_rate_cents: q.hourly_rate_cents ?? null,
     decided_at: q.decided_at ?? null,
+    approved_by_name: (q as { approved_by_name?: string | null }).approved_by_name ?? null,
     public_token: q.public_token,
     created_at: q.created_at,
     salesperson_id: (q as { salesperson_id?: string | null }).salesperson_id ?? null,

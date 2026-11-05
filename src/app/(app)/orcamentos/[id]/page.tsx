@@ -113,6 +113,15 @@ export default async function OrcamentoDetailPage({
         </div>
       </header>
 
+      {quote.status === "approved" && quote.approved_by_name && (
+        <div className="rounded-lg border border-l-2 border-l-success bg-subtle p-4 text-sm">
+          <p className="font-medium">Aprovado por {quote.approved_by_name}</p>
+          {quote.decided_at && (
+            <p className="mt-0.5 text-muted">em {fmtDate(quote.decided_at)}</p>
+          )}
+        </div>
+      )}
+
       {quote.decision_reason &&
         (quote.status === "rejected" ||
           quote.status === "negotiation_requested") && (
