@@ -28,9 +28,14 @@ export default async function AdminHomePage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <PageIcon module="admin" icon={Building2} />
-        <h1 className="text-xl font-semibold">Empresas</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <PageIcon module="admin" icon={Building2} />
+          <h1 className="text-xl font-semibold">Empresas</h1>
+        </div>
+        <Link href="/admin/uso" className="text-sm text-muted hover:text-foreground transition">
+          Ver uso da plataforma →
+        </Link>
       </div>
 
       {requests.length > 0 && (
