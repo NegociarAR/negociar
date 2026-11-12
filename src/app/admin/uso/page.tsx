@@ -7,6 +7,7 @@ import {
   getTopActiveCompanies,
   getTechnicalHealth,
 } from "@/modules/admin/usage-queries";
+import { DrilldownTrigger } from "@/modules/admin/drilldown-panel";
 import { BackLink } from "@/components/back-link";
 import { PageIcon } from "@/components/page-icon";
 import { BarChart2 } from "lucide-react";
@@ -19,25 +20,12 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
-function StatTile({ label, value }: { label: string; value: string | number }) {
+function StatTileInner({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border bg-surface p-4 space-y-1">
+    <div className="rounded-lg border bg-surface p-4 space-y-1 hover:bg-subtle transition cursor-pointer">
       <p className="text-xs text-muted">{label}</p>
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function PctBar({ label, pct, used, total }: { label: string; pct: number; used: number; total: number }) {
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span>{label}</span>
-        <span className="tabular-nums text-muted">{used}/{total} — {pct}%</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-subtle">
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
-      </div>
+      <p className="text-xs text-muted">clique para ver lista →</p>
     </div>
   );
 }
@@ -55,7 +43,14 @@ export default async function AdminUsoPage() {
 
   if (!overview || !adoption || !ranking || !health) notFound();
 
-  const totalCompanies = overview.counts.pending + overview.counts.active + overview.counts.suspended;
+  const totalCompanies =
+    overview.counts.pending + overview.counts.active + overview.counts.suspended;
+
+  const totalRows = [
+    ...overview.companiesByStatus.pending,
+    ...overview.companiesByStatus.active,
+    ...overview.companiesByStatus.suspended,
+  ].sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div className="space-y-8">
@@ -69,27 +64,70 @@ export default async function AdminUsoPage() {
       {/* 1. Visão geral */}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold">Visão geral de negócio</h2>
+
+        {/* Tiles clicáveis */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Total de empresas" value={totalCompanies} />
-          <StatTile label="Ativas" value={overview.counts.active} />
-          <StatTile label="Novas (30 dias)" value={overview.newLast30} />
-          <StatTile label="MRR estimado" value={brl(overview.mrrCents)} />
+          <DrilldownTrigger
+            title="Todas as empresas"
+            count={totalCompanies}
+            rows={totalRows}
+          >
+            <StatTileInner label="Total de empresas" value={totalCompanies} />
+          </DrilldownTrigger>
+
+          <DrilldownTrigger
+            title="Empresas ativas"
+            count={overview.counts.active}
+            rows={overview.companiesByStatus.active}
+          >
+            <StatTileInner label="Ativas" value={overview.counts.active} />
+          </DrilldownTrigger>
+
+          <DrilldownTrigger
+            title="Novas (últimos 30 dias)"
+            count={overview.newLast30}
+            rows={overview.newCompanies.map((c) => ({
+              id: c.id,
+              label: c.label,
+              detail: c.detail,
+            }))}
+          >
+            <StatTileInner label="Novas (30 dias)" value={overview.newLast30} />
+          </DrilldownTrigger>
+
+          <DrilldownTrigger
+            title="Assinaturas pagantes (MRR)"
+            count={overview.payingSubscriptions.length}
+            rows={overview.payingSubscriptions}
+          >
+            <StatTileInner label="MRR estimado" value={brl(overview.mrrCents)} />
+          </DrilldownTrigger>
         </div>
 
         {/* por status */}
         <div className="rounded-lg border bg-surface p-4 space-y-2">
           <p className="text-xs font-medium text-muted uppercase tracking-wide">Por status</p>
           <div className="flex flex-wrap gap-4 text-sm">
-            {[
-              { label: "Pendentes", count: overview.counts.pending },
-              { label: "Ativas", count: overview.counts.active },
-              { label: "Suspensas", count: overview.counts.suspended },
-            ].map((s) => (
-              <span key={s.label} className="tabular-nums">
-                <span className="text-muted">{s.label}: </span>
-                <strong>{s.count}</strong>
-              </span>
-            ))}
+            {(["pending", "active", "suspended"] as const).map((st) => {
+              const labels: Record<string, string> = {
+                pending: "Pendentes",
+                active: "Ativas",
+                suspended: "Suspensas",
+              };
+              return (
+                <DrilldownTrigger
+                  key={st}
+                  title={labels[st]}
+                  count={overview.counts[st]}
+                  rows={overview.companiesByStatus[st]}
+                >
+                  <span className="tabular-nums hover:underline cursor-pointer">
+                    <span className="text-muted">{labels[st]}: </span>
+                    <strong>{overview.counts[st]}</strong>
+                  </span>
+                </DrilldownTrigger>
+              );
+            })}
           </div>
         </div>
 
@@ -99,10 +137,17 @@ export default async function AdminUsoPage() {
             <p className="text-xs font-medium text-muted uppercase tracking-wide">Por plano</p>
             <div className="flex flex-wrap gap-4 text-sm">
               {overview.byPlan.map((p) => (
-                <span key={p.plan_id} className="tabular-nums">
-                  <span className="text-muted">{p.plan_name}: </span>
-                  <strong>{p.count}</strong>
-                </span>
+                <DrilldownTrigger
+                  key={p.plan_id}
+                  title={p.plan_name}
+                  count={p.count}
+                  rows={p.companies}
+                >
+                  <span className="tabular-nums hover:underline cursor-pointer">
+                    <span className="text-muted">{p.plan_name}: </span>
+                    <strong>{p.count}</strong>
+                  </span>
+                </DrilldownTrigger>
               ))}
             </div>
           </div>
@@ -117,7 +162,27 @@ export default async function AdminUsoPage() {
             <p className="text-sm text-muted">Sem dados de empresas ativas.</p>
           ) : (
             adoption.map((f) => (
-              <PctBar key={f.feature} label={f.feature} pct={f.pct} used={f.usedCount} total={f.totalActive} />
+              <DrilldownTrigger
+                key={f.feature}
+                title={f.feature}
+                count={f.usedCount}
+                rows={f.companies}
+              >
+                <div className="space-y-1 text-left">
+                  <div className="flex justify-between text-sm">
+                    <span className="hover:underline">{f.feature}</span>
+                    <span className="tabular-nums text-muted">
+                      {f.usedCount}/{f.totalActive} — {f.pct}%
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-subtle">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${f.pct}%` }}
+                    />
+                  </div>
+                </div>
+              </DrilldownTrigger>
             ))
           )}
         </div>
@@ -143,7 +208,10 @@ export default async function AdminUsoPage() {
                   <tr key={r.companyId} className="hover:bg-subtle transition">
                     <td className="px-4 py-3 text-muted">{i + 1}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/admin/empresas/${r.companyId}`} className="font-medium hover:underline">
+                      <Link
+                        href={`/admin/empresas/${r.companyId}`}
+                        className="font-medium hover:underline"
+                      >
                         {r.companyName}
                       </Link>
                     </td>
@@ -172,7 +240,12 @@ export default async function AdminUsoPage() {
               {health.invoiceErrors.map((e, i) => (
                 <li key={i} className="py-2 flex flex-wrap justify-between gap-2">
                   <div>
-                    <span className="font-medium">{e.companyName}</span>
+                    <Link
+                      href={`/admin/empresas/${e.companyId}`}
+                      className="font-medium hover:underline"
+                    >
+                      {e.companyName}
+                    </Link>
                     {e.errorMessage && (
                       <p className="text-xs text-danger mt-0.5 max-w-prose">{e.errorMessage}</p>
                     )}
@@ -185,11 +258,29 @@ export default async function AdminUsoPage() {
         </div>
 
         {/* Parcelas vencidas */}
-        <div className="rounded-lg border bg-surface p-4 flex items-center justify-between gap-4">
-          <p className="text-sm">Parcelas vencidas há +30 dias sem receber</p>
-          <span className={`tabular-nums font-semibold text-lg ${health.overdueInstallments > 0 ? "text-danger" : "text-success"}`}>
-            {health.overdueInstallments}
-          </span>
+        <div className="rounded-lg border bg-surface p-5 space-y-3">
+          <p className="text-xs font-medium text-muted uppercase tracking-wide">
+            Parcelas vencidas há +30 dias ({health.overdueInstallments})
+          </p>
+          {health.overdueList.length === 0 ? (
+            <p className="text-sm text-muted">Nenhuma parcela em atraso.</p>
+          ) : (
+            <ul className="divide-y text-sm max-h-64 overflow-y-auto">
+              {health.overdueList.map((inst, i) => (
+                <li key={i} className="py-2 flex flex-wrap justify-between gap-2">
+                  <Link
+                    href={`/admin/empresas/${inst.companyId}`}
+                    className="font-medium hover:underline"
+                  >
+                    {inst.companyName}
+                  </Link>
+                  <span className="text-xs text-muted tabular-nums">
+                    venc. {inst.dueDate} · {brl(inst.amountCents)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Cron */}
